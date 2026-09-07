@@ -1,6 +1,6 @@
 # batman1989.co.uk — GitHub Pages + Namecheap
 
-Prepared locally; nothing has been pushed, deployed or changed in DNS.
+Repository: https://github.com/Crawford1982/batman. Source pushed and GitHub Pages configured for GitHub Actions. Custom domain set to batman1989.co.uk.
 
 The game builds to static files and needs no application server. GitHub Pages is suitable for the present free game. GitHub Free supports Pages from public repositories; use an appropriate paid plan if the repository must be private. The browser downloads the game assets in either case.
 
@@ -23,7 +23,7 @@ For Namecheap BasicDNS/PremiumDNS/FreeDNS: Domain List > Manage > Advanced DNS. 
 | A | @ | 185.199.109.153 |
 | A | @ | 185.199.110.153 |
 | A | @ | 185.199.111.153 |
-| CNAME | www | YOUR_GITHUB_USERNAME.github.io |
+| CNAME | www | Crawford1982.github.io |
 
 Replace YOUR_GITHUB_USERNAME with the actual owner; do not include a repository name. Remove only conflicting parking/redirect/address records for the same web hosts after inspecting them. Preserve mail MX records and unrelated TXT/CNAME records. Do not use wildcard DNS. Keep the domain-verification TXT record.
 

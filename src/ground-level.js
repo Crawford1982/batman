@@ -319,7 +319,7 @@ export class GroundLevel {
             center = bounds.getCenter(new T.Vector3());
           const front = model.getObjectByName("Batmobile_FrontLight_0"),
             rear = model.getObjectByName("Batmobile_RearLight_0");
-          let heading = 0;
+          let heading = model.getObjectByName("Batmobile_body") ? Math.PI : 0;
           if (front && rear) {
             const f = new T.Box3()
                 .setFromObject(front)
@@ -714,3 +714,4 @@ export class GroundLevel {
     this.audio.update(Math.abs(this.car.speed) * 2, this.phase === "play");
   }
 }
+

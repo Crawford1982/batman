@@ -61,3 +61,7 @@ Additional verification: node tests/visual-pass.mjs checks imported drones, rout
 ## Road and steering corrections
 
 The whole Batmobile footprint is constrained to the road network, with sliding/drag at curbs and passable junctions. Mouse steering requires holding the right button; keyboard steering takes priority, and controller axes have a rescaled 18% dead zone. Pause, release and road reset clear mouse steering. The film presentation pass adjusts paint/metal/rubber materials, headlights, chase camera and animated amber exhaust. See verification/film-comparison.html for before/after and museum reference, and RELEASE-READINESS.md for the public-launch gates. Fifteen unit tests and tests/road-controls.mjs cover the new behavior.
+
+## Replacement Batmobile
+
+The current car is visnik’s 89 Batmobile, downloaded from https://blendswap.com/blend/10625 under CC BY-NC-SA 3.0. The adapted GLB keeps that licence. Original licence and attribution are included in public. To regenerate, extract the original blend to ../assets-source/visnik, run scripts/convert-visnik-car.py with Blender (background, disable-autoexec), then node scripts/prepare-visnik-car.mjs. No Blender installation is required to play or build.

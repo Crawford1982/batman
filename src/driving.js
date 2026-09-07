@@ -53,7 +53,7 @@ export function roadContainsPoint(x, z) {
 // Check the body, not just its centre: a long car must not hang over a curb.
 export function carFitsRoad(position, yaw) {
   const c = Math.cos(yaw), s = Math.sin(yaw);
-  for (const x of [-1.9, 0, 1.9]) for (const z of [-4.5, 0, 4.5]) {
+  for (const x of [-2.1, 0, 2.1]) for (const z of [-4.5, 0, 4.5]) {
     if (!roadContainsPoint(position.x + x*c + z*s, position.z - x*s + z*c)) return false;
   }
   return true;
