@@ -1,6 +1,9 @@
 import * as T from "three";
 import { RELAY_SITES } from "./districts.js";
 
+export const FLIGHT_DURATION = 600;
+export const FINAL_DEFENCE = 90;
+
 export class Mission {
   constructor(scene) {
     this.relays = RELAY_SITES.map((site) => {
@@ -31,7 +34,10 @@ export class Mission {
   }
   reset() {
     this.city = 100;
-    this.nextRaid = 55;
+    this.nextRaid = 12;
+    this.phase = "intercept";
+    this.finalStarted = null;
+    this.finalRaids = 0;
     this.raid = 0;
     this.finalRaid = false;
     for (const r of this.relays) {
@@ -46,14 +52,27 @@ export class Mission {
   get disabled() {
     return 3 - this.remaining.length;
   }
-  update(dt, elapsed) {
+  outcome(elapsed, bombers) {
+    if (this.city <= 0 || elapsed >= FLIGHT_DURATION) return 'lost';
+    if (this.finalStarted !== null && this.disabled === 3 && this.finalRaids === 3 &&
+        elapsed - this.finalStarted >= FINAL_DEFENCE && bombers === 0) return 'won';
+    return null;
+  }
+  update(dt, elapsed, bombers = 0) {
+    if (this.disabled === 3 && elapsed >= 60 && this.finalStarted === null) {
+      this.phase = 'defend'; this.finalStarted = elapsed; this.nextRaid = 0;
+    } else if (this.finalStarted === null) this.phase = elapsed < 60 ? 'intercept' : 'sabotage';
     for (const r of this.remaining) {
       r.core.rotation.y += dt;
       r.ring.rotation.z += dt * 0.4;
     }
     this.nextRaid -= dt;
-    if (this.nextRaid <= 0) {
-      this.nextRaid = Math.max(65, 95 - elapsed / 75) + this.disabled * 12;
+    if (this.nextRaid <= 0 && bombers < 3) {
+      if (this.phase === 'defend') {
+        if (this.finalRaids >= 3) return null;
+        this.finalRaids++;
+        this.nextRaid = 14;
+      } else this.nextRaid = this.phase === 'intercept' ? 42 : 65 + this.disabled * 14;
       return RELAY_SITES[this.raid++ % RELAY_SITES.length];
     }
     return null;
@@ -93,7 +112,7 @@ export const BRIEFING = [
     title: "THE COLD IS THE WEAPON.",
     location: "OLD GOTHAM · EMERGENCY SHELTER",
     speaker: "GORDON / GCPD DISPATCH",
-    text: "They are targeting the heating grid. The cathedral is full of families. We need twenty minutes to get everyone out.",
+    text: "They are targeting the heating grid. The cathedral is full of families. We need ten minutes at most to get everyone out.",
     target: new T.Vector3(-1100, 110, -1000),
     eye: new T.Vector3(-1280, 215, -670),
   },
@@ -101,7 +120,7 @@ export const BRIEFING = [
     title: "KEEP GOTHAM ALIVE.",
     location: "WAYNE TOWER · NETWORK UPLINK",
     speaker: "ALFRED / MISSION DIRECTIVE",
-    text: "Destroy the three red command relays. Intercept bombers before they reach the shelters. Keep the city grid alive until evacuation is complete.",
+    text: "Intercept the opening raid. Destroy three red command relays to accelerate the evacuation, then hold off the final attack. Ten minutes is our limit.",
     target: new T.Vector3(-270, 260, -380),
     eye: new T.Vector3(-70, 350, -40),
   },

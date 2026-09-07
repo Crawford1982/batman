@@ -1,7 +1,7 @@
 import { GroundLevel } from "./ground-level.js";
 import { Minimap } from "./minimap.js";
 import "./minimap.css";
-import { Mission, BRIEFING } from "./mission.js";
+import { Mission, BRIEFING, FLIGHT_DURATION, FINAL_DEFENCE } from "./mission.js";
 import { districtAt } from "./districts.js";
 import "./mission.css";
 import { createEnemy } from "./enemy.js";
@@ -259,8 +259,8 @@ function start() {
   player.quaternion.copy(flight.quaternion);
   camera.position.copy(flight.position).add(new T.Vector3(0, 10, 30));
   audio.start();
-  notice("ALFRED / Three command relays. Follow the gold diamond.", 7);
-  for (let i = 0; i < 4; i++) spawn();
+  notice("ALFRED / Incoming raid. Intercept bombers; red relays are their command network.", 7);
+  for (let i = 0; i < 2; i++) spawn();
 }
 function pause() {
   if (mode.startsWith("drive")) {
@@ -386,7 +386,7 @@ stick.onpointerdown = (e) => {
 stick.onpointermove = (e) => {
   if (e.pointerId === stickId) stickMove(e);
 };
-stick.onpointerup = stick.onpointercancel = () => {
+stick.onpointerup = stick.onpointercancel = stick.onlostpointercapture = () => {
   stickId = null;
   touch.x = touch.y = 0;
   knob.style.transform = "";
@@ -397,7 +397,7 @@ document.querySelectorAll("[data-hold]").forEach((b) => {
     b.setPointerCapture(e.pointerId);
     touch[k] = true;
   };
-  b.onpointerup = b.onpointercancel = () => (touch[k] = false);
+  b.onpointerup = b.onpointercancel = b.onlostpointercapture = () => (touch[k] = false);
 });
 $("touch-missile").onpointerdown = () => shoot(true);
 function input() {
@@ -540,10 +540,10 @@ function update(dt, wallDt = dt) {
     spawnTimer -= dt;
     if (
       spawnTimer <= 0 &&
-      enemies.length < Math.min(12, 4 + Math.floor(elapsed / 60))
+      enemies.filter(e=>e.kind !== "bomber").length < (mission.phase === "intercept" ? 2 : mission.phase === "defend" ? 3 : 4)
     ) {
       spawn();
-      spawnTimer = 5;
+      spawnTimer = mission.phase === "defend" ? 12 : 18;
     }
     for (let i = enemies.length - 1; i >= 0; i--) {
       const e = enemies[i];
@@ -588,7 +588,11 @@ function update(dt, wallDt = dt) {
     }
     updateProjectiles(dt);
     if (mode !== "play") return;
-    const raid = mission.update(wallDt, elapsed);
+    const previousPhase = mission.phase;
+    const raid = mission.update(wallDt, elapsed, enemies.filter(e=>e.kind === 'bomber').length);
+    if (mission.phase !== previousPhase) notice(mission.phase === 'defend'
+      ? 'GORDON / Relays offline. Final evacuation underway. Stop the last three bombers.'
+      : 'ALFRED / Attack source identified. Disable the three red command relays.', 8);
     if (raid) spawnBomber(raid);
     if (mission.city <= 0) {
       finish(
@@ -597,13 +601,11 @@ function update(dt, wallDt = dt) {
       );
       return;
     }
-    if (elapsed >= 1200) {
-      finish(
-        mission.disabled === 3,
-        mission.disabled === 3
-          ? "Evacuation complete. Gotham lives to see the dawn."
-          : "Evacuation time expired with command relays still online. Disable all three to secure the city.",
-      );
+    const outcome = mission.outcome(elapsed, enemies.filter(e=>e.kind === 'bomber').length);
+    if (outcome) {
+      finish(outcome === 'won', outcome === 'won'
+        ? 'Final attack contained. Evacuation complete. Take the override to Gordon in Chapter II.'
+        : 'The evacuation window closed. Disable all three relays and contain the final raid before time runs out.');
       return;
     }
     camOffset
@@ -620,7 +622,7 @@ function update(dt, wallDt = dt) {
     camera.lookAt(look);
     camera.fov += (58 + (controls.boost ? 9 : 0) - camera.fov) * dt * 2;
     camera.updateProjectionMatrix();
-    const left = Math.max(0, Math.ceil(1200 - elapsed));
+    const left = Math.max(0, Math.ceil(FLIGHT_DURATION - elapsed));
     $("timer").textContent =
       `${String(Math.floor(left / 60)).padStart(2, "0")}:${String(left % 60).padStart(2, "0")}`;
     $("hp").textContent = `${Math.round(flight.health)}%`;
@@ -922,12 +924,14 @@ function updateMissionHUD() {
     ? `${objective.name} under threat. ${Math.ceil(objective.mesh.position.distanceTo(objective.destination) / 12)}s to impact.`
     : mission.disabled < 3
       ? "Destroy the red uplinks. Cannons and homing missiles both work."
-      : "Relays offline. Keep incoming bombers away from the shelters.";
+      : "Stop the last bombers. Clear the skies to complete the evacuation early.";
   $("city-value").textContent = mission.city + "%";
   $("city-bar").style.width = mission.city + "%";
   $("city-bar").style.background = mission.city < 40 ? "#ff7358" : "#ddbc7b";
   $("evac-status").textContent =
-    `EVACUATION ${Math.min(100, Math.floor(elapsed / 12))}% / RELAYS ${mission.disabled}/3`;
+    mission.phase === 'defend'
+      ? `PHASE 3 / HOLD ${Math.max(0, Math.ceil(FINAL_DEFENCE-(elapsed-mission.finalStarted)))}s · RAID ${mission.finalRaids}/3`
+      : `PHASE ${mission.phase === 'intercept' ? '1 / INTERCEPT' : '2 / SABOTAGE'} · RELAYS ${mission.disabled}/3`;
   $("objective-marker").hidden = !objective;
   if (objective) {
     const projected = objective.mesh.position.clone().project(camera);

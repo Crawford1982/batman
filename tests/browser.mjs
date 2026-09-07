@@ -30,7 +30,7 @@ await page.waitForFunction(()=>window.__batwing.state.elapsed>1.1);
 let s = await page.evaluate(() => window.__batwing.state);
 assert.equal(s.mode, "play");
 assert.ok(s.elapsed > 1);
-assert.ok(s.enemies >= 4);
+assert.ok(s.enemies >= 2);
 assert.ok(s.position.every(Number.isFinite));
 await page.screenshot({ path: "verification/flight.png" });
 await page.keyboard.press("Escape");
@@ -94,7 +94,10 @@ await page.evaluate(() => {
     r.hp = 0;
     r.mesh.visible = false;
   }
-  window.__batwing.step(1200);
+  const g=window.__batwing;
+  g.step(.01,60);g.step(.01,14);g.step(.01,14);
+  for(let i=g.enemies.length-1;i>=0;i--) {const e=g.enemies[i];e.mesh.removeFromParent();g.enemies.splice(i,1);}
+  g.step(.01,91);
 });
 assert.equal(
   await page.locator("#pause-title").textContent(),

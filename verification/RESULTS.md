@@ -41,3 +41,8 @@ visnik CC BY-NC-SA 3.0 Batmobile integrated, 116,146 triangles. Four animated wh
 ## Driving and route polish
 
 16 unit checks passed, including 10 FPS versus 60 FPS driving distance and wall-clock elapsed time. Flight, ground, road-controls and route-clearance browser checks passed. Theatre and railway camera views inspected. Sampled ground views submitted approximately 172k to 220k triangles after spatial culling; these are not sustained FPS benchmarks. Physical phones/controllers remain unverified.
+
+
+## Shorter mission and mobile driving guidance — 7 September 2026
+
+20 unit tests pass, covering finite final raids, early victory, ten-minute failure, raid throttling, nearby recovery without free health/time/progress, and junction cues before and after checkpoint crossing. Production build passes. Flight browser regression passes including mission victory, collision, combat, pause, loss and restart. Ground browser regression passes including chapter transitions and simultaneous CDP touch steering + gas, touch cancellation, visible mobile map and turn guidance. Road-control regression passes for neutral mouse steering, deliberate steering and full-body curb containment. Both mobile landscape screenshots inspected. These are browser emulation checks; physical phones/controllers and sustained device performance remain unverified. No new asset downloads or voice generation in this focused pass.

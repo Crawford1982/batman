@@ -69,6 +69,20 @@ export function driveSteering(keys, mouse, touch, pad) {
   if (pad) return deadZone(pad.axes[0] || 0);
   return mouse.steering ? deadZone(mouse.x || 0, .08) : 0;
 }
+export function routeCue(position, yaw, checkpoint) {
+  const goal = DRIVE_ROUTE[checkpoint];
+  if (!goal) return "OVERRIDE DELIVERED";
+  const prev = ROAD_POINTS[checkpoint], next = DRIVE_ROUTE[checkpoint + 1];
+  const desired = Math.atan2(-(goal.x-position.x), -(goal.z-position.z));
+  const error = Math.atan2(Math.sin(desired-yaw), Math.cos(desired-yaw));
+  if (Math.hypot(position.x-prev.x,position.z-prev.z)<75 && Math.abs(error)>.65)
+    return error>0 ? "← TURN LEFT NOW" : "TURN RIGHT NOW →";
+  const distance = Math.round(Math.hypot(goal.x-position.x,goal.z-position.z));
+  if (!next) return `↑ DELIVER OVERRIDE · ${distance} M`;
+  const cross = (goal.x-prev.x)*(next.z-goal.z)-(goal.z-prev.z)*(next.x-goal.x);
+  const turn = cross<0 ? "← LEFT" : "RIGHT →";
+  return `${turn} IN ${distance} M${distance<130 ? " · BRAKE FOR TURN" : ""}`;
+}
 export class Driving {
   constructor() {
     this.reset();
@@ -85,6 +99,15 @@ export class Driving {
     this.emp = 0;
     this.score = 0;
     this.done = false;
+  }
+  recoverToRoute() {
+    const a = ROAD_POINTS[this.checkpoint], b = DRIVE_ROUTE[this.checkpoint];
+    if (!b) return;
+    const dx=b.x-a.x, dz=b.z-a.z, length=Math.hypot(dx,dz);
+    const distance=clamp(((this.position.x-a.x)*dx+(this.position.z-a.z)*dz)/length,0,Math.max(0,length-35));
+    this.position.set(a.x+dx*distance/length,.6,a.z+dz*distance/length);
+    this.yaw=Math.atan2(-dx,-dz);
+    this.speed=0; this.steer=0; this.invulnerable=2;
   }
   damage(amount) {
     if (this.invulnerable > 0) return false;

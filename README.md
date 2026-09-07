@@ -6,7 +6,7 @@ A local browser flight-combat game using your 1989 Batwing model. A snowy city w
 
 A 27-second skippable, real-time cinematic introduces the threat: hijacked Wayne defense aircraft are attacking the heating grid during a winter evacuation. Alfred and Gordon brief the player through on-screen radio captions. Music is synthesized; the briefing does not use recorded speech or downloaded video.
 
-Win by disabling all three red command relays and keeping the city grid and Batwing intact for the 20-minute evacuation. Homing missiles and cannons damage relays. Bombers fly toward named shelters even when the player is elsewhere; each successful strike removes 10% city integrity. Disabled relays slow subsequent raids. The gold objective diamond prioritizes the bomber closest to impact, then the nearest remaining relay. The HUD shows time to impact, evacuation progress, relay count and city integrity. Building lights dim as the grid takes damage.
+The flight mission has a ten-minute maximum and can finish early. Intercept a relaxed opening raid, disable all three red command relays, then survive a 90-second final defence and clear its three bombers while keeping the city grid and Batwing intact. Homing missiles and cannons damage relays. Bombers fly toward named shelters even when the player is elsewhere; each successful strike removes 10% city integrity. Disabled relays slow subsequent raids. The gold objective diamond prioritizes the bomber closest to impact, then the nearest remaining relay. The HUD shows time to impact, mission phase, relay count and city integrity. Building lights dim as the grid takes damage.
 
 Flight remains arcade assisted. Turn-rate smoothing, gradual boost deceleration, assisted boundary turns and surface recovery replace abrupt speed changes and roof teleports. This is not a realistic aerodynamic simulation.
 
@@ -71,3 +71,5 @@ The current car is visnik’s 89 Batmobile, downloaded from https://blendswap.com/
 Mission countdowns use active wall-clock time; pause and hidden tabs pause the mission. Ground physics substeps preserve motion across normal low-frame-rate conditions, with a 250 ms simulation catch-up cap for long stalls. Driving has speed-sensitive steering, faster recentring and stronger boost acceleration; chase camera looks into turns. Drone strikes start after a quiet opening, with longer initial warnings and escalating cadence by route progress. Monarch Theatre, the elevated transit line and cathedral command entrance provide distinct route landmarks.
 
 City instances are spatially batched and distance-culled; Adaptive can reduce render resolution further on slow devices. This reduces submitted geometry but does not guarantee 60 FPS. Briefings retain captioned mission text and the original synthesized score.
+
+Car navigation warns before each junction, including on touch screens. Reset to road preserves distance along the current leg, health, score and the running clock.

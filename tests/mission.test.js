@@ -10,8 +10,9 @@ test("destroying relays slows raids and reset restores the mission", () => {
   assert.equal(m.remaining.length, 3);
   m.relays[0].hp = 0;
   assert.equal(m.disabled, 1);
-  assert.ok(m.update(56, 56));
-  assert.ok(m.nextRaid > 95);
+  assert.ok(m.update(90, 90));
+  const online = new Mission(new Scene()); online.update(90,90);
+  assert.ok(m.nextRaid > online.nextRaid);
   for (let i = 0; i < 10; i++) m.impact();
   assert.equal(m.city, 0);
   m.reset();
@@ -54,4 +55,20 @@ test("bridge deck collision allows flight below the elevated span", () => {
   const b = { x: 0, z: 0, w: 100, d: 40, h: 29, bottom: 19 };
   assert.ok(!insideBuilding(new Vector3(0, 8, 0), b));
   assert.ok(insideBuilding(new Vector3(0, 25, 0), b));
+});
+
+test('final defence is finite, requires clear skies and resets cleanly',()=>{
+ const m=new Mission(new Scene());m.relays.forEach(r=>r.hp=0);
+ assert.ok(m.update(60,60));assert.equal(m.phase,'defend');
+ assert.ok(m.update(14,74));assert.ok(m.update(14,88));
+ assert.equal(m.update(100,188),null);assert.equal(m.finalRaids,3);
+ assert.equal(m.outcome(600,0),'lost');
+ assert.equal(m.outcome(188,1),null);assert.equal(m.outcome(188,0),'won');
+ m.reset();assert.equal(m.phase,'intercept');assert.equal(m.finalStarted,null);
+ assert.equal(m.outcome(600,0),'lost');
+});
+test('a full bomber roster does not consume final raid spawns',()=>{
+ const m=new Mission(new Scene());m.relays.forEach(r=>r.hp=0);
+ assert.equal(m.update(60,60,3),null);assert.equal(m.finalRaids,0);
+ assert.ok(m.update(1,61,2));assert.equal(m.finalRaids,1);
 });

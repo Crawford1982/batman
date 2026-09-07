@@ -1,7 +1,7 @@
 import { RouteScenes } from "./route-scenes.js";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { Driving, DRIVE_ROUTE, driveSteering } from "./driving.js";
+import { Driving, DRIVE_ROUTE, driveSteering, routeCue } from "./driving.js";
 import { createEnemy } from "./enemy.js";
 import { Minimap } from "./minimap.js";
 import { clamp } from "./flight.js";
@@ -78,7 +78,7 @@ export class GroundLevel {
         b.setPointerCapture(e.pointerId);
         this.touch[k] = 1;
       };
-      b.onpointerup = b.onpointercancel = () => (this.touch[k] = 0);
+      b.onpointerup = b.onpointercancel = b.onlostpointercapture = () => (this.touch[k] = 0);
     });
     const stick = $("drive-stick");
     let active = null;
@@ -100,7 +100,7 @@ export class GroundLevel {
     stick.onpointermove = (e) => {
       if (e.pointerId === active) move(e);
     };
-    stick.onpointerup = stick.onpointercancel = () => {
+    stick.onpointerup = stick.onpointercancel = stick.onlostpointercapture = () => {
       active = null;
       this.touch.steering = false;
       this.touch.steer = 0;
@@ -483,14 +483,8 @@ export class GroundLevel {
   }
   resetRoad() {
     if (this.phase !== "play") return;
-    const prev = this.car.checkpoint
-        ? DRIVE_ROUTE[this.car.checkpoint - 1]
-        : { x: 0, z: 450 },
-      next = DRIVE_ROUTE[this.car.checkpoint];
-    this.car.position.set(prev.x, 0.6, prev.z);
-    this.car.yaw = Math.atan2(-(next.x - prev.x), -(next.z - prev.z));
-    this.car.speed = 0;
-    this.car.steer = 0;
+    this.car.recoverToRoute();
+    this.touch = {};
     this.mouse.steering = false;
     this.mouse.x = 0;
     this.car.invulnerable = 2;
@@ -688,9 +682,7 @@ export class GroundLevel {
       $("drive-progress").textContent =
         `ROUTE ${this.car.checkpoint + 1} / ${DRIVE_ROUTE.length} · ${Math.round(Math.hypot(goal.x - this.car.position.x, goal.z - this.car.position.z))} M`;
       $("drive-turn").textContent = this.car.roadContact ? "CURB CONTACT · steer back into the lane" :
-        Math.abs(this.car.speed) < 1
-          ? "W / GAS to accelerate · follow the route"
-          : "Gold markers guide you through the junctions";
+        routeCue(this.car.position, this.car.yaw, this.car.checkpoint);
       this.map.update(this.car, this.mapMission, [], [], this.time);
     }
     this.checkpoints.forEach((p, i) => {

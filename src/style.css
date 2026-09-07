@@ -649,3 +649,9 @@ body.hit #vignette {
     left: 145px;
   }
 }
+
+@media (pointer:coarse) {
+ #stick {left:max(24px,env(safe-area-inset-left))}
+ .touch-actions {right:max(20px,env(safe-area-inset-right))}
+ #hud {padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+}

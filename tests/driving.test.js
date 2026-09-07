@@ -70,3 +70,19 @@ test("low frame rates preserve mission time and stable car motion",()=>{
  assert.ok(Math.abs(b.elapsed-before-1.5)<1e-8);
  assert.ok(carFitsRoad(b.position,b.yaw));
 });
+
+
+test("road recovery preserves distance, mission time and earned progress", () => {
+ const c=new Driving();c.checkpoint=2;c.position.set(-510,.6,-700);c.elapsed=110;c.health=60;c.score=1000;
+ c.recoverToRoute();
+ assert.equal(c.position.x,-522.5);assert.equal(c.position.z,-700);
+ assert.ok(carFitsRoad(c.position,c.yaw));assert.equal(c.elapsed,110);assert.equal(c.health,60);
+ assert.equal(c.checkpoint,2);assert.equal(c.score,1000);assert.equal(c.speed,0);
+});
+
+test("navigation warns before a junction and keeps the turn instruction after checkpoint crossing", async () => {
+ const {routeCue}=await import('../src/driving.js');
+ assert.match(routeCue({x:0,z:100},0,0),/LEFT.*BRAKE/);
+ assert.match(routeCue({x:0,z:20},0,1),/LEFT NOW/);
+ assert.match(routeCue({x:-500,z:0},Math.PI/2,2),/RIGHT NOW/);
+});
