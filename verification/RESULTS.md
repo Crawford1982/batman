@@ -37,3 +37,7 @@ The final website archive includes corrected controls, road containment and full
 ## Replacement asset and live deployment — 7 September 2026
 
 visnik CC BY-NC-SA 3.0 Batmobile integrated, 116,146 triangles. Four animated wheel assemblies. All 15 unit tests, road-controls.mjs and ground.mjs passed. Production build and GitHub Pages workflow 34151888932 succeeded. live-domain.mjs loaded http://batman1989.co.uk with both models, confirmed Batmobile_body and four wheel assemblies, zero page/asset errors. HTTPS certificate pending; no 60 FPS or physical-device claim.
+
+## Driving and route polish
+
+16 unit checks passed, including 10 FPS versus 60 FPS driving distance and wall-clock elapsed time. Flight, ground, road-controls and route-clearance browser checks passed. Theatre and railway camera views inspected. Sampled ground views submitted approximately 172k to 220k triangles after spatial culling; these are not sustained FPS benchmarks. Physical phones/controllers remain unverified.
