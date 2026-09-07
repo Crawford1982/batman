@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#050b17" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+    <title>BATWING — Gotham After Dark</title>
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+    <div id="vignette"></div>
+    <main id="menu">
+      <div class="eyebrow">
+        WAYNE AEROSPACE <span>EXPERIMENTAL DIVISION / 1989</span>
+      </div>
+      <div class="menu-content">
+        <div class="edition">A GOTHAM CITY FLIGHT EXPERIENCE</div>
+        <h1>BATWING</h1>
+        <div class="subtitle">GOTHAM AFTER DARK</div>
+        <p class="intro">
+          The heating grid is under attack.<br />Twenty minutes. One city to
+          save.
+        </p>
+        <button id="start" disabled>INITIALIZING AIRCRAFT…</button
+        ><button id="start-ground">CHAPTER II / BATMOBILE →</button
+        ><button id="controls">FLIGHT MANUAL <span>↗</span></button>
+        <div class="settings">
+          <label
+            >VISUALS
+            <select id="quality">
+              <option value="auto">Adaptive</option>
+              <option value="high">High</option>
+              <option value="low">Performance</option>
+            </select></label
+          ><label class="sound"
+            ><input id="sound" type="checkbox" checked /> MUSIC & AUDIO</label
+          >
+        </div>
+        <div id="loading">Preparing Gotham…</div>
+      </div>
+      <footer>
+        <span>OPERATION SILENT BELL <i></i> STORY PATROL</span
+        ><span>MOUSE / CONTROLLER / TOUCH</span>
+      </footer>
+    </main>
+    <section id="manual" hidden>
+      <div class="panel">
+        <div class="edition">WAYNE AEROSPACE / PILOT BRIEFING</div>
+        <h2>Own the night.</h2>
+        <p>
+          Protect the heating grid during a 20-minute evacuation. Destroy three
+          red command relays and intercept bombers before they reach a shelter.
+          Follow the objective diamond. Fly through blue repair rings to restore
+          your armor. Buildings cause light damage; your Batwing glances off
+          surfaces with assisted recovery.
+        </p>
+        <div class="manual-grid">
+          <div>
+            <h3>MOUSE + KEYBOARD</h3>
+            <p>
+              Move mouse · steer<br />W / S · accelerate / brake<br />A / D ·
+              turn · ↑ / ↓ · pitch<br />Q / E · roll · Shift · boost<br />Click
+              / Space · cannons<br />Right click / F · homing missile<br />Esc /
+              P · pause
+            </p>
+          </div>
+          <div>
+            <h3>CONTROLLER</h3>
+            <p>
+              Left stick · steer<br />Right stick X · yaw<br />LB / RB · roll<br />RT
+              · cannons · A · missile<br />D-pad up/down · throttle<br />LT ·
+              boost · Start · pause
+            </p>
+            <h3>TOUCH</h3>
+            <p>
+              Left pad · steer<br />Right buttons · fire / missile / boost<br />+
+              / − · speed
+            </p>
+          </div>
+        </div>
+        <p><a href="./credits.html" target="_blank" rel="noopener">MODEL CREATORS & ASSET LICENCES</a></p>
+        <button id="close-manual">READY TO FLY</button>
+      </div>
+    </section>
+    <section id="hud" hidden>
+      <header>
+        <div class="brand">BATWING <small>TACTICAL SYSTEMS</small></div>
+        <div class="timer">
+          <small>EVACUATION WINDOW</small><strong id="timer">20:00</strong>
+        </div>
+        <button id="pause" aria-label="Pause game">Ⅱ</button>
+      </header>
+      <div id="mission-hud">
+        <div class="mission-kicker">OPERATION SILENT BELL</div>
+        <strong id="mission-order">DISABLE COMMAND RELAYS</strong>
+        <p id="mission-detail"></p>
+        <div class="city-status">
+          <span>CITY GRID <b id="city-value">100%</b></span>
+          <div><i id="city-bar"></i></div>
+        </div>
+        <small id="evac-status">EVACUATION 0% / RELAYS 0/3</small>
+      </div>
+      <div id="district-name"></div>
+      <div id="objective-marker" hidden>
+        <span>&#9671;</span><b id="objective-name"></b
+        ><small id="objective-distance"></small>
+      </div>
+      <div id="message">GOTHAM CITY · WINTER, 1989</div>
+      <div id="crosshair"><span></span></div>
+      <div id="target-label"></div>
+      <div class="bottom-hud">
+        <div class="armor">
+          <small>ARMOR INTEGRITY <b id="hp">100%</b></small>
+          <div class="track"><div id="health"></div></div>
+          <p id="weapon">CANNONS READY · MISSILES ONLINE</p>
+        </div>
+        <div class="telemetry">
+          <span><b id="speed">65</b> KTS</span
+          ><span><b id="alt">155</b> M</span>
+        </div>
+        <div class="score">
+          <small>DRONES NEUTRALIZED</small><strong id="kills">00</strong
+          ><span id="score">000000 PTS</span>
+        </div>
+      </div>
+      <div id="radar">
+        <div class="map-title">GOTHAM NAVIGATION <em>NORTH UP</em></div>
+        <canvas
+          width="420"
+          height="420"
+          aria-label="Gotham navigation map: white arrow is your aircraft, gold route leads to your objective"
+          role="img"
+        ></canvas>
+        <div id="map-destination">ACQUIRING ROUTE</div>
+        <div class="map-key">▲ YOU · <b>■ THREAT</b> · <i>○ REPAIR</i></div>
+      </div>
+      <div id="touch">
+        <div id="stick"><div></div></div>
+        <div class="touch-speed">
+          <button data-hold="up">+</button><button data-hold="down">−</button>
+        </div>
+        <div class="touch-actions">
+          <button data-hold="boost">BOOST</button
+          ><button id="touch-missile">MISSILE</button
+          ><button data-hold="fire">FIRE</button>
+        </div>
+      </div>
+    </section>
+    <section id="pause-menu" hidden>
+      <div class="panel compact">
+        <div class="edition">WAYNE AEROSPACE</div>
+        <h2 id="pause-title">Patrol paused.</h2>
+        <p id="pause-copy">Gotham can wait a moment.</p>
+        <button id="next-level" hidden>CONTINUE / THE FINAL MILE →</button
+        ><button id="resume">RESUME FLIGHT</button
+        ><button id="restart">NEW PATROL</button
+        ><button id="exit">RETURN TO HANGAR</button>
+      </div>
+    </section>
+    <div id="error" hidden></div>
+    <section id="briefing" hidden aria-label="Mission briefing">
+      <div class="cinema-top">
+        <span>WAYNE AEROSPACE / SECURE TRANSMISSION</span
+        ><span id="brief-location"></span>
+      </div>
+      <div class="cinema-copy">
+        <div id="brief-speaker"></div>
+        <h2 id="brief-title"></h2>
+        <p id="brief-text"></p>
+        <div class="brief-chapters"><i></i><i></i><i></i></div>
+      </div>
+      <div class="cinema-bottom">
+        <span>OPERATION SILENT BELL <b>20:00 TO EVACUATE</b></span
+        ><button id="skip-briefing">LAUNCH NOW &rarr;</button>
+      </div>
+    </section>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

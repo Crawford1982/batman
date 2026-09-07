@@ -1,0 +1,10 @@
+#hud #radar{display:block;width:230px;height:auto;bottom:150px;right:28px;border:1px solid #86a9bb66;border-radius:3px;background:#07131fed;overflow:hidden;box-shadow:0 4px 25px #0008}
+#hud #radar:before,#hud #radar:after{display:none}
+#radar .map-title{padding:9px 11px;font-size:9px;letter-spacing:2px;color:#bdd1dc;border-bottom:1px solid #7e9cac33;display:flex;justify-content:space-between}
+#radar .map-title em{font-style:normal;color:#7895a8;letter-spacing:1px;font-size:8px}
+#hud #radar canvas{width:100%;height:auto;display:block}
+#map-destination{padding:8px 10px;font-size:9px;letter-spacing:.5px;color:#efd299;border-top:1px solid #7e9cac33;min-height:29px}
+#radar .map-key{padding:0 10px 8px;font-size:8px;color:#aac2ce;letter-spacing:.3px}
+#radar .map-key b{color:#ff9980;font-weight:400}#radar .map-key i{color:#72d5dc;font-style:normal}
+@media(pointer:coarse),(max-width:700px){#hud #radar{display:block;top:108px;bottom:auto;right:14px;width:150px}#radar .map-title{padding:5px 7px;font-size:8px;letter-spacing:1px}#radar .map-title em{display:none}#map-destination{font-size:8px;padding:5px 6px;min-height:24px}#radar .map-key{font-size:7px;padding:0 6px 5px}}
+@media(max-height:550px){#hud #radar{top:76px;bottom:auto;right:15px;width:125px}#radar .map-title{display:none}#radar .map-key{display:none}#map-destination{font-size:7px;padding:4px;min-height:21px}}

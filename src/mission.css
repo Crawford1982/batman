@@ -1,0 +1,271 @@
+#briefing {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  background: linear-gradient(0deg, #020710ed, transparent 70%);
+}
+.cinema-top,
+.cinema-bottom {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background: #02060aee;
+  padding: 22px 4.5%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: #a6bbc8;
+}
+.cinema-top {
+  top: 0;
+  border-bottom: 1px solid #c7ab6b38;
+}
+.cinema-bottom {
+  bottom: 0;
+}
+.cinema-bottom b {
+  color: #c7ab6b;
+  font-weight: 400;
+  margin-left: 28px;
+}
+.cinema-bottom button {
+  pointer-events: auto;
+  background: transparent;
+  color: #dbc18b;
+  border-color: #c7ab6b60;
+  padding: 12px 20px;
+  font-size: 10px;
+}
+.cinema-copy {
+  position: absolute;
+  bottom: 125px;
+  left: 6%;
+  max-width: 680px;
+  animation: film-in 0.8s ease both;
+}
+#brief-speaker {
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: #d6bb85;
+}
+#brief-title {
+  font:
+    600 clamp(32px, 5.5vw, 76px)/1.05 "Barlow Condensed",
+    sans-serif;
+  letter-spacing: 2px;
+  margin: 20px 0;
+}
+#brief-text {
+  max-width: 560px;
+  color: #c6d4dc;
+  font-size: 16px;
+  line-height: 1.8;
+  text-shadow: 0 2px 5px #000;
+}
+.brief-chapters {
+  display: flex;
+  gap: 8px;
+  margin-top: 28px;
+}
+.brief-chapters i {
+  display: block;
+  height: 2px;
+  width: 65px;
+  background: #7392a344;
+}
+.brief-chapters i.active {
+  background: #d6bb85;
+  box-shadow: 0 0 10px #d6bb8560;
+}
+@keyframes film-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+#mission-hud {
+  position: absolute;
+  left: 32px;
+  top: 100px;
+  width: 250px;
+  padding: 16px;
+  background: linear-gradient(90deg, #05101be8, #05101b55);
+  border-left: 2px solid #c7ab6b90;
+}
+.mission-kicker {
+  color: #c7ab6b;
+  font-size: 8px;
+  letter-spacing: 2px;
+}
+#mission-order {
+  display: block;
+  font:
+    500 19px "Barlow Condensed",
+    sans-serif;
+  letter-spacing: 1px;
+  margin-top: 9px;
+}
+#mission-detail {
+  font-size: 10px;
+  line-height: 1.6;
+  color: #9eb6c4;
+  margin: 8px 0 14px;
+}
+.city-status > span {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: #b9cbd5;
+}
+.city-status > div {
+  height: 3px;
+  background: #66818b40;
+  margin: 8px 0;
+}
+.city-status i {
+  display: block;
+  height: 100%;
+  background: #ddbc7b;
+  width: 100%;
+  transition: width 0.4s;
+}
+#evac-status {
+  font-size: 8px;
+  letter-spacing: 0.8px;
+}
+#district-name {
+  position: absolute;
+  right: 32px;
+  top: 100px;
+  font-size: 10px;
+  letter-spacing: 3px;
+  color: #adbdc9;
+  text-shadow: 0 2px 5px #000;
+}
+#objective-marker {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #f3c480;
+  text-shadow: 0 2px 4px #000;
+  max-width: 180px;
+}
+#objective-marker > span {
+  display: block;
+  font: 40px Arial;
+  line-height: 1;
+}
+#objective-marker b {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+#objective-marker small {
+  font-size: 9px;
+  color: #efdbb9;
+  letter-spacing: 1px;
+}
+#hud #message {
+  top: 30%;
+}
+@media (max-width: 700px) {
+  #mission-hud {
+    top: 80px;
+    left: 16px;
+    width: 190px;
+    padding: 10px;
+  }
+  #mission-order {
+    font-size: 16px;
+  }
+  #mission-detail {
+    font-size: 9px;
+  }
+  #district-name {
+    top: 83px;
+    right: 16px;
+    font-size: 8px;
+    letter-spacing: 1px;
+  }
+  .cinema-top {
+    font-size: 8px;
+    padding: 16px;
+  }
+  .cinema-top > span:first-child {
+    display: none;
+  }
+  .cinema-copy {
+    bottom: 105px;
+    right: 6%;
+  }
+  #brief-text {
+    font-size: 13px;
+  }
+  .cinema-bottom {
+    padding: 16px;
+  }
+  .cinema-bottom > span {
+    font-size: 8px;
+  }
+  .cinema-bottom b {
+    display: none;
+  }
+  #objective-marker b {
+    font-size: 8px;
+  }
+}
+@media (max-height: 550px) {
+  .cinema-copy {
+    bottom: 75px;
+    max-width: 75%;
+  }
+  #brief-title {
+    font-size: 35px;
+    margin: 10px 0;
+  }
+  #brief-text {
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 8px 0;
+  }
+  .brief-chapters {
+    margin-top: 14px;
+  }
+  .cinema-top,
+  .cinema-bottom {
+    padding: 10px 4%;
+  }
+  #mission-hud {
+    top: 70px;
+    padding: 8px;
+    width: 210px;
+  }
+  #mission-detail {
+    display: none;
+  }
+  #mission-order {
+    font-size: 15px;
+    margin-top: 5px;
+  }
+  .city-status > span {
+    font-size: 8px;
+  }
+  .mission-kicker {
+    font-size: 7px;
+  }
+  #district-name {
+    top: 72px;
+  }
+  #hud #message {
+    top: 40%;
+    font-size: 9px;
+  }
+}

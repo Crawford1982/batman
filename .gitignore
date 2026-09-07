@@ -1,0 +1,11 @@
+node_modules/
+dist/
+verification/*.png
+verification/*.html
+batwing-website.zip
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db

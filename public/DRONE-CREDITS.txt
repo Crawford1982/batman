@@ -1,0 +1,5 @@
+General Atomics MQ-1 Predator UAV by VTX (https://sketchfab.com/VTX_car)
+Source: https://sketchfab.com/3d-models/general-atomics-mq-1-predator-uav-4ccb9e314d8540caa630ca286fe49d5f
+License: CC BY-NC-SA 4.0 — https://creativecommons.org/licenses/by-nc-sa/4.0/
+Modified for this game: reduced geometry, converted materials, added game lighting/equipment.
+This asset and its adaptations remain under CC BY-NC-SA 4.0.

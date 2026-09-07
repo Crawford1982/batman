@@ -1,0 +1,10 @@
+import { NodeIO } from '@gltf-transform/core';
+import { ALL_EXTENSIONS } from '@gltf-transform/extensions';
+import { dedup,weld,simplify,prune } from '@gltf-transform/functions';
+import { MeshoptSimplifier } from 'meshoptimizer';
+const io=new NodeIO().registerExtensions(ALL_EXTENSIONS);
+const doc=await io.read('../batmobile_jet_car_1989.glb');
+await MeshoptSimplifier.ready;
+await doc.transform(dedup(),weld(),simplify({simplifier:MeshoptSimplifier,ratio:.3,error:.001}),prune());
+await io.write('public/batmobile.glb',doc);
+console.log('Car triangles',doc.getRoot().listMeshes().reduce((n,m)=>n+m.listPrimitives().reduce((s,p)=>s+(p.getIndices()?.getCount()||p.getAttribute('POSITION').getCount())/3,0),0));

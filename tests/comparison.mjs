@@ -1,0 +1,2 @@
+import { chromium } from '@playwright/test';
+const b=await chromium.launch({channel:'msedge',headless:true});const p=await b.newPage({viewport:{width:1440,height:1100}});await p.goto('http://localhost:4173/verification/film-comparison.html');await p.waitForFunction(()=>[...document.images].every(i=>i.complete&&i.naturalWidth>0),{},{timeout:30000});await p.screenshot({path:'verification/film-comparison.png',fullPage:true});console.log('Comparison images loaded');await b.close();
