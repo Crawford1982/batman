@@ -1,6 +1,6 @@
-# Public release assessment — 7 September 2026
+# Public release assessment â€” 7 September 2026
 
-Current verdict: suitable for local review and controlled playtesting after the current fixes; not yet signed off for a broad public release. A bought domain supplies the address, not hosting or intellectual-property permission.
+Current verdict: a deployed development preview, not yet signed off as a finished release. GitHub Pages and Namecheap DNS are configured; HTTPS certificate issuance is pending.
 
 ## Implemented and checked
 
@@ -16,18 +16,13 @@ Current verdict: suitable for local review and controlled playtesting after the 
 1. Performance: profile the GTX 1650 and actual phones, measure sustained frame times through both chapters and optimize the slow cases. Target stable 60 FPS on the intended desktop tier and at least 30 FPS on supported phones, with an explicit minimum-device policy. Current Intel HD 4600 results fall short. No 60 FPS claim is justified yet.
 2. Gameplay: play both missions end to end in real time; verify all junctions, curb recovery, enemy timing, win/loss, retry and no soft locks. Check timer consistency at low FPS: physics currently caps simulation delta, so wall-clock mission duration can stretch on slow hardware.
 3. Compatibility: real Chrome/Edge/Firefox/Safari, iPhone/iPad Safari and Android Chrome; physical controller; portrait/landscape rotation, resize, focus loss, audio activation, loading failures and slow connections. Emulation does not replace these checks.
-4. Rights: review Batman/DC/Warner branding and vehicle-design use before public launch. Supplied car and aircraft files identify CC BY 4.0 creator licences; these do not establish that the uploader can grant all underlying franchise rights. Predator is CC BY-NC-SA 4.0; any commercial plan requires an appropriate replacement or permission. Keep full credits and modification notices. A fan-project disclaimer is not a substitute for permission.
+4. Rights: review Batman/DC/Warner branding and vehicle-design use before public launch. The Batwing identifies CC BY 4.0 and the replacement Batmobile is CC BY-NC-SA 3.0; these do not establish that the uploader can grant all underlying franchise rights. Predator is CC BY-NC-SA 4.0; any commercial plan requires an appropriate replacement or permission. Keep full credits and modification notices. A fan-project disclaimer is not a substitute for permission.
 5. Hosting: deploy a versioned preview to a static HTTPS host, test the actual domain/subfolder paths, MIME types, cache rules and GLB downloads, then connect DNS. Preserve existing email MX/TXT records. Keep a rollback build. Do not expose the local Vite development server as the public site.
 6. Launch basics: verify instructions, loading/retry messages, favicon/social preview, readable UI, privacy disclosure if analytics/cookies are introduced, and one final production smoke test. Current game needs no accounts, payments or backend.
 
-## Information needed from the owner
+## Hosting state
 
-- Exact domain and registrar/DNS provider.
-- Existing hosting account, or agreement on a static host.
-- Whether the game will be free without advertising, donations, sponsorship or payments; identify any commercial plan for the asset review.
-- Intended audience/devices and acceptable minimum performance.
-
-Use an authenticated provider session or scoped access when deployment is authorized; do not paste passwords into chat. No deployment or DNS mutation has been performed.
+Repository: Crawford1982/batman. Free game hosted on GitHub Pages at batman1989.co.uk through Namecheap BasicDNS. Public HTTP smoke test passed; HTTPS certificate pending. No accounts, payments or analytics added. See GITHUB-PAGES.md for exact settings.
 
 ## Source references
 
@@ -39,6 +34,6 @@ Use an authenticated provider session or scoped access when deployment is author
 These are release criteria, not a claim that all requirements have already passed.
 
 
-## Owner update: domain and hosting
+## Replacement car
 
-The owner has bought batman1989.co.uk through Namecheap and intends a free GitHub Pages game. Local preparation is in .github/workflows/pages.yml, public/CNAME and GITHUB-PAGES.md. GitHub username/repository are still needed. No remote repository, DNS change or deployment has been performed. The current car is still rejected for film fidelity; replacement is an unresolved release gate. See verification/car-candidates.html. The visnik candidate appears promising from its preview, but its download requires sign-in and it has not been integrated or validated.
+Downloaded and integrated visnik's 89 Batmobile from BlendSwap. It has a more faithful low front turbine, long fenders and sculpted fins. Browser PBR conversion, four wheel pivots, geometry optimization (116,146 triangles), licence notice and attribution are included. Collision half-width increased to 2.1 for the rear wheels. Road and full ground browser regressions passed. Visual inspection: verification/car-visnik.png. This is a closer fan model, not a claim of exact film-prop geometry.
