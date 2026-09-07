@@ -92,17 +92,23 @@ export class Driving {
     this.invulnerable = 1.5;
     return true;
   }
-  update(dt, input, buildings = [], constrainRoad = true) {
-    dt = clamp(dt, 0, 0.05);
-    this.elapsed += dt;
+  update(dt, input, buildings = [], constrainRoad = true, wallDt = dt) {
+    this.elapsed += Math.max(0, wallDt);
+    const duration = clamp(dt, 0, .25), steps = Math.max(1, Math.ceil(duration / (1/60)));
+    let passed = null;
+    for (let i=0;i<steps;i++) passed = this.step(duration/steps,input,buildings,constrainRoad) || passed;
+    return passed;
+  }
+  step(dt, input, buildings, constrainRoad) {
+
     this.invulnerable = Math.max(0, this.invulnerable - dt);
     this.emp = Math.max(0, this.emp - dt);
     this.steer +=
-      (clamp(input.steer || 0, -1, 1) - this.steer) * (1 - Math.exp(-dt * 7));
+      (clamp(input.steer || 0, -1, 1) - this.steer) * (1 - Math.exp(-dt * (input.steer ? 6 : 10)));
     const accel = input.accel || 0,
       brake = input.brake || 0,
       max = input.boost ? 70 : 46;
-    this.speed += accel * 27 * dt;
+    this.speed += accel * (input.boost ? 38 : 27) * dt;
     if (brake > 0) {
       if (this.speed > 1)
         this.speed = Math.max(0, this.speed - brake * 55 * dt);
@@ -117,7 +123,7 @@ export class Driving {
       this.steer *
       Math.sign(this.speed) *
       Math.min(Math.abs(this.speed) / 12, 1) *
-      (input.drift ? 1.9 : 1.08) *
+      (input.drift ? 1.65 : 1.3 - .42 * Math.min(Math.abs(this.speed)/70,1)) *
       dt;
     const old = this.position.clone();
     this.position.x -= Math.sin(this.yaw) * this.speed * dt;

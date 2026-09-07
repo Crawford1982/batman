@@ -477,9 +477,9 @@ const minimap = new Minimap(
   $("radar").querySelector("canvas"),
   world.buildings,
 );
-function update(dt) {
+function update(dt, wallDt = dt) {
   if (mode.startsWith("drive")) {
-    ground.update(dt);
+    ground.update(dt, wallDt);
     return;
   }
   const controls = input();
@@ -493,7 +493,7 @@ function update(dt) {
       controls.x = clamp(-delta * 2, -1, 1);
       controls.boost = false;
     }
-    elapsed += dt;
+    elapsed += wallDt;
     score += 0;
     missileCooldown = Math.max(0, missileCooldown - dt);
     flight.update(dt, controls);
@@ -588,7 +588,7 @@ function update(dt) {
     }
     updateProjectiles(dt);
     if (mode !== "play") return;
-    const raid = mission.update(dt, elapsed);
+    const raid = mission.update(wallDt, elapsed);
     if (raid) spawnBomber(raid);
     if (mission.city <= 0) {
       finish(
@@ -684,7 +684,7 @@ function frame(now) {
   const dt = Math.min(frameSeconds, 0.05);
   last = now;
   t += dt;
-  update(dt);
+  update(dt, Math.max(0, frameSeconds));
   renderer.info.reset();
   if (low) renderer.render(scene, camera);
   else composer.render();
@@ -694,6 +694,10 @@ function frame(now) {
     fps = frameCount / fpsTime;
     frameCount = 0;
     fpsTime = 0;
+    if ($("quality").value === "auto" && low && fps < 28 && (mode === "play" || mode === "drive")) {
+      renderer.setPixelRatio(Math.max(.6, renderer.getPixelRatio() * .85));
+      composer.setSize(innerWidth, innerHeight);
+    }
     if (
       $("quality").value === "auto" &&
       fps < 42 &&
@@ -701,7 +705,7 @@ function frame(now) {
       (mode === "play" || mode === "drive")
     ) {
       low = true;
-      renderer.setPixelRatio(1);
+      renderer.setPixelRatio(Math.min(1, 1280 / innerWidth));
       bloom.enabled = false;
       world.setQuality(true);
       composer.setSize(innerWidth, innerHeight);

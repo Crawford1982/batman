@@ -1,3 +1,4 @@
+import { RouteScenes } from "./route-scenes.js";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { Driving, DRIVE_ROUTE, driveSteering } from "./driving.js";
@@ -61,7 +62,7 @@ export class GroundLevel {
     this.wheels = [];
     document.body.insertAdjacentHTML(
       "beforeend",
-      `<section id="drive-load" hidden><div class="drive-film-top">WAYNE AEROSPACE <span>CHAPTER II / GROUND OPERATIONS</span></div><div class="drive-film-copy"><div class="edition">OPERATION SILENT BELL · THE FINAL MILE</div><h2>TAKE THE<br>STREETS BACK.</h2><p>The shelters are safe. The network is not.<br>Deliver the physical override to Gordon at the cathedral before the rogue drones reconnect.</p><div class="drive-load-track"><i id="drive-load-bar"></i></div><p id="drive-load-status">Preparing the Batmobile…</p><button id="drive-launch" disabled>LOADING VEHICLE</button><button id="drive-back">BACK TO CHAPTERS</button><div class="drive-help">W / S · accelerator / brake & reverse<br>A / D · steer · hold right mouse + move · steer · Shift · jet boost<br>Space · handbrake · F / click · EMP<br>Controller: left stick · RT / LT · A boost · X EMP</div></div></section><section id="drive-hud" hidden><header><div>BATMOBILE<small>CHAPTER II / THE FINAL MILE</small></div><div class="drive-clock"><small>NETWORK RECONNECT</small><strong id="drive-time">06:00</strong></div><button id="drive-pause">Ⅱ</button></header><div class="drive-objective"><small>DELIVER THE OVERRIDE</small><h3 id="drive-goal"></h3><p id="drive-progress"></p><p id="drive-turn"></p></div><div id="drive-radio"></div><div id="drive-waypoint"><b>◇</b><span id="drive-waypoint-text"></span></div><div id="drive-map"><canvas aria-label="Batmobile route map" role="img"></canvas><div id="drive-map-target"></div></div><div class="drive-bottom"><div><small>ARMOR <b id="drive-health">100%</b></small><div class="drive-armor"><i id="drive-armor-bar"></i></div><span id="drive-emp">EMP READY</span></div><div class="drive-speed"><b id="drive-speed">0</b><span>KM/H</span></div></div><div id="drive-touch"><div id="drive-stick"><i></i></div><div class="drive-pedals"><button data-drive="brake">BRAKE</button><button data-drive="accel">GAS</button><button data-drive="boost">BOOST</button><button id="drive-touch-emp">EMP</button></div></div><button id="drive-reset">RESET TO ROAD · R</button></section>`,
+      `<section id="drive-load" hidden><div class="drive-film-top">WAYNE AEROSPACE <span>CHAPTER II / GROUND OPERATIONS</span></div><div class="drive-film-copy"><div class="edition">OPERATION SILENT BELL · THE FINAL MILE</div><h2>TAKE THE<br>STREETS BACK.</h2><p>The shelters have five minutes of reserve heat.<br>The rogue network is reconnecting. Take the encrypted override through the theatre district and beneath the elevated railway. Gordon is waiting at the cathedral.<br><br>Keep moving when the red strike marker appears. Use EMP to break the attack.</p><div class="drive-load-track"><i id="drive-load-bar"></i></div><p id="drive-load-status">Preparing the Batmobile…</p><button id="drive-launch" disabled>LOADING VEHICLE</button><button id="drive-back">BACK TO CHAPTERS</button><div class="drive-help">W / S · accelerator / brake & reverse<br>A / D · steer · hold right mouse + move · steer · Shift · jet boost<br>Space · handbrake · F / click · EMP<br>Controller: left stick · RT / LT · A boost · X EMP</div></div></section><section id="drive-hud" hidden><header><div>BATMOBILE<small>CHAPTER II / THE FINAL MILE</small></div><div class="drive-clock"><small>NETWORK RECONNECT</small><strong id="drive-time">05:00</strong></div><button id="drive-pause">Ⅱ</button></header><div class="drive-objective"><small>DELIVER THE OVERRIDE</small><h3 id="drive-goal"></h3><p id="drive-progress"></p><p id="drive-turn"></p></div><div id="drive-radio"></div><div id="drive-waypoint"><b>◇</b><span id="drive-waypoint-text"></span></div><div id="drive-map"><canvas aria-label="Batmobile route map" role="img"></canvas><div id="drive-map-target"></div></div><div class="drive-bottom"><div><small>ARMOR <b id="drive-health">100%</b></small><div class="drive-armor"><i id="drive-armor-bar"></i></div><span id="drive-emp">EMP READY</span></div><div class="drive-speed"><b id="drive-speed">0</b><span>KM/H</span></div></div><div id="drive-touch"><div id="drive-stick"><i></i></div><div class="drive-pedals"><button data-drive="brake">BRAKE</button><button data-drive="accel">GAS</button><button data-drive="boost">BOOST</button><button id="drive-touch-emp">EMP</button></div></div><button id="drive-reset">RESET TO ROAD · R</button></section>`,
     );
     $("drive-launch").onclick = () => this.start();
     $("drive-back").onclick = () => {
@@ -187,6 +188,7 @@ export class GroundLevel {
     this.effects = new GroundEffects(this.group);
     this.streets = new StreetDetail(this.group);
     this.makeStreets();
+    this.routeScenes = new RouteScenes(this.group);
     this.obstacles = [...this.world.buildings, ...this.streets.colliders];
     this.saveQuaternion = new T.Quaternion();
     this.cameraOffset = new T.Vector3();
@@ -536,7 +538,7 @@ export class GroundLevel {
     if (k.KeyF || this.mouse.fire) this.emp();
     return { steer, accel, brake, boost, drift };
   }
-  update(dt) {
+  update(dt, wallDt = dt) {
     const input = this.controls();
     if (this.phase === "paused" || this.phase === "ended") return;
     this.time += dt;
@@ -553,7 +555,7 @@ export class GroundLevel {
     }
     if (this.phase === "play") {
       const oldHealth = this.car.health,
-        passed = this.car.update(dt, input, this.obstacles);
+        passed = this.car.update(Math.min(wallDt,.25), input, this.obstacles, true, wallDt);
       if (passed) {
         this.audio.shot(true);
         this.radio(passed.line);
@@ -571,8 +573,8 @@ export class GroundLevel {
           }
         }
       }
-      this.disabled = Math.max(0, this.disabled - dt);
-      this.attackTimer -= dt;
+      this.disabled = Math.max(0, this.disabled - wallDt);
+      this.attackTimer -= wallDt;
       this.drones.forEach((d, i) => {
         const a=this.time*.38+i*Math.PI;
         const entry=Math.max(0,1-this.time/5)*100;
@@ -591,9 +593,9 @@ export class GroundLevel {
       }
       this.mines.forEach(m=>{if(m.userData.light)m.userData.light.visible=Math.sin(this.time*5+m.position.z)>.1;});
       this.effects.target(this.drones[0].position,this.strike.position,this.strikeTime>0);
-      if (this.attackTimer <= 0 && this.disabled <= 0) {
-        this.attackTimer = 9;
-        this.strikeTime = 1.8;
+      if (this.attackTimer <= 0 && this.disabled <= 0 && this.car.elapsed > 15) {
+        this.attackTimer = this.car.checkpoint < 2 ? 11 : this.car.checkpoint < 4 ? 8 : 6;
+        this.strikeTime = this.car.checkpoint < 2 ? 2.6 : 2.1;
         this.strike.position
           .copy(this.car.position)
           .add(
@@ -608,7 +610,7 @@ export class GroundLevel {
         this.radio("THREAT / Drone strike marked. Keep moving or use EMP.");
       }
       if (this.strikeTime > 0) {
-        this.strikeTime -= dt;
+        this.strikeTime -= wallDt;
         this.strike.material.opacity = 0.45 + Math.sin(this.time * 20) * 0.3;
         if (this.strikeTime <= 0) {
           if (this.car.position.distanceTo(this.strike.position) < 8)
@@ -624,7 +626,7 @@ export class GroundLevel {
         document.body.classList.add("hit");
         setTimeout(() => document.body.classList.remove("hit"), 200);
       }
-      if (this.car.health <= 0 || this.car.elapsed >= 360) {
+      if (this.car.health <= 0 || this.car.elapsed >= 300) {
         this.finish(false);
         return;
       }
@@ -640,22 +642,22 @@ export class GroundLevel {
       for (const w of this.wheels)
         w.mesh.rotation.x = w.rotation + this.wheelSpin;
       this.cameraOffset
-        .set(0, 2.9, input.boost ? 16 : 13)
+        .set(-this.car.steer * Math.min(Math.abs(this.car.speed)/25,1)*1.2, 3.1, input.boost ? 15 : 12.5)
         .applyAxisAngle(new T.Vector3(0, 1, 0), this.car.yaw)
         .add(this.car.position);
       this.camera.position.lerp(this.cameraOffset, 1 - Math.exp(-dt * 6));
       this.look
-        .set(0, 1, -15)
+        .set(-this.car.steer*3, 1.1, -17)
         .applyAxisAngle(new T.Vector3(0, 1, 0), this.car.yaw)
         .add(this.car.position);
       this.camera.up.set(0, 1, 0);
       this.shake = Math.max(0,(this.shake||0)-dt);
       this.camera.position.x += Math.sin(this.time*75)*this.shake*.35;
       this.camera.lookAt(this.look);
-      this.camera.fov += ((input.boost ? 62 : 54) - this.camera.fov) * dt * 2;
+      this.camera.fov += ((input.boost ? 62 : 54) - this.camera.fov) * (1-Math.exp(-dt*2));
       this.camera.fov = clamp(this.camera.fov, 48, 70);
       this.camera.updateProjectionMatrix();
-      const left = Math.max(0, Math.ceil(360 - this.car.elapsed));
+      const left = Math.max(0, Math.ceil(300 - this.car.elapsed));
       $("drive-time").textContent =
         `${String(Math.floor(left / 60)).padStart(2, "0")}:${String(left % 60).padStart(2, "0")}`;
       $("drive-speed").textContent = Math.round(Math.abs(this.car.speed) * 3.6);
@@ -706,6 +708,7 @@ export class GroundLevel {
     this.pulse.material.opacity = this.pulseLife;
     $("drive-radio").style.opacity = this.time < this.messageUntil ? 1 : 0;
     this.streets.update(this.time, this.car.position);
+    this.routeScenes.update(this.car.position);
     this.world.update(dt, this.car.position, this.time);
     this.world.moon.position
       .copy(this.camera.position)

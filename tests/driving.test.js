@@ -59,3 +59,14 @@ test("checkpoint sequence completes and reset clears progress", () => {
   assert.equal(c.checkpoint, 0);
   assert.equal(c.health, 100);
 });
+
+test("low frame rates preserve mission time and stable car motion",()=>{
+ const a=new Driving(),b=new Driving();
+ for(let i=0;i<120;i++)a.update(1/60,{accel:1});
+ for(let i=0;i<20;i++)b.update(.1,{accel:1});
+ assert.ok(Math.abs(a.elapsed-b.elapsed)<1e-8);
+ assert.ok(Math.abs(a.position.z-b.position.z)<.1);
+ const before=b.elapsed;b.update(.05,{},[],true,1.5);
+ assert.ok(Math.abs(b.elapsed-before-1.5)<1e-8);
+ assert.ok(carFitsRoad(b.position,b.yaw));
+});

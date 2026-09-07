@@ -38,7 +38,7 @@ Latest verification: 9 unit tests plus browser scenarios for briefing/skip, rela
 
 ## Chapter II â€” The Final Mile
 
-Choose CHAPTER II / BATMOBILE from the menu, or continue after winning the flight chapter. A dedicated loading screen introduces the mission and loads the supplied 1989 Batmobile only when needed. Deliver the physical network override to Gordon at the cathedral through six ordered route checkpoints before the six-minute reconnect timer expires. Gold markers and the minimap show the route. Checkpoints repair light damage. Road mines and telegraphed drone strikes threaten the car; EMP clears nearby mines and suppresses drones for five seconds, with a six-second cooldown.
+Choose CHAPTER II / BATMOBILE from the menu, or continue after winning the flight chapter. A dedicated loading screen introduces the mission and loads the supplied 1989 Batmobile only when needed. Deliver the physical network override to Gordon at the cathedral through six ordered route checkpoints before the five-minute reconnect timer expires. Gold markers and the minimap show the route. Checkpoints repair light damage. Road mines and telegraphed drone strikes threaten the car; EMP clears nearby mines and suppresses drones for five seconds, with a six-second cooldown.
 
 Driving: W/Up accelerates; S/Down brakes then reverses. A/D or left/right arrows steer. For mouse steering, hold the right mouse button and move relative to where you pressed; release to stop steering. Passive mouse movement does not steer. Shift boosts, Space is the handbrake, F or click fires EMP, R resets to the last route checkpoint without resetting the timer. Esc/P pauses. Standard controller: left stick steering, RT gas, LT brake/reverse, A boost, B handbrake, X EMP, Start pause. Touch uses the steering pad and GAS/BRAKE/BOOST/EMP buttons.
 
@@ -65,3 +65,9 @@ The whole Batmobile footprint is constrained to the road network, with sliding/d
 ## Replacement Batmobile
 
 The current car is visnik’s 89 Batmobile, downloaded from https://blendswap.com/blend/10625 under CC BY-NC-SA 3.0. The adapted GLB keeps that licence. Original licence and attribution are included in public. To regenerate, extract the original blend to ../assets-source/visnik, run scripts/convert-visnik-car.py with Blender (background, disable-autoexec), then node scripts/prepare-visnik-car.mjs. No Blender installation is required to play or build.
+
+## Focused polish pass
+
+Mission countdowns use active wall-clock time; pause and hidden tabs pause the mission. Ground physics substeps preserve motion across normal low-frame-rate conditions, with a 250 ms simulation catch-up cap for long stalls. Driving has speed-sensitive steering, faster recentring and stronger boost acceleration; chase camera looks into turns. Drone strikes start after a quiet opening, with longer initial warnings and escalating cadence by route progress. Monarch Theatre, the elevated transit line and cathedral command entrance provide distinct route landmarks.
+
+City instances are spatially batched and distance-culled; Adaptive can reduce render resolution further on slow devices. This reduces submitted geometry but does not guarantee 60 FPS. Briefings retain captioned mission text and the original synthesized score.

@@ -138,6 +138,25 @@ export function createWorld(scene) {
     beacons.setMatrixAt(i, dummy.matrix);
   });
   scene.add(antennas, beacons);
+  // Spatial instance batches allow the GPU to skip whole distant city blocks.
+  const cityCells = [];
+  for (const source of [blocks, roofs, tops, antennas, beacons]) {
+    const cells = new Map(), matrix = new T.Matrix4(), color = new T.Color();
+    for (let i=0;i<source.count;i++) {
+      source.getMatrixAt(i,matrix);
+      const x=Math.floor(matrix.elements[12]/700), z=Math.floor(matrix.elements[14]/700), key=x+','+z;
+      if (!cells.has(key)) cells.set(key,{x:(x+.5)*700,z:(z+.5)*700,indices:[]});
+      cells.get(key).indices.push(i);
+    }
+    scene.remove(source);
+    for (const cell of cells.values()) {
+      const mesh=new T.InstancedMesh(source.geometry,source.material,cell.indices.length);
+      cell.indices.forEach((i,j)=>{source.getMatrixAt(i,matrix);mesh.setMatrixAt(j,matrix);if(source.instanceColor){source.getColorAt(i,color);mesh.setColorAt(j,color);}});
+      mesh.computeBoundingSphere();scene.add(mesh);cityCells.push({mesh,x:cell.x,z:cell.z});
+    }
+    source.dispose();
+  }
+
 
   const ground = new T.Mesh(
     new T.PlaneGeometry(8000, 8000),
@@ -328,6 +347,7 @@ export function createWorld(scene) {
       mat.emissiveIntensity = 0.15 + (0.5 * value) / 100;
     },
     update(dt, pos, t) {
+      for (const cell of cityCells) cell.mesh.visible=Math.hypot(cell.x-pos.x,cell.z-pos.z)<(pos.y<25?1450:2700);
       districts.update(t);
       sky.position.copy(pos);
       sky.material.uniforms.time.value = t;
