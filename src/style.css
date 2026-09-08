@@ -667,3 +667,16 @@ body.hit #vignette {
 footer a{color:inherit;text-decoration:underline;text-underline-offset:4px;pointer-events:auto} .no-script{position:fixed;z-index:99;inset:0;background:#08111f;padding:15vh 8%;color:#fff}.no-script a{color:#efc986}
 
 @media (min-height:551px) and (max-height:700px){.menu-content{top:18%}.menu-content h1{font-size:96px}.intro{margin:18px 0}.settings{margin-top:6px}}
+
+/* Chapter presentation uses only composited UI; no extra scene geometry. */
+#chapter-card {position:absolute;z-index:7;top:22%;left:50%;transform:translateX(-50%);width:min(650px,85vw);text-align:center;pointer-events:none;text-shadow:0 3px 18px #000;background:linear-gradient(90deg,transparent,#020812bb,transparent);padding:18px 12px;animation:chapter-reveal 3.8s ease both}
+#chapter-card small {display:block;color:#dfc58c;font-size:10px;letter-spacing:3px;margin-bottom:8px}
+#chapter-card strong {font:500 clamp(24px,4vw,46px)/1.1 "Barlow Condensed",sans-serif;color:#edf3f6}
+@keyframes chapter-reveal {0%{opacity:0;translate:0 8px}15%,75%{opacity:1;translate:0 0}100%{opacity:0}}
+#chapter-results {display:grid;grid-template-columns:1fr 1fr;gap:16px 20px;border-block:1px solid #c3a36155;padding:18px 0;margin:18px 0}
+#chapter-results small {display:block;color:#91a9b9;font-size:9px;letter-spacing:1.5px;margin-bottom:5px}
+#chapter-results strong {display:block;color:#ddc38d;font-size:14px}
+#pause-menu:has(#chapter-results:not([hidden])) .compact {max-width:580px;animation:film-in .45s ease both}
+#drive-turn.turn-urgent {color:#ffe0a0;font-size:14px;border-left:3px solid #e5bd69;padding:8px;background:#0a111bd9}
+@media(max-height:500px){#chapter-card{top:16%;padding:8px}#chapter-results{gap:8px;padding:10px 0;margin:10px 0}}
+@media(prefers-reduced-motion:reduce){#chapter-card,#pause-menu .compact{animation:none!important}}

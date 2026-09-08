@@ -1,3 +1,4 @@
+import { chapterCard, clearPresentation, showResults } from "./presentation.js";
 import { updateEnemy } from "./enemy-ai.js";
 import { GroundLevel } from "./ground-level.js";
 import { Minimap } from "./minimap.js";
@@ -236,6 +237,7 @@ function damage(n) {
   }
 }
 function start() {
+  clearPresentation();
   window.gothamAnalytics?.event("level_start",{level_name:"batwing"});
   audio.stopVoice();
   hitUntil = 0;
@@ -253,7 +255,7 @@ function start() {
   score = 0;
   kills = 0;
   missileCooldown = 0;
-  spawnTimer = 0;
+  spawnTimer = 25;
   mouse.x = mouse.y = 0;
   mouse.active = false;
   mode = "play";
@@ -265,8 +267,8 @@ function start() {
   player.quaternion.copy(flight.quaternion);
   camera.position.copy(flight.position).add(new T.Vector3(0, 10, 30));
   audio.start();
-  notice("ALFRED / Incoming raid. Intercept bombers; red relays are their command network.", 7);
-  for (let i = 0; i < 2; i++) spawn();
+  chapterCard("CHAPTER I / OPERATION SILENT BELL", "A guardian above Gotham");
+  notice("ALFRED / The city is quiet. Get your bearings. Follow the gold heading marker.", 7);
 }
 function pause() {
   if (mode.startsWith("drive")) {
@@ -274,6 +276,7 @@ function pause() {
     return;
   }
   if (mode === "play") {
+    clearPresentation();
     mode = "paused";
     $("pause-title").textContent = "Patrol paused.";
     $("pause-copy").textContent = "Gotham can wait a moment.";
@@ -286,12 +289,14 @@ function pause() {
   }
 }
 function finish(win, reason = "") {
+  $("hud").hidden = true;
+  showResults("batwing", win, elapsed, score, flight.health, `${kills} targets / ${mission.disabled} relays`);
   window.gothamAnalytics?.event("level_end",{level_name:"batwing",success:win,elapsed_seconds:elapsed,score});
   $("next-level").hidden = !win;
   mode = "ended";
   $("pause-title").textContent = win ? "The night is yours." : "Signal lost.";
   $("pause-copy").textContent =
-    `${kills} drones neutralized · ${score.toLocaleString()} points · ${Math.floor(elapsed / 60)} minutes on patrol. ${reason || (win ? "Evacuation complete. The heating grid is secure." : "The Batwing is down. Gotham needs its guardian.")}`;
+    reason || (win ? "The skies are clear. Take the encrypted override to Gordon at the cathedral." : "The Batwing is down. Gotham needs its guardian.");
   $("resume").hidden = true;
   $("pause-menu").hidden = false;
 }
@@ -302,6 +307,7 @@ $("resume").onclick = pause;
 $("restart").onclick = () =>
   mode.startsWith("drive") ? ground.start() : start();
 $("exit").onclick = () => {
+  clearPresentation();
   audio.stopVoice();
   ground.hide();
   $("next-level").hidden = true;
@@ -548,8 +554,8 @@ function update(dt, wallDt = dt) {
     if (controls.fire) shoot();
     spawnTimer -= dt;
     if (
-      spawnTimer <= 0 &&
-      enemies.filter(e=>e.kind !== "bomber").length < (mission.phase === "intercept" ? 2 : mission.phase === "defend" ? 3 : 4)
+      mission.phase !== "patrol" && mission.phase !== "defend" && spawnTimer <= 0 &&
+      enemies.filter(e=>e.kind !== "bomber").length < 2
     ) {
       spawn();
       spawnTimer = mission.phase === "defend" ? 12 : 18;
@@ -584,9 +590,12 @@ function update(dt, wallDt = dt) {
     if (mode !== "play") return;
     const previousPhase = mission.phase;
     const raid = mission.update(wallDt, elapsed, enemies.filter(e=>e.kind === 'bomber').length);
-    if (mission.phase !== previousPhase) notice(mission.phase === 'defend'
+    if (mission.phase !== previousPhase) {
+      chapterCard(mission.phase === 'defend' ? '03 / FINAL ATTACK' : '02 / INTERCEPTION', mission.phase === 'defend' ? 'Hold the evacuation corridor' : 'Break the rogue network');
+      notice(mission.phase === 'defend'
       ? 'GORDON / Relays offline. Final evacuation underway. Stop the last three bombers.'
       : 'ALFRED / Attack source identified. Disable the three red command relays.', 8);
+    }
     if (raid) spawnBomber(raid);
     if (mission.city <= 0) {
       finish(
@@ -773,6 +782,7 @@ if (testMode)
   });
 
 function beginBriefing() {
+  clearPresentation();
   audio.stopVoice();
   ground.hide();
   $("next-level").hidden = true;
@@ -931,23 +941,23 @@ function updateMissionHUD() {
     flight.position.x,
     flight.position.z,
   );
-  $("mission-order").textContent = bomber
+  $("mission-order").textContent = mission.phase === "patrol" ? "PATROL / GET YOUR BEARINGS" : bomber
     ? "INTERCEPT INBOUND BOMBER"
     : mission.disabled < 3
       ? "DISABLE COMMAND RELAYS"
       : "DEFEND THE EVACUATION";
-  $("mission-detail").textContent = bomber
+  $("mission-detail").textContent = mission.phase === "patrol" ? "Enjoy the skyline. An incoming transmission will identify the threat." : bomber
     ? `${objective.name} under threat. ${Math.ceil(objective.mesh.position.distanceTo(objective.destination) / 12)}s to impact.`
     : mission.disabled < 3
       ? "Destroy the red uplinks. Cannons and homing missiles both work."
-      : "Stop the last bombers. Clear the skies to complete the evacuation early.";
+      : "Three final bombers. No reinforcements. Clear the evacuation corridor.";
   $("city-value").textContent = mission.city + "%";
   $("city-bar").style.width = mission.city + "%";
   $("city-bar").style.background = mission.city < 40 ? "#ff7358" : "#ddbc7b";
   $("evac-status").textContent =
     mission.phase === 'defend'
       ? `PHASE 3 / HOLD ${Math.max(0, Math.ceil(FINAL_DEFENCE-(elapsed-mission.finalStarted)))}s · RAID ${mission.finalRaids}/3`
-      : `PHASE ${mission.phase === 'intercept' ? '1 / INTERCEPT' : '2 / SABOTAGE'} · RELAYS ${mission.disabled}/3`;
+      : `${mission.phase === 'patrol' ? '01 / PATROL' : '02 / INTERCEPTION'} · RELAYS ${mission.disabled}/3`;
   $("objective-marker").hidden = !objective;
   if (objective) {
     const projected = objective.mesh.position.clone().project(camera);

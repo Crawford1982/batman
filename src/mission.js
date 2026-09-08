@@ -2,7 +2,7 @@ import * as T from "three";
 import { RELAY_SITES } from "./districts.js";
 
 export const FLIGHT_DURATION = 600;
-export const FINAL_DEFENCE = 90;
+export const FINAL_DEFENCE = 45;
 
 export class Mission {
   constructor(scene) {
@@ -34,8 +34,8 @@ export class Mission {
   }
   reset() {
     this.city = 100;
-    this.nextRaid = 12;
-    this.phase = "intercept";
+    this.nextRaid = 0;
+    this.phase = "patrol";
     this.finalStarted = null;
     this.finalRaids = 0;
     this.raid = 0;
@@ -61,18 +61,19 @@ export class Mission {
   update(dt, elapsed, bombers = 0) {
     if (this.disabled === 3 && elapsed >= 60 && this.finalStarted === null) {
       this.phase = 'defend'; this.finalStarted = elapsed; this.nextRaid = 0;
-    } else if (this.finalStarted === null) this.phase = elapsed < 60 ? 'intercept' : 'sabotage';
+    } else if (this.finalStarted === null) this.phase = elapsed < 25 ? 'patrol' : 'intercept';
     for (const r of this.remaining) {
       r.core.rotation.y += dt;
       r.ring.rotation.z += dt * 0.4;
     }
+    if (this.phase === "patrol") return null;
     this.nextRaid -= dt;
     if (this.nextRaid <= 0 && bombers < 3) {
       if (this.phase === 'defend') {
         if (this.finalRaids >= 3) return null;
         this.finalRaids++;
         this.nextRaid = 14;
-      } else this.nextRaid = this.phase === 'intercept' ? 42 : 65 + this.disabled * 14;
+      } else this.nextRaid = 65 + this.disabled * 14;
       return RELAY_SITES[this.raid++ % RELAY_SITES.length];
     }
     return null;

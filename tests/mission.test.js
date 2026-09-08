@@ -64,11 +64,16 @@ test('final defence is finite, requires clear skies and resets cleanly',()=>{
  assert.equal(m.update(100,188),null);assert.equal(m.finalRaids,3);
  assert.equal(m.outcome(600,0),'lost');
  assert.equal(m.outcome(188,1),null);assert.equal(m.outcome(188,0),'won');
- m.reset();assert.equal(m.phase,'intercept');assert.equal(m.finalStarted,null);
+ m.reset();assert.equal(m.phase,'patrol');assert.equal(m.finalStarted,null);
  assert.equal(m.outcome(600,0),'lost');
 });
 test('a full bomber roster does not consume final raid spawns',()=>{
  const m=new Mission(new Scene());m.relays.forEach(r=>r.hp=0);
  assert.equal(m.update(60,60,3),null);assert.equal(m.finalRaids,0);
  assert.ok(m.update(1,61,2));assert.equal(m.finalRaids,1);
+});
+
+test('opening patrol is quiet, interception begins at 25 seconds',()=>{
+ const m=new Mission(new Scene()); assert.equal(m.update(24,24),null); assert.equal(m.phase,'patrol');
+ assert.ok(m.update(1,25)); assert.equal(m.phase,'intercept');
 });

@@ -30,7 +30,7 @@ await page.waitForFunction(()=>window.__batwing.state.elapsed>1.1);
 let s = await page.evaluate(() => window.__batwing.state);
 assert.equal(s.mode, "play");
 assert.ok(s.elapsed > 1);
-assert.ok(s.enemies >= 2);
+assert.equal(s.enemies, 0, "opening patrol has no enemies");
 assert.ok(s.position.every(Number.isFinite));
 await page.screenshot({ path: "verification/flight.png" });
 await page.keyboard.press("Escape");

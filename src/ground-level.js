@@ -1,3 +1,4 @@
+import { chapterCard, clearPresentation, showResults } from "./presentation.js";
 import { JunctionGuide } from "./junction-guide.js";
 import { RouteScenes } from "./route-scenes.js";
 import * as T from "three";
@@ -404,6 +405,8 @@ export class GroundLevel {
   start() {
     if (!this.ready) return;
     window.gothamAnalytics?.event("level_start",{level_name:"batmobile"});
+    clearPresentation();
+    chapterCard("CHAPTER II / THE FINAL MILE", "Bring Gotham back online");
     this.car.reset();
     this.wheelSpin = 0;
     this.effects.reset();
@@ -442,6 +445,7 @@ export class GroundLevel {
   }
   pause() {
     if (this.phase === "play") {
+      clearPresentation();
       this.phase = "paused";
       this.mouse.steering = false;
       this.mouse.fire = false;
@@ -459,6 +463,8 @@ export class GroundLevel {
     }
   }
   finish(win) {
+    $("drive-hud").hidden = true;
+    showResults("batmobile", win, this.car.elapsed, this.car.score, this.car.health, `${this.car.checkpoint} / ${DRIVE_ROUTE.length} checkpoints`);
     window.gothamAnalytics?.event("level_end",{level_name:"batmobile",success:win,elapsed_seconds:this.car.elapsed,score:this.car.score});
     this.phase = "ended";
     this.onMode("driveEnded");
@@ -466,7 +472,7 @@ export class GroundLevel {
       ? "Gotham is back online."
       : "The override is lost.";
     $("pause-copy").textContent = win
-      ? `Gordon has the core. The drones are grounded. ${this.car.score} points · ${Math.floor(this.car.elapsed / 60)}m ${Math.floor(this.car.elapsed % 60)}s. Both chapters complete.`
+      ? `Gordon has the core. The drones are grounded. ${this.car.score} points · ${Math.floor(this.car.elapsed / 60)}m ${Math.floor(this.car.elapsed % 60)}s. The cathedral is safe. Operation Silent Bell complete.`
       : this.car.health <= 0
         ? "The Batmobile is disabled. Use EMP against mines and marked drone strikes."
         : "The rogue network reconnected. Follow the route and use jet boost on the straights.";
@@ -685,6 +691,8 @@ export class GroundLevel {
       $("drive-goal").textContent = goal.name;
       $("drive-progress").textContent =
         `ROUTE ${this.car.checkpoint + 1} / ${DRIVE_ROUTE.length} · ${Math.round(Math.hypot(goal.x - this.car.position.x, goal.z - this.car.position.z))} M`;
+      const turnDistance = Math.hypot(goal.x-this.car.position.x, goal.z-this.car.position.z);
+      $("drive-turn").classList.toggle("turn-urgent", turnDistance < 130 || this.car.roadContact);
       $("drive-turn").textContent = this.car.roadContact ? "CURB CONTACT · steer back into the lane" :
         routeCue(this.car.position, this.car.yaw, this.car.checkpoint);
       this.map.update(this.car, this.mapMission, [], [], this.time);

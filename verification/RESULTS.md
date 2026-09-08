@@ -89,3 +89,7 @@ analytics.mjs passed with all external requests intercepted: no Google tag befor
 
 ## Google measurement setup — 8 September 2026
 Deployment 34232836611 succeeded (5bfd8d4). GA4 property 553126859 / G-DE3DJK44V4 connected. Live about page check: zero GA collection before consent; consented page_view accepted HTTP 204 with correct ID. Search Console HTML-tag ownership verified; sitemap status Success, 3 discovered pages. Indexing and dashboard aggregation remain pending. Automated consent tests and production build passed before deployment.
+
+
+## Focused campaign polish — 9 September 2026
+Quiet 25-second patrol, interception with two ambient fighters maximum, finite final bomber raid with 45-second hold (previously 90), chapter cards, prominent near-turn cues, completion scorecards and locally saved best times/scores. Existing physics and assets preserved. 23 unit tests, flight desktop/mobile regression, ground keyboard/touch/EMP/restart/transition regression, SEO checks and production build passed. Presentation regression verified scorecards, replay/pause cleanup and portrait layout; fixed stale HUD overflow after resize by hiding gameplay HUDs on completion. Headless frame rates are not physical-device performance certification.
