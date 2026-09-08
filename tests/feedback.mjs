@@ -6,7 +6,7 @@ p.on('pageerror',e=>errors.push(e.message));
 await p.goto((process.env.GAME_URL || 'http://localhost:4173')+'/?test=1');
 await p.waitForFunction(()=>window.__batwing?.ready);
 const result=await p.evaluate(()=>{
- const g=window.__batwing;g.start();
+ const g=window.__batwing;g.start();g.step(.2);
  for(const e of g.enemies)e.mesh.removeFromParent();g.enemies.length=0;
  g.spawnBomber(g.mission.relays[0]);const enemy=g.enemies[0];
  enemy.mesh.position.copy(g.flight.position).addScaledVector(g.flight.forward,150);

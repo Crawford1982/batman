@@ -53,3 +53,5 @@ Published game commit 7d4504a via successful GitHub Pages run 34157594144. Live-
 ## Target feedback and junction guidance — 8 September 2026
 
 Added target type/range/armour, a brief reticle flash and quiet rate-limited confirmation sound on actual weapon hits. Added merged gold road arrows before junctions, retained briefly after checkpoint crossing. Controls and physics unchanged. Twenty unit tests and production build passed. Flight and ground browser regressions passed, including touch controls. feedback.mjs verified actual cannon damage updates armour and reticle, target loss hides armour, and nearby junction guidance remains visible after crossing. Both feature screenshots inspected. Browser-emulated performance samples are not physical-device benchmarks; user reports both chapters felt good on their phone on 7 September.
+
+Published 77f9140 through successful Pages run 34223627187. feedback.mjs also passes against the public domain after explicitly advancing past the initial cannon cooldown in its setup. Zero page errors.
