@@ -660,3 +660,6 @@ body.hit #vignette {
 #target-armour i {display:block;height:100%;background:#efc986;transition:width .12s ease-out}
 #crosshair.confirmed {border-color:#fff4c9;box-shadow:0 0 15px #ffe4a988}
 #crosshair.confirmed:before,#crosshair.confirmed:after {background:#fff4c9}
+
+#attack-warning {position:absolute;top:calc(50% - 65px);left:50%;transform:translateX(-50%);padding:7px 12px;border:1px solid #f5b96a80;background:#25180ce0;color:#ffce89;font-size:10px;letter-spacing:1.5px;white-space:nowrap;box-shadow:0 0 15px #f89b3220}
+@media(pointer:coarse){#attack-warning{font-size:9px;padding:5px 9px}}

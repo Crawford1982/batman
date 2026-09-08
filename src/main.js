@@ -1,3 +1,4 @@
+import { updateEnemy } from "./enemy-ai.js";
 import { GroundLevel } from "./ground-level.js";
 import { Minimap } from "./minimap.js";
 import "./minimap.css";
@@ -161,6 +162,7 @@ function spawn() {
   enemies.push({
     mesh: e,
     hp: 2,
+    kind: "interceptor",
     age: 0,
     fire: 6 + Math.random() * 6,
     phase: Math.random() * 6,
@@ -557,6 +559,7 @@ function update(dt, wallDt = dt) {
         const to = new T.Vector3().subVectors(e.destination, e.mesh.position);
         if (to.length() < 18) {
           burst(e.destination);
+          e.hp = 0;
           mission.impact();
           notice("GORDON / Shelter hit. City grid integrity falling.", 6);
           remove(enemies, i);
@@ -566,30 +569,14 @@ function update(dt, wallDt = dt) {
         e.mesh.position.addScaledVector(to.normalize(), dt * 12);
         continue;
       }
-      e.mesh.position.x += Math.sin(t * 0.6 + e.phase) * dt * 12;
-      e.mesh.position.z += Math.cos(t * 0.4 + e.phase) * dt * 15;
-      e.mesh.position.y += Math.sin(t + e.phase) * dt * 3;
-      e.mesh.lookAt(flight.position);
-      e.mesh.rotateZ(Math.sin(t + e.phase) * 0.2);
-      e.fire -= dt;
-      const dist = e.mesh.position.distanceTo(flight.position);
-      if (e.fire <= 0 && dist < 380) {
+      const attack = updateEnemy(e, flight, dt);
+      if (attack) {
         const m = new T.Mesh(shotGeo, hostileMat);
-        m.position.copy(e.mesh.position);
-        m.scale.setScalar(1.4);
-        scene.add(m);
-        shots.push({
-          mesh: m,
-          velocity: new T.Vector3()
-            .subVectors(flight.position, e.mesh.position)
-            .normalize()
-            .multiplyScalar(95),
-          life: 5,
-          enemy: true,
-        });
-        e.fire = 5 + Math.random() * 6;
+        m.position.copy(e.mesh.position); m.scale.setScalar(1.4); scene.add(m);
+        shots.push({mesh:m,velocity:attack.multiplyScalar(95),life:5,enemy:true});
       }
-      if (dist > 1100) remove(enemies, i);
+      if (!e.guard && e.mesh.position.distanceTo(flight.position)>1100) remove(enemies,i);
+
     }
     updateProjectiles(dt);
     if (mode !== "play") return;
@@ -644,7 +631,7 @@ function update(dt, wallDt = dt) {
     const liveTarget = target && target.hp > 0;
     $("crosshair").classList.toggle("confirmed", t < hitUntil);
     $("target-label").textContent = liveTarget
-      ? `${target.kind === 'relay' ? 'COMMAND RELAY' : target.kind === 'bomber' ? 'BOMBER' : 'DRONE'} · ${Math.round(target.mesh.position.distanceTo(flight.position))} M · FIRE`
+      ? `${target.kind === 'relay' ? 'COMMAND RELAY' : target.kind === 'bomber' ? 'BOMBER' : target.kind === 'escort' ? 'ESCORT' : 'INTERCEPTOR'} · ${Math.round(target.mesh.position.distanceTo(flight.position))} M · FIRE`
       : t < hitUntil ? "HIT CONFIRMED" : "";
     $("target-armour").hidden = !liveTarget;
     if (liveTarget) {
@@ -654,6 +641,7 @@ function update(dt, wallDt = dt) {
     }
     noticeTimer -= dt;
     if (noticeTimer <= 0) $("message").style.opacity = 0;
+    $("attack-warning").hidden = !enemies.some(e=>e.ai?.phase === "warning");
     updateMissionHUD();
     minimap.update(flight, mission, enemies, world.rings, t);
   } else if (mode === "briefing") {
@@ -859,7 +847,13 @@ function spawnBomber(site) {
     name: site.name,
     destination,
   });
-  notice(`GORDON / Bomber inbound to ${site.name}. Intercept it.`, 7);
+  const bomber = enemies[enemies.length-1];
+  const escort = enemies.find(e=>e.kind !== 'bomber' && !e.guard);
+  if (escort) {
+    escort.kind='escort';escort.guard=bomber;escort.ai=null;
+    // Existing aircraft fly into formation rather than teleporting or raising the cap.
+  }
+  notice(`GORDON / Bomber inbound to ${site.name}.${escort ? ' Escort detected.' : ''} Intercept it.`, 7);
 }
 function updateProjectiles(dt) {
   for (let i = shots.length - 1; i >= 0; i--) {

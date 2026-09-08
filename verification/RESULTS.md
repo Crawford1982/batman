@@ -62,3 +62,10 @@ Published 77f9140 through successful Pages run 34223627187. feedback.mjs also pa
 Three stock-voice recordings generated through vidIQ with explicit authorization for 42 credits total: Daniel as Alfred, Bill as Gordon, Brian as Batman. No further generation calls. MP3 assets total 334,916 bytes and decode to 6.72, 6.88 and 7.12 seconds, each inside its nine-second scene. Original matching captions; mild high-pass radio filtering and music ducking. Skipping, muting, menu exit and restarting cancel playback and pending downloads. Voice assets are served statically; no runtime generation service or keys.
 
 Twenty unit tests and production build passed. Full flight browser regression passed, including mobile controls. voices.mjs passed in desktop and mobile emulation: all three decoded files and character transitions, music duck/restore, skip, mute, and cancellation before a delayed download resolves. No page errors. Actual-phone listening has not yet been verified.
+
+
+## Interceptor runs and bomber escorts — 8 September 2026
+
+Existing fighters now approach, display a 1.6-second attack warning, fire once at a committed predicted position, pass through and bank away before re-engaging. Bomber spawns recruit an existing fighter as escort; formation travel is bounded and does not teleport aircraft or increase fighter counts. Escorts intercept approaching players and detach if a bomber is destroyed or impacts a shelter. Models and mobile controls remain unchanged.
+
+22 unit tests pass, including warning-before-fire, fixed aim during evasion, finite attack/breakaway cycle and formation/detachment. Full flight regression and dedicated enemy-ai.mjs desktop/mobile browser checks pass. Mobile warning screenshot inspected. Production build passes. The suggested Blend Swap 17286 historical aircraft was reviewed but not downloaded for this rogue-drone fleet. No paid assets or generation used.
