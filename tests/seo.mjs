@@ -11,7 +11,7 @@ assert.equal(await p.locator('link[rel=canonical]').getAttribute('href'),'https:
 const data=JSON.parse(await p.locator('script[type="application/ld+json"]').textContent());assert.equal(data['@type'],'VideoGame');assert.equal(data.isAccessibleForFree,true);
 assert.ok(await p.locator('footer a[href="./about.html"]').isVisible());
 if(!process.env.GAME_URL)await p.screenshot({path:'public/social-preview.jpg',type:'jpeg',quality:85});
-await p.locator('footer a').click();assert.match(await p.locator('h1').textContent(),/Batman 1989/);
+await p.locator('footer a[href="./about.html"]').click();assert.match(await p.locator('h1').textContent(),/Batman 1989/);
 await p.waitForFunction(()=>document.querySelector('img').complete&&document.querySelector('img').naturalWidth===1200);
 await p.screenshot({path:'verification/seo-about.png',fullPage:true});
 const nojs=await b.newPage({javaScriptEnabled:false,viewport:{width:390,height:844}});

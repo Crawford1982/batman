@@ -78,3 +78,10 @@ Published 122c03c via successful Pages run 34229998961. HTTPS desktop/mobile ene
 Added descriptive search metadata, HTTPS canonical URLs, Open Graph/Twitter large-image cards, a 1200x630 actual-game JPEG, truthful VideoGame JSON-LD, static linked about/controls page, robots and sitemap. Corrected outdated twenty-minute menu copy and adjusted medium-height menus so settings remain visible. Keyword mapping and Search Console next steps documented in SEO-PACKAGE.md; supplied volumes not independently verified. No Search Console submission, rankings or rich-result eligibility claimed.
 
 seo.mjs passes for metadata/schema parsing, crawlable menu link, image dimensions/loading, mobile about-page overflow, no-JavaScript content and fallback, robots/sitemap availability. About page and share image visually inspected. Production build passes; game physics/combat unchanged.
+
+
+## Analytics preparation — 8 September 2026
+
+Prepared optional GA4 basic-consent integration, privacy page, safe chapter start/end events and channel-specific traffic plan. Measurement ID intentionally empty pending the owner's existing ID or authenticated account setup. Not activated or deployed. Google Analytics browser is at sign-in; Search Console remains unverified.
+
+analytics.mjs passed with all external requests intercepted: no Google tag before consent or after decline, remembered choice, accepted initialization, sanitized event fields, withdrawal/cookie removal, mobile fit and verification-query exclusion. No real Google Analytics collection was sent by tests. Production build passed. No social posts or paid promotions performed.

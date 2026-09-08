@@ -236,6 +236,7 @@ function damage(n) {
   }
 }
 function start() {
+  window.gothamAnalytics?.event("level_start",{level_name:"batwing"});
   audio.stopVoice();
   hitUntil = 0;
   ground.hide();
@@ -285,6 +286,7 @@ function pause() {
   }
 }
 function finish(win, reason = "") {
+  window.gothamAnalytics?.event("level_end",{level_name:"batwing",success:win,elapsed_seconds:elapsed,score});
   $("next-level").hidden = !win;
   mode = "ended";
   $("pause-title").textContent = win ? "The night is yours." : "Signal lost.";

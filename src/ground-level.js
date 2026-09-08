@@ -403,6 +403,7 @@ export class GroundLevel {
   }
   start() {
     if (!this.ready) return;
+    window.gothamAnalytics?.event("level_start",{level_name:"batmobile"});
     this.car.reset();
     this.wheelSpin = 0;
     this.effects.reset();
@@ -458,6 +459,7 @@ export class GroundLevel {
     }
   }
   finish(win) {
+    window.gothamAnalytics?.event("level_end",{level_name:"batmobile",success:win,elapsed_seconds:this.car.elapsed,score:this.car.score});
     this.phase = "ended";
     this.onMode("driveEnded");
     $("pause-title").textContent = win

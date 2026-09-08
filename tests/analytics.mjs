@@ -1,0 +1,32 @@
+import {chromium} from '@playwright/test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const b=await chromium.launch({channel:'msedge',headless:true});
+const p=await b.newPage({viewport:{width:390,height:844}}),requests=[],errors=[];
+p.on('pageerror',e=>errors.push(e.message));
+await p.route('**/*',async r=>{
+ const u=new URL(r.request().url());
+ if(u.hostname==='www.googletagmanager.com'){requests.push(u.href);return r.fulfill({contentType:'application/javascript',body:''});}
+ if(u.hostname!=='batman1989.co.uk')return r.abort();
+ if(u.pathname==='/analytics-config.json')return r.fulfill({json:{measurementId:'G-TEST123'}});
+ if(u.pathname==='/analytics.js')return r.fulfill({contentType:'application/javascript',body:fs.readFileSync('public/analytics.js','utf8')});
+ return r.fulfill({contentType:'text/html',body:'<html><head><meta name="viewport" content="width=device-width,initial-scale=1"><script defer src="/analytics.js"></script></head><body>Analytics test</body></html>'});
+});
+await p.goto('https://batman1989.co.uk/');await p.locator('#analytics-consent').waitFor();
+assert.equal(requests.length,0);assert.equal(await p.evaluate(()=>document.cookie),'');
+await p.getByRole('button',{name:'No thanks',exact:true}).click();
+await p.evaluate(()=>window.gothamAnalytics.event('level_start',{level_name:'batwing'}));assert.equal(requests.length,0);
+await p.reload();await p.waitForFunction(()=>document.querySelector('#analytics-consent')?.hidden);assert.equal(requests.length,0);
+await p.evaluate(()=>window.gothamAnalytics.openSettings());
+assert.equal(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+await p.getByRole('button',{name:'Allow analytics',exact:true}).click();await p.waitForFunction(()=>window.dataLayer?.length>=4);
+await p.waitForTimeout(100);assert.equal(requests.length,1);
+await p.evaluate(()=>window.gothamAnalytics.event('level_end',{level_name:'batmobile',success:true,score:500,elapsed_seconds:43.6,email:'never-send'}));
+const event=await p.evaluate(()=>Array.from(window.dataLayer.at(-1)));
+assert.equal(event[0],'event');assert.equal(event[1],'level_end');assert.deepEqual(event[2],{level_name:'batmobile',success:true,score:500,elapsed_seconds:44});
+await p.evaluate(()=>{document.cookie='_ga=test;path=/;Secure';window.gothamAnalytics.openSettings();});
+await p.getByRole('button',{name:'No thanks',exact:true}).click();assert.equal(await p.evaluate(()=>window['ga-disable-G-TEST123']),true);assert.equal(await p.evaluate(()=>document.cookie),'');
+const length=await p.evaluate(()=>window.dataLayer.length);
+await p.evaluate(()=>window.gothamAnalytics.event('level_start',{level_name:'batwing'}));assert.equal(await p.evaluate(()=>window.dataLayer.length),length);
+await p.goto('https://batman1989.co.uk/?test=1');assert.equal(await p.locator('#analytics-consent').count(),0);
+assert.deepEqual(errors,[]);await b.close();console.log('PASS: zero GA requests before consent/after decline, remembered choice, acceptance, sanitized chapter events, withdrawal/cookie cleanup, mobile layout, test exclusion; Google script mocked, no real analytics sent');
