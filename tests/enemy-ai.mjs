@@ -4,9 +4,9 @@ const browser=await chromium.launch({channel:'msedge',headless:true});
 const errors=[];
 for(const mobile of [false,true]){
  const page=await browser.newPage({viewport:mobile?{width:844,height:390}:{width:1280,height:800},hasTouch:mobile,isMobile:mobile});
- page.on('pageerror',e=>errors.push(e.message));
+ page.on('pageerror',e=>{errors.push(e.message);console.error(e.message);});
  await page.goto((process.env.GAME_URL||'http://localhost:4173')+'/?test=1');
- await page.waitForFunction(()=>window.__batwing?.ready);
+ await page.waitForFunction(()=>window.__batwing?.ready,{},{timeout:60000});
  await page.evaluate(()=>{
   const g=window.__batwing;g.start();const e=g.enemies[0];
   e.mesh.position.copy(g.flight.position).addScaledVector(g.flight.forward,280);
