@@ -269,3 +269,12 @@
     font-size: 9px;
   }
 }
+
+#bomber-threat {border-left:2px solid #eab76c;padding:7px 9px;margin:9px 0;background:#eab76c12;color:#f4c87e}
+#bomber-eta {display:block;font-size:11px;letter-spacing:.6px}
+#bomber-route {display:block;font-size:9px;margin:4px 0;color:#d9e1e7}
+#bomber-threat>div {height:3px;background:#ffffff20}
+#bomber-progress {display:block;height:100%;background:#eab76c;transition:width .5s linear}
+#bomber-threat.critical {border-color:#ff8065;background:#ff806520;color:#ffaf94}
+#bomber-threat.critical i {background:#ff8065}
+@media(max-height:500px){#bomber-threat{padding:4px 6px;margin:5px 0}#bomber-eta{font-size:9px}#bomber-route{font-size:8px;margin:2px 0}}

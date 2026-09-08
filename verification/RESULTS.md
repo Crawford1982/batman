@@ -97,3 +97,7 @@ Quiet 25-second patrol, interception with two ambient fighters maximum, finite f
 
 ## Cathedral arrival
 Seven-second skippable arrival camera and completion transmission; timer and vehicle frozen, pursuit/HUD removed, automatic results handover. Reduced-motion preference preserves stationary camera. Arrival browser check and full ground desktop/touch regression passed; production build passed. Existing assets only.
+
+
+## Heavy bomber readability
+Distinct shared heavy-bomber geometry with wide wings, twin nacelles, underwing payload and amber engine/signature lights. Same two mesh draws per aircraft; no new downloaded assets or light sources. Compact HUD keeps impact countdown visible on mobile, highlights final approach, identifies threatened site; minimap draws bomber-to-shelter approach paths. Chapter card/radio overlap separated. 23 unit tests, full flight desktop/mobile regression, bomber desktop/mobile warning/cleanup checks, AI warning/escort checks and actual weapon hit-feedback regression passed. Build passed.

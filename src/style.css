@@ -680,3 +680,5 @@ footer a{color:inherit;text-decoration:underline;text-underline-offset:4px;point
 #drive-turn.turn-urgent {color:#ffe0a0;font-size:14px;border-left:3px solid #e5bd69;padding:8px;background:#0a111bd9}
 @media(max-height:500px){#chapter-card{top:16%;padding:8px}#chapter-results{gap:8px;padding:10px 0;margin:10px 0}}
 @media(prefers-reduced-motion:reduce){#chapter-card,#pause-menu .compact{animation:none!important}}
+
+body:has(#chapter-card:not([hidden])) #hud #message {top:38%}

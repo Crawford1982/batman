@@ -8,7 +8,7 @@ for(const mobile of [false,true]){
  await page.goto((process.env.GAME_URL||'http://localhost:4173')+'/?test=1');
  await page.waitForFunction(()=>window.__batwing?.ready,{},{timeout:60000});
  await page.evaluate(()=>{
-  const g=window.__batwing;g.start();const e=g.enemies[0];
+  const g=window.__batwing;g.start();g.spawn();const e=g.enemies[0];
   e.mesh.position.copy(g.flight.position).addScaledVector(g.flight.forward,280);
   g.step(.01);e.ai.cooldown=0;g.step(.01);
  });

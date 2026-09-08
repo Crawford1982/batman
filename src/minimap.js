@@ -124,6 +124,12 @@ export class Minimap {
     }
     for (const e of enemies) {
       const [x, y] = mapPoint(e.mesh.position.x, e.mesh.position.z);
+      if (e.kind === "bomber") {
+        const [tx,ty] = mapPoint(e.destination.x,e.destination.z);
+        c.strokeStyle = '#ffb77588'; c.lineWidth = 1.5; c.setLineDash([3,4]);
+        c.beginPath(); c.moveTo(x,y); c.lineTo(tx,ty); c.stroke(); c.setLineDash([]);
+        c.strokeStyle = '#ffb775'; c.beginPath(); c.arc(tx,ty,8,0,Math.PI*2); c.stroke();
+      }
       c.fillStyle = e.kind === "bomber" ? "#ffb775" : "#ff7968";
       c.beginPath();
       c.arc(x, y, e.kind === "bomber" ? 5 : 2.5, 0, Math.PI * 2);

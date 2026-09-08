@@ -6,7 +6,7 @@ import "./minimap.css";
 import { Mission, BRIEFING, FLIGHT_DURATION, FINAL_DEFENCE } from "./mission.js";
 import { districtAt } from "./districts.js";
 import "./mission.css";
-import { createEnemy } from "./enemy.js";
+import { createEnemy, createBomber } from "./enemy.js";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
@@ -642,7 +642,7 @@ function update(dt, wallDt = dt) {
     const liveTarget = target && target.hp > 0;
     $("crosshair").classList.toggle("confirmed", t < hitUntil);
     $("target-label").textContent = liveTarget
-      ? `${target.kind === 'relay' ? 'COMMAND RELAY' : target.kind === 'bomber' ? 'BOMBER' : target.kind === 'escort' ? 'ESCORT' : 'INTERCEPTOR'} · ${Math.round(target.mesh.position.distanceTo(flight.position))} M · FIRE`
+      ? `${target.kind === 'relay' ? 'COMMAND RELAY' : target.kind === 'bomber' ? 'HEAVY BOMBER' : target.kind === 'escort' ? 'ESCORT' : 'INTERCEPTOR'} · ${Math.round(target.mesh.position.distanceTo(flight.position))} M · FIRE`
       : t < hitUntil ? "HIT CONFIRMED" : "";
     $("target-armour").hidden = !liveTarget;
     if (liveTarget) {
@@ -838,8 +838,8 @@ function updateBriefing(dt) {
 }
 function spawnBomber(site) {
   if (enemies.filter((e) => e.kind === "bomber").length >= 3) return;
-  const mesh = createEnemy();
-  mesh.scale.setScalar(2);
+  const mesh = createBomber();
+  mesh.scale.setScalar(1.35);
   const destination = new T.Vector3(site.x, site.y, site.z);
   const approach = new T.Vector3(
     flight.position.x - site.x,
@@ -951,6 +951,15 @@ function updateMissionHUD() {
     : mission.disabled < 3
       ? "Destroy the red uplinks. Cannons and homing missiles both work."
       : "Three final bombers. No reinforcements. Clear the evacuation corridor.";
+  const threat = $("bomber-threat");
+  threat.hidden = !bomber;
+  if (bomber) {
+    const seconds = Math.max(0, Math.ceil(objective.mesh.position.distanceTo(objective.destination) / 12));
+    $("bomber-eta").textContent = `${seconds <= 25 ? 'FINAL APPROACH' : 'BOMBER INBOUND'} · ${seconds}s`;
+    $("bomber-route").textContent = objective.name;
+    $("bomber-progress").style.width = Math.max(0, Math.min(100, seconds/88*100)) + '%';
+    threat.classList.toggle('critical', seconds <= 25);
+  }
   $("city-value").textContent = mission.city + "%";
   $("city-bar").style.width = mission.city + "%";
   $("city-bar").style.background = mission.city < 40 ? "#ff7358" : "#ddbc7b";
