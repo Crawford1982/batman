@@ -72,6 +72,7 @@ assert.equal(
   await p.locator("#pause-title").textContent(),
   "Gotham is back online.",
 );
+await p.click("#arrival-skip");
 await p.click("#exit");
 assert.ok(await p.locator("#menu").isVisible());
 await p.click("#start");

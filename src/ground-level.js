@@ -66,6 +66,8 @@ export class GroundLevel {
       "beforeend",
       `<section id="drive-load" hidden><div class="drive-film-top">WAYNE AEROSPACE <span>CHAPTER II / GROUND OPERATIONS</span></div><div class="drive-film-copy"><div class="edition">OPERATION SILENT BELL · THE FINAL MILE</div><h2>TAKE THE<br>STREETS BACK.</h2><p>The shelters have five minutes of reserve heat.<br>The rogue network is reconnecting. Take the encrypted override through the theatre district and beneath the elevated railway. Gordon is waiting at the cathedral.<br><br>Keep moving when the red strike marker appears. Use EMP to break the attack.</p><div class="drive-load-track"><i id="drive-load-bar"></i></div><p id="drive-load-status">Preparing the Batmobile…</p><button id="drive-launch" disabled>LOADING VEHICLE</button><button id="drive-back">BACK TO CHAPTERS</button><div class="drive-help">W / S · accelerator / brake & reverse<br>A / D · steer · hold right mouse + move · steer · Shift · jet boost<br>Space · handbrake · F / click · EMP<br>Controller: left stick · RT / LT · A boost · X EMP</div></div></section><section id="drive-hud" hidden><header><div>BATMOBILE<small>CHAPTER II / THE FINAL MILE</small></div><div class="drive-clock"><small>NETWORK RECONNECT</small><strong id="drive-time">05:00</strong></div><button id="drive-pause">Ⅱ</button></header><div class="drive-objective"><small>DELIVER THE OVERRIDE</small><h3 id="drive-goal"></h3><p id="drive-progress"></p><p id="drive-turn"></p></div><div id="drive-radio"></div><div id="drive-waypoint"><b>◇</b><span id="drive-waypoint-text"></span></div><div id="drive-map"><canvas aria-label="Batmobile route map" role="img"></canvas><div id="drive-map-target"></div></div><div class="drive-bottom"><div><small>ARMOR <b id="drive-health">100%</b></small><div class="drive-armor"><i id="drive-armor-bar"></i></div><span id="drive-emp">EMP READY</span></div><div class="drive-speed"><b id="drive-speed">0</b><span>KM/H</span></div></div><div id="drive-touch"><div id="drive-stick"><i></i></div><div class="drive-pedals"><button data-drive="brake">BRAKE</button><button data-drive="accel">GAS</button><button data-drive="boost">BOOST</button><button id="drive-touch-emp">EMP</button></div></div><button id="drive-reset">RESET TO ROAD · R</button></section>`,
     );
+    document.body.insertAdjacentHTML("beforeend", `<section id="arrival-film" hidden aria-label="Mission complete"><div class="arrival-top">OPERATION SILENT BELL / GOTHAM CATHEDRAL</div><div class="arrival-copy"><small>GCPD / SECURE CHANNEL</small><h2>The city has a tomorrow.</h2><p>Override accepted. Heat restored.<br>Gordon’s people are safe inside.</p><button id="arrival-skip">VIEW MISSION RESULTS →</button></div></section>`);
+    $("arrival-skip").onclick = () => this.endArrival();
     $("drive-launch").onclick = () => this.start();
     $("drive-back").onclick = () => {
       this.hide();
@@ -405,6 +407,7 @@ export class GroundLevel {
   start() {
     if (!this.ready) return;
     window.gothamAnalytics?.event("level_start",{level_name:"batmobile"});
+    $("arrival-film").hidden = true;
     clearPresentation();
     chapterCard("CHAPTER II / THE FINAL MILE", "Bring Gotham back online");
     this.car.reset();
@@ -437,6 +440,7 @@ export class GroundLevel {
     );
   }
   hide() {
+    $("arrival-film").hidden = true;
     this.phase = "off";
     this.group.visible = false;
     $("drive-load").hidden = true;
@@ -444,6 +448,7 @@ export class GroundLevel {
     this.touch = {};
   }
   pause() {
+    if (this.phase === "arrival") { this.endArrival(); return; }
     if (this.phase === "play") {
       clearPresentation();
       this.phase = "paused";
@@ -463,6 +468,7 @@ export class GroundLevel {
     }
   }
   finish(win) {
+    if (this.phase !== "play") return;
     $("drive-hud").hidden = true;
     showResults("batmobile", win, this.car.elapsed, this.car.score, this.car.health, `${this.car.checkpoint} / ${DRIVE_ROUTE.length} checkpoints`);
     window.gothamAnalytics?.event("level_end",{level_name:"batmobile",success:win,elapsed_seconds:this.car.elapsed,score:this.car.score});
@@ -480,12 +486,27 @@ export class GroundLevel {
     $("next-level").hidden = true;
     $("pause-menu").hidden = false;
     if (win) {
-      this.audio.explosion();
-      this.pulseLife = 2;
+      this.car.speed = 0;
+      this.touch = {}; this.mouse.steering = false;
+      this.vehicle.position.copy(this.car.position);
+      this.exhaust.visible = false; this.strike.visible = false;
+      this.drones.forEach(d => d.visible = false);
+      this.checkpoints.forEach(p => p.mesh.visible = false);
+      this.junctionGuide.markers.forEach(m => m.visible = false);
+      this.phase = "arrival"; this.onMode("driveArrival"); this.arrivalTime = 0;
+      this.arrivalEye = this.camera.position.clone();
+      this.arrivalLook = this.look.clone();
+      $("pause-menu").hidden = true; $("arrival-film").hidden = false;
+      this.audio.shot(true);
       try {
         localStorage.setItem("gotham-ground-complete", "1");
       } catch {}
     }
+  }
+  endArrival() {
+    if (this.phase !== "arrival") return;
+    this.phase = "ended"; this.onMode("driveEnded");
+    $("arrival-film").hidden = true; $("pause-menu").hidden = false;
   }
   radio(text) {
     $("drive-radio").textContent = text;
@@ -543,6 +564,23 @@ export class GroundLevel {
     return { steer, accel, brake, boost, drift };
   }
   update(dt, wallDt = dt) {
+    if (this.phase === "arrival") {
+      this.controls(); // Controller menu button can skip, just like Escape.
+      if (this.phase !== "arrival") return;
+      this.arrivalTime += dt;
+      const progress = Math.min(1, this.arrivalTime / 6);
+      const ease = progress * progress * (3 - 2 * progress);
+      if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        const eye = this.car.position.clone().add(new T.Vector3(16, 8, 20));
+        const look = this.car.position.clone().add(new T.Vector3(0, 4, -8));
+        this.camera.position.lerpVectors(this.arrivalEye, eye, ease);
+        this.camera.lookAt(this.arrivalLook.clone().lerp(look, ease));
+      }
+      this.world.update(dt, this.car.position, this.time);
+      this.audio.update(0, false);
+      if (this.arrivalTime >= 7) this.endArrival();
+      return;
+    }
     const input = this.controls();
     if (this.phase === "paused" || this.phase === "ended") return;
     this.time += dt;

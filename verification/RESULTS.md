@@ -93,3 +93,7 @@ Deployment 34232836611 succeeded (5bfd8d4). GA4 property 553126859 / G-DE3DJK44V
 
 ## Focused campaign polish — 9 September 2026
 Quiet 25-second patrol, interception with two ambient fighters maximum, finite final bomber raid with 45-second hold (previously 90), chapter cards, prominent near-turn cues, completion scorecards and locally saved best times/scores. Existing physics and assets preserved. 23 unit tests, flight desktop/mobile regression, ground keyboard/touch/EMP/restart/transition regression, SEO checks and production build passed. Presentation regression verified scorecards, replay/pause cleanup and portrait layout; fixed stale HUD overflow after resize by hiding gameplay HUDs on completion. Headless frame rates are not physical-device performance certification.
+
+
+## Cathedral arrival
+Seven-second skippable arrival camera and completion transmission; timer and vehicle frozen, pursuit/HUD removed, automatic results handover. Reduced-motion preference preserves stationary camera. Arrival browser check and full ground desktop/touch regression passed; production build passed. Existing assets only.

@@ -501,3 +501,12 @@
  #drive-hud {padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
  #drive-reset {min-height:44px}
 }
+
+#arrival-film {position:absolute;inset:0;z-index:9;pointer-events:none;background:linear-gradient(0deg,#02060aee,transparent 70%);border-top:30px solid #02060a;border-bottom:30px solid #02060a}
+.arrival-top {padding:18px 5%;color:#c7ac75;font-size:10px;letter-spacing:2px}
+.arrival-copy {position:absolute;bottom:7%;left:6%;max-width:600px;color:#e7edf1}
+.arrival-copy small {color:#c7ac75;font-size:10px;letter-spacing:2px}
+.arrival-copy h2 {font:500 clamp(30px,5vw,62px)/1.05 "Barlow Condensed",sans-serif;margin:12px 0}
+.arrival-copy p {font-size:14px;line-height:1.6;color:#bccdd8}
+#arrival-skip {pointer-events:auto;background:#09131cbb;border:1px solid #c7ac7566;color:#dfc68e;padding:14px 20px;font-size:11px}
+@media(max-height:500px){#arrival-film{border-width:12px}.arrival-copy{bottom:4%}.arrival-copy h2{font-size:32px}.arrival-copy p{font-size:12px;margin:8px 0}}
