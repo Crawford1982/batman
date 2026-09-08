@@ -55,3 +55,10 @@ Published game commit 7d4504a via successful GitHub Pages run 34157594144. Live-
 Added target type/range/armour, a brief reticle flash and quiet rate-limited confirmation sound on actual weapon hits. Added merged gold road arrows before junctions, retained briefly after checkpoint crossing. Controls and physics unchanged. Twenty unit tests and production build passed. Flight and ground browser regressions passed, including touch controls. feedback.mjs verified actual cannon damage updates armour and reticle, target loss hides armour, and nearby junction guidance remains visible after crossing. Both feature screenshots inspected. Browser-emulated performance samples are not physical-device benchmarks; user reports both chapters felt good on their phone on 7 September.
 
 Published 77f9140 through successful Pages run 34223627187. feedback.mjs also passes against the public domain after explicitly advancing past the initial cannon cooldown in its setup. Zero page errors.
+
+
+## Three-character briefing voices — 8 September 2026
+
+Three stock-voice recordings generated through vidIQ with explicit authorization for 42 credits total: Daniel as Alfred, Bill as Gordon, Brian as Batman. No further generation calls. MP3 assets total 334,916 bytes and decode to 6.72, 6.88 and 7.12 seconds, each inside its nine-second scene. Original matching captions; mild high-pass radio filtering and music ducking. Skipping, muting, menu exit and restarting cancel playback and pending downloads. Voice assets are served statically; no runtime generation service or keys.
+
+Twenty unit tests and production build passed. Full flight browser regression passed, including mobile controls. voices.mjs passed in desktop and mobile emulation: all three decoded files and character transitions, music duck/restore, skip, mute, and cancellation before a delayed download resolves. No page errors. Actual-phone listening has not yet been verified.

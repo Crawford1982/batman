@@ -4,6 +4,10 @@ export class AudioSystem {
     this.ctx = null;
     this.next = 0;
     this.step = 0;
+    this.voiceBuffers = {};
+    this.voiceToken = 0;
+    this.voiceSource = null;
+    this.voiceId = null;
   }
   start() {
     if (!this.ctx) {
@@ -29,10 +33,55 @@ export class AudioSystem {
     }
     this.ctx.resume();
   }
+  mix() {
+    if (this.ctx) this.master.gain.setTargetAtTime(
+      this.enabled ? (this.voiceSource ? .08 : .26) : 0, this.ctx.currentTime, .12);
+  }
   mute(v) {
     this.enabled = !v;
-    if (this.ctx)
-      this.master.gain.setTargetAtTime(v ? 0 : 0.26, this.ctx.currentTime, 0.1);
+    if (v) this.stopVoice();
+    this.mix();
+  }
+  loadVoice(id) {
+    if (!this.ctx || !['alfred','gordon','batman'].includes(id)) return Promise.resolve(null);
+    return this.voiceBuffers[id] ||= fetch(new URL(`./voices/${id}.mp3`, document.baseURI))
+      .then(r => { if (!r.ok) throw new Error('Voice unavailable'); return r.arrayBuffer(); })
+      .then(data => this.ctx.decodeAudioData(data)).catch(() => null);
+  }
+  preloadVoices() {
+    return Promise.all(['alfred','gordon','batman'].map(id => this.loadVoice(id)));
+  }
+  stopVoice() {
+    this.voiceToken++;
+    if (this.voiceSource) {
+      this.voiceSource.onended = null;
+      this.voiceSource.stop();
+      this.voiceNodes.forEach(node => node.disconnect());
+    }
+    this.voiceSource = null; this.voiceId = null;
+    this.mix();
+  }
+  async speak(id) {
+    this.stopVoice();
+    const token = this.voiceToken;
+    if (!this.enabled) return;
+    const buffer = await this.loadVoice(id);
+    // Skips, mute, and later lines invalidate pending downloads.
+    if (!buffer || token !== this.voiceToken || !this.enabled) return;
+    const source = this.ctx.createBufferSource(), gain = this.ctx.createGain();
+    const radio = this.ctx.createBiquadFilter();
+    source.buffer = buffer; radio.type = 'highpass'; radio.frequency.value = 130;
+    gain.gain.value = .85;
+    source.connect(radio); radio.connect(gain); gain.connect(this.ctx.destination);
+    const nodes = [source,radio,gain];
+    this.voiceSource = source; this.voiceNodes = nodes; this.voiceId = id;
+    source.onended = () => {
+      nodes.forEach(node => node.disconnect());
+      if (this.voiceSource === source) {
+        this.voiceSource = null; this.voiceId = null; this.mix();
+      }
+    };
+    this.mix(); source.start();
   }
   tone(freq, at, len, gain = 0.1, type = "sine") {
     const o = this.ctx.createOscillator(),

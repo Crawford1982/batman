@@ -234,6 +234,7 @@ function damage(n) {
   }
 }
 function start() {
+  audio.stopVoice();
   hitUntil = 0;
   ground.hide();
   $("next-level").hidden = true;
@@ -297,6 +298,7 @@ $("resume").onclick = pause;
 $("restart").onclick = () =>
   mode.startsWith("drive") ? ground.start() : start();
 $("exit").onclick = () => {
+  audio.stopVoice();
   ground.hide();
   $("next-level").hidden = true;
   mode = "menu";
@@ -342,6 +344,7 @@ addEventListener("blur", () => {
   if (mode === "play" || mode === "drive") pause();
 });
 document.addEventListener("visibilitychange", () => {
+  if (audio.ctx) (document.hidden ? audio.ctx.suspend() : audio.ctx.resume()).catch(() => {});
   if (document.hidden && (mode === "play" || mode === "drive")) pause();
 });
 $("game").addEventListener("pointermove", (e) => {
@@ -780,6 +783,7 @@ if (testMode)
   });
 
 function beginBriefing() {
+  audio.stopVoice();
   ground.hide();
   $("next-level").hidden = true;
   if (!ready) return;
@@ -793,6 +797,7 @@ function beginBriefing() {
   $("briefing").hidden = false;
   mission.reset();
   audio.start();
+  audio.preloadVoices();
 }
 function updateBriefing(dt) {
   if (document.hidden) return;
@@ -804,6 +809,7 @@ function updateBriefing(dt) {
     $("brief-title").textContent = shot.title;
     $("brief-text").textContent = shot.text;
     $("brief-speaker").textContent = shot.speaker;
+    audio.speak(shot.voice);
     $("brief-location").textContent = shot.location;
     document
       .querySelectorAll(".brief-chapters i")
