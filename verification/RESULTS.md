@@ -101,3 +101,7 @@ Seven-second skippable arrival camera and completion transmission; timer and veh
 
 ## Heavy bomber readability
 Distinct shared heavy-bomber geometry with wide wings, twin nacelles, underwing payload and amber engine/signature lights. Same two mesh draws per aircraft; no new downloaded assets or light sources. Compact HUD keeps impact countdown visible on mobile, highlights final approach, identifies threatened site; minimap draws bomber-to-shelter approach paths. Chapter card/radio overlap separated. 23 unit tests, full flight desktop/mobile regression, bomber desktop/mobile warning/cleanup checks, AI warning/escort checks and actual weapon hit-feedback regression passed. Build passed.
+
+
+## In-game mission radio
+Ten recorded lines: Alfred patrol/relay orders/driving/left turn, Gordon inbound/shelter hit/final evacuation/arrival, Batman air and ground replies. Matching captions, music ducking, repeated-alert throttle, lazy loading and caching. Speech/replies cancel on pause, mute, restart, menu exit and arrival skip. Radio and existing briefing-voice desktop/mobile tests passed, including 10 decoded clips, both replies, pending-load cancellation and muted playback. Additional authorized generation spend exactly 42 vidIQ credits.

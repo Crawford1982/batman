@@ -20,7 +20,8 @@ for(const mobile of [false,true]) {
  await p.waitForFunction(()=>window.__batwing.ground.audio.voiceId==='batman');
  assert.match(await p.locator('#brief-speaker').textContent(),/BATMAN/);
  await p.locator('#skip-briefing').click();
- assert.equal(await p.evaluate(()=>window.__batwing.ground.audio.voiceId),null);
+ await p.waitForFunction(()=>window.__batwing.ground.audio.voiceId==='alfred-patrol');
+ await p.evaluate(()=>window.__batwing.ground.audio.stopVoice());
  assert.equal(await p.evaluate(()=>window.__batwing.state.mode),'play');
  await p.waitForTimeout(400);
  assert.ok(await p.evaluate(()=>window.__batwing.ground.audio.master.gain.value>.23),'music returns after skipping');

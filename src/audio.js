@@ -1,3 +1,4 @@
+import { RADIO_LINES } from "./radio-lines.js";
 export class AudioSystem {
   constructor() {
     this.enabled = true;
@@ -43,7 +44,7 @@ export class AudioSystem {
     this.mix();
   }
   loadVoice(id) {
-    if (!this.ctx || !['alfred','gordon','batman'].includes(id)) return Promise.resolve(null);
+    if (!this.ctx || !['alfred','gordon','batman',...Object.keys(RADIO_LINES)].includes(id)) return Promise.resolve(null);
     return this.voiceBuffers[id] ||= fetch(new URL(`./voices/${id}.mp3`, document.baseURI))
       .then(r => { if (!r.ok) throw new Error('Voice unavailable'); return r.arrayBuffer(); })
       .then(data => this.ctx.decodeAudioData(data)).catch(() => null);
@@ -53,6 +54,8 @@ export class AudioSystem {
   }
   stopVoice() {
     this.voiceToken++;
+    const caption = document.getElementById("radio-caption");
+    if (caption) caption.hidden = true;
     if (this.voiceSource) {
       this.voiceSource.onended = null;
       this.voiceSource.stop();
@@ -61,13 +64,17 @@ export class AudioSystem {
     this.voiceSource = null; this.voiceId = null;
     this.mix();
   }
-  async speak(id) {
+  async speak(id, onDone = null) {
     this.stopVoice();
     const token = this.voiceToken;
     if (!this.enabled) return;
+    this.voiceId = id;
     const buffer = await this.loadVoice(id);
     // Skips, mute, and later lines invalidate pending downloads.
-    if (!buffer || token !== this.voiceToken || !this.enabled) return;
+    if (!buffer || token !== this.voiceToken || !this.enabled) {
+      if (token === this.voiceToken) this.voiceId = null;
+      return;
+    }
     const source = this.ctx.createBufferSource(), gain = this.ctx.createGain();
     const radio = this.ctx.createBiquadFilter();
     source.buffer = buffer; radio.type = 'highpass'; radio.frequency.value = 130;
@@ -79,9 +86,34 @@ export class AudioSystem {
       nodes.forEach(node => node.disconnect());
       if (this.voiceSource === source) {
         this.voiceSource = null; this.voiceId = null; this.mix();
+        const caption = document.getElementById('radio-caption'); if (caption) caption.hidden = true;
+        if (token === this.voiceToken) onDone?.();
       }
     };
+    if (RADIO_LINES[id]) {
+      let caption = document.getElementById('radio-caption');
+      if (!caption) { caption = document.createElement('div'); caption.id = 'radio-caption'; caption.setAttribute('aria-live','polite'); document.body.append(caption); }
+      caption.textContent = RADIO_LINES[id].join(' / '); caption.hidden = false;
+    }
     this.mix(); source.start();
+  }
+  radioMessage(text) {
+    let id, reply;
+    if (text.includes('The city is quiet')) id = 'alfred-patrol';
+    else if (text.includes('Attack source identified')) { id = 'alfred-relays'; reply = 'batman-air'; }
+    else if (text.includes('Final evacuation')) id = 'gordon-final';
+    else if (text.includes('Shelter hit')) id = 'gordon-hit';
+    else if (text.includes('Bomber inbound')) id = 'gordon-inbound';
+    else if (text.includes('Take the override')) { id = 'alfred-drive'; reply = 'batman-drive'; }
+    else if (text.includes('Turn left')) id = 'alfred-left';
+    if (!id || !this.enabled) return;
+    const now = performance.now();
+    this.radioTimes ||= {};
+    if (now - (this.radioTimes[id] ?? -Infinity) < 15000) return;
+    // Repeated raids wait for the current transmission rather than cutting it off.
+    if (id === 'gordon-inbound' && this.voiceId) return;
+    this.radioTimes[id] = now;
+    this.speak(id, reply ? () => this.speak(reply) : null);
   }
   tone(freq, at, len, gain = 0.1, type = "sine") {
     const o = this.ctx.createOscillator(),

@@ -405,6 +405,7 @@ export class GroundLevel {
     }
   }
   start() {
+    this.audio.stopVoice(); this.audio.radioTimes = {};
     if (!this.ready) return;
     window.gothamAnalytics?.event("level_start",{level_name:"batmobile"});
     $("arrival-film").hidden = true;
@@ -440,6 +441,7 @@ export class GroundLevel {
     );
   }
   hide() {
+    this.audio.stopVoice();
     $("arrival-film").hidden = true;
     this.phase = "off";
     this.group.visible = false;
@@ -450,6 +452,7 @@ export class GroundLevel {
   pause() {
     if (this.phase === "arrival") { this.endArrival(); return; }
     if (this.phase === "play") {
+      this.audio.stopVoice();
       clearPresentation();
       this.phase = "paused";
       this.mouse.steering = false;
@@ -469,6 +472,7 @@ export class GroundLevel {
   }
   finish(win) {
     if (this.phase !== "play") return;
+    this.audio.stopVoice();
     $("drive-hud").hidden = true;
     showResults("batmobile", win, this.car.elapsed, this.car.score, this.car.health, `${this.car.checkpoint} / ${DRIVE_ROUTE.length} checkpoints`);
     window.gothamAnalytics?.event("level_end",{level_name:"batmobile",success:win,elapsed_seconds:this.car.elapsed,score:this.car.score});
@@ -498,17 +502,20 @@ export class GroundLevel {
       this.arrivalLook = this.look.clone();
       $("pause-menu").hidden = true; $("arrival-film").hidden = false;
       this.audio.shot(true);
+      this.audio.speak("gordon-safe");
       try {
         localStorage.setItem("gotham-ground-complete", "1");
       } catch {}
     }
   }
   endArrival() {
+    this.audio.stopVoice();
     if (this.phase !== "arrival") return;
     this.phase = "ended"; this.onMode("driveEnded");
     $("arrival-film").hidden = true; $("pause-menu").hidden = false;
   }
   radio(text) {
+    this.audio.radioMessage(text);
     $("drive-radio").textContent = text;
     this.messageUntil = this.time + 7;
   }

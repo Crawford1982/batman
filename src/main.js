@@ -90,6 +90,7 @@ const keys = {},
 let aircraft = null,
   removedNodes = [];
 function notice(text, duration = 4) {
+  audio.radioMessage(text);
   $("message").textContent = text;
   noticeTimer = duration;
   $("message").style.opacity = 1;
@@ -237,6 +238,7 @@ function damage(n) {
   }
 }
 function start() {
+  audio.radioTimes = {};
   clearPresentation();
   window.gothamAnalytics?.event("level_start",{level_name:"batwing"});
   audio.stopVoice();
@@ -276,6 +278,7 @@ function pause() {
     return;
   }
   if (mode === "play") {
+    audio.stopVoice();
     clearPresentation();
     mode = "paused";
     $("pause-title").textContent = "Patrol paused.";
@@ -289,6 +292,7 @@ function pause() {
   }
 }
 function finish(win, reason = "") {
+  audio.stopVoice();
   $("hud").hidden = true;
   showResults("batwing", win, elapsed, score, flight.health, `${kills} targets / ${mission.disabled} relays`);
   window.gothamAnalytics?.event("level_end",{level_name:"batwing",success:win,elapsed_seconds:elapsed,score});
