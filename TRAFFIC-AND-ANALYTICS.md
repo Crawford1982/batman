@@ -1,9 +1,13 @@
 # Traffic and measurement plan
 
-## Connect accounts
-GA4 measurement ID goes in public/analytics-config.json. Empty ID deliberately leaves analytics and the banner inactive. Verify the property/data stream before setting a real ID. Basic consent: no Google analytics script before acceptance, ads denied, localhost and ?test excluded. Events: level_start(level_name); level_end(level_name, success, elapsed_seconds, score). Mark level_start as a key event in GA4. Check Realtime after a consented real visit. Declining visitors are not counted, and analytics are not a total visitor census.
+## Connected accounts (8 September 2026)
+GA4 property: batman1989.co.uk — Gotham After Dark, property ID 553126859, web stream 15740380509, measurement ID G-DE3DJK44V4. Dashboard: https://analytics.google.com/analytics/web/#/a323924975p553126859/reports/intelligenthome
 
-Verify the HTTPS site in Google Search Console; submit /sitemap.xml and request home/about indexing. This needs the owner's Google session or verification token. Neither verification nor sitemap submission has been completed by this integration.
+Deployed consent-gated analytics: no Google script before acceptance; ads/signals and enhanced measurement disabled. Localhost and ?test excluded. Events: page_view, level_start(level_name), level_end(level_name, success, elapsed_seconds, score). Live consented page_view returned HTTP 204 from Google with the correct measurement ID; zero collection requests before consent. Dashboard data may take time to appear. Declining visitors are not counted.
+
+Search Console HTTPS URL-prefix property verified via homepage meta tag. Keep that tag. Sitemap submitted successfully; Google reports Success and 3 discovered pages. Discovery is not confirmation of indexing. Dashboard: https://search.google.com/search-console?resource_id=https%3A%2F%2Fbatman1989.co.uk%2F
+
+Optional follow-up after data arrives: mark level_start as a key event and link Search Console to GA4. Neither is configured yet. Separate indexing requests have not been submitted.
 
 ## Bring relevant visitors
 1. Share a 15–25 second clip showing flight, a warning/dodge, then the Batmobile. Link directly to the game. State that it is free and unofficial.
@@ -16,4 +20,4 @@ Friends: https://batman1989.co.uk/?utm_source=friends&utm_medium=referral&utm_ca
 
 Suggested post: I built a free, unofficial Batman 1989-inspired browser game: fly the Batwing above snowy Gotham, then drive the Batmobile to the cathedral. Desktop and touch controls, two playable chapters. I'd love feedback on how it feels on your device. [channel link]
 
-No social posts, paid promotions or account setup have been performed by this document. No ranking/traffic guarantees.
+No social posts or paid promotions have been performed. No ranking/traffic guarantees.

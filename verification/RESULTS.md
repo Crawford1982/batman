@@ -85,3 +85,7 @@ seo.mjs passes for metadata/schema parsing, crawlable menu link, image dimension
 Prepared optional GA4 basic-consent integration, privacy page, safe chapter start/end events and channel-specific traffic plan. Measurement ID intentionally empty pending the owner's existing ID or authenticated account setup. Not activated or deployed. Google Analytics browser is at sign-in; Search Console remains unverified.
 
 analytics.mjs passed with all external requests intercepted: no Google tag before consent or after decline, remembered choice, accepted initialization, sanitized event fields, withdrawal/cookie removal, mobile fit and verification-query exclusion. No real Google Analytics collection was sent by tests. Production build passed. No social posts or paid promotions performed.
+
+
+## Google measurement setup — 8 September 2026
+Deployment 34232836611 succeeded (5bfd8d4). GA4 property 553126859 / G-DE3DJK44V4 connected. Live about page check: zero GA collection before consent; consented page_view accepted HTTP 204 with correct ID. Search Console HTML-tag ownership verified; sitemap status Success, 3 discovered pages. Indexing and dashboard aggregation remain pending. Automated consent tests and production build passed before deployment.
