@@ -85,6 +85,17 @@ export class AudioSystem {
     o.start();
     o.stop(t + 0.22);
   }
+  hit() {
+    if (!this.ctx || this.ctx.currentTime < (this.nextHit || 0)) return;
+    const t = this.ctx.currentTime;
+    this.nextHit = t + .09;
+    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+    o.frequency.setValueAtTime(1050, t);
+    o.frequency.exponentialRampToValueAtTime(650, t + .055);
+    g.gain.setValueAtTime(.025, t);
+    g.gain.exponentialRampToValueAtTime(.0001, t + .06);
+    o.connect(g); g.connect(this.master); o.start(t); o.stop(t + .07);
+  }
   explosion() {
     if (!this.ctx) return;
     const t = this.ctx.currentTime,

@@ -1,3 +1,4 @@
+import { JunctionGuide } from "./junction-guide.js";
 import { RouteScenes } from "./route-scenes.js";
 import * as T from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
@@ -189,6 +190,7 @@ export class GroundLevel {
     this.streets = new StreetDetail(this.group);
     this.makeStreets();
     this.routeScenes = new RouteScenes(this.group);
+    this.junctionGuide = new JunctionGuide(this.group);
     this.obstacles = [...this.world.buildings, ...this.streets.colliders];
     this.saveQuaternion = new T.Quaternion();
     this.cameraOffset = new T.Vector3();
@@ -701,6 +703,7 @@ export class GroundLevel {
     $("drive-radio").style.opacity = this.time < this.messageUntil ? 1 : 0;
     this.streets.update(this.time, this.car.position);
     this.routeScenes.update(this.car.position);
+    this.junctionGuide.update(this.car.checkpoint, this.car.position);
     this.world.update(dt, this.car.position, this.time);
     this.world.moon.position
       .copy(this.camera.position)

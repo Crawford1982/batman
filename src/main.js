@@ -73,6 +73,7 @@ let ready = false,
   last = performance.now(),
   noticeTimer = 0,
   target = null,
+  hitUntil = 0,
   frameCount = 0,
   fps = 60,
   fpsTime = 0,
@@ -233,6 +234,7 @@ function damage(n) {
   }
 }
 function start() {
+  hitUntil = 0;
   ground.hide();
   $("next-level").hidden = true;
   if (!ready) return;
@@ -636,7 +638,17 @@ function update(dt, wallDt = dt) {
         ? `MISSILE REARMING · ${missileCooldown.toFixed(1)}s`
         : "CANNONS READY · MISSILES ONLINE";
     $("crosshair").classList.toggle("lock", !!target);
-    $("target-label").textContent = target ? "TARGET ACQUIRED · FIRE" : "";
+    const liveTarget = target && target.hp > 0;
+    $("crosshair").classList.toggle("confirmed", t < hitUntil);
+    $("target-label").textContent = liveTarget
+      ? `${target.kind === 'relay' ? 'COMMAND RELAY' : target.kind === 'bomber' ? 'BOMBER' : 'DRONE'} · ${Math.round(target.mesh.position.distanceTo(flight.position))} M · FIRE`
+      : t < hitUntil ? "HIT CONFIRMED" : "";
+    $("target-armour").hidden = !liveTarget;
+    if (liveTarget) {
+      const percent = clamp(target.hp / (target.kind === 'relay' ? 12 : target.kind === 'bomber' ? 9 : 2) * 100, 0, 100);
+      $("target-armour").firstElementChild.style.width = percent + '%';
+      $("target-armour").setAttribute('aria-label', `Target armour ${Math.ceil(percent)} percent`);
+    }
     noticeTimer -= dt;
     if (noticeTimer <= 0) $("message").style.opacity = 0;
     updateMissionHUD();
@@ -878,6 +890,8 @@ function updateProjectiles(dt) {
           radius
         ) {
           victim.hp -= shot.missile ? 5 : 1;
+          hitUntil = t + .2;
+          audio.hit();
           hit = true;
           if (victim.hp <= 0) {
             burst(victim.mesh.position);

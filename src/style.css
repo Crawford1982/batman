@@ -655,3 +655,8 @@ body.hit #vignette {
  .touch-actions {right:max(20px,env(safe-area-inset-right))}
  #hud {padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
 }
+
+#target-armour {position:absolute;left:50%;top:calc(50% + 61px);transform:translateX(-50%);width:100px;height:3px;background:#b4d3df38;box-shadow:0 1px 4px #000}
+#target-armour i {display:block;height:100%;background:#efc986;transition:width .12s ease-out}
+#crosshair.confirmed {border-color:#fff4c9;box-shadow:0 0 15px #ffe4a988}
+#crosshair.confirmed:before,#crosshair.confirmed:after {background:#fff4c9}
