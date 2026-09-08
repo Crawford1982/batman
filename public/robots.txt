@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /verification/
+
+Sitemap: https://batman1989.co.uk/sitemap.xml

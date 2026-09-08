@@ -71,3 +71,10 @@ Existing fighters now approach, display a 1.6-second attack warning, fire once a
 22 unit tests pass, including warning-before-fire, fixed aim during evasion, finite attack/breakaway cycle and formation/detachment. Full flight regression and dedicated enemy-ai.mjs desktop/mobile browser checks pass. Mobile warning screenshot inspected. Production build passes. The suggested Blend Swap 17286 historical aircraft was reviewed but not downloaded for this rogue-drone fleet. No paid assets or generation used.
 
 Published 122c03c via successful Pages run 34229998961. HTTPS desktop/mobile enemy checks passed; the live test allows 60 seconds for initial model loading after a 30-second initial-load timeout. Production bundle and Batwing model both return HTTP 200.
+
+
+## SEO package — 8 September 2026
+
+Added descriptive search metadata, HTTPS canonical URLs, Open Graph/Twitter large-image cards, a 1200x630 actual-game JPEG, truthful VideoGame JSON-LD, static linked about/controls page, robots and sitemap. Corrected outdated twenty-minute menu copy and adjusted medium-height menus so settings remain visible. Keyword mapping and Search Console next steps documented in SEO-PACKAGE.md; supplied volumes not independently verified. No Search Console submission, rankings or rich-result eligibility claimed.
+
+seo.mjs passes for metadata/schema parsing, crawlable menu link, image dimensions/loading, mobile about-page overflow, no-JavaScript content and fallback, robots/sitemap availability. About page and share image visually inspected. Production build passes; game physics/combat unchanged.
