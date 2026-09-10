@@ -685,3 +685,5 @@ body:has(#chapter-card:not([hidden])) #hud #message {top:38%}
 
 #radio-caption {position:absolute;z-index:9;left:50%;bottom:23%;transform:translateX(-50%);width:min(560px,65vw);padding:10px 16px;background:#030b14e8;border-left:2px solid #d5b777;color:#edf3f7;font-size:13px;line-height:1.5;text-align:center;pointer-events:none}
 @media(max-height:500px){#radio-caption{bottom:15%;width:50vw;padding:6px 10px;font-size:10px}}
+
+.trailer-link{display:inline-block;padding:10px 0;color:#dfc68c;font-size:10px;letter-spacing:1.3px;text-decoration:none}.trailer-link:hover{text-decoration:underline}.trailer-link:focus-visible{outline:2px solid #dfc68c;outline-offset:4px}
