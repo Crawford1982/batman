@@ -93,6 +93,7 @@ export class Driving {
     this.speed = 0;
     this.steer = 0;
     this.health = 100;
+    this.damageTaken = 0;
     this.invulnerable = 0;
     this.elapsed = 0;
     this.checkpoint = 0;
@@ -112,6 +113,7 @@ export class Driving {
   damage(amount) {
     if (this.invulnerable > 0) return false;
     this.health = clamp(this.health - amount, 0, 100);
+    this.damageTaken += amount;
     this.invulnerable = 1.5;
     return true;
   }

@@ -69,6 +69,7 @@ export class GroundLevel {
     document.body.insertAdjacentHTML("beforeend", `<section id="arrival-film" hidden aria-label="Mission complete"><div class="arrival-top">OPERATION SILENT BELL / GOTHAM CATHEDRAL</div><div class="arrival-copy"><small>GCPD / SECURE CHANNEL</small><h2>The city has a tomorrow.</h2><p>Override accepted. Heat restored.<br>Gordon’s people are safe inside.</p><button id="arrival-skip">VIEW MISSION RESULTS →</button></div></section>`);
     $("arrival-skip").onclick = () => this.endArrival();
     document.querySelector('.drive-objective').insertAdjacentHTML('beforeend','<div id="drive-ambush" hidden><strong></strong><span></span></div>');
+    document.querySelector('.drive-objective').insertAdjacentHTML('beforeend', '<div id="drive-threat" hidden><strong></strong><span></span><i></i></div><div id="drive-reward" role="status"></div>');
     $("drive-launch").onclick = () => this.start();
     $("drive-back").onclick = () => {
       this.hide();
@@ -169,7 +170,7 @@ export class GroundLevel {
     this.group.add(this.pulse);
     this.pulseLife = 0;
     this.strike = new T.Mesh(
-      new T.RingGeometry(5.3, 6, 48),
+        new T.RingGeometry(7.3, 8, 48),
       new T.MeshBasicMaterial({
         color: 0xff6045,
         transparent: true,
@@ -180,6 +181,12 @@ export class GroundLevel {
     this.strike.rotation.x = -Math.PI / 2;
     this.strike.visible = false;
     this.group.add(this.strike);
+    this.strikeMarkers = [this.strike, ...[-1, 1].map(() => {
+      const marker = this.strike.clone();
+      marker.material = this.strike.material.clone();
+      this.group.add(marker);
+      return marker;
+    })];
     this.drones = [-1, 1].map((side) => {
       const d = createEnemy();
       d.scale.setScalar(0.55);
@@ -433,6 +440,11 @@ export class GroundLevel {
     this.strikeTime = 0;
     this.strike.visible = false;
     this.pulseLife = 0;
+    this.cancelStrike();
+    this.strikeNumber = 0; this.evasions = 0; this.countered = 0;
+    this.cleanSections = 0; this.sectionDamaged = false;
+    this.sectionDamageStart = this.car.damageTaken;
+    this.rewardUntil = 0; $('drive-reward').textContent = '';
     this.ambushState = 'waiting'; this.ambushEnd = -Infinity;
     $('drive-ambush').hidden = true;
     for (const m of this.mines) { m.visible = !m.userData.ambush; m.userData.clearedByEMP = false; }
@@ -451,6 +463,7 @@ export class GroundLevel {
   }
   hide() {
     this.audio.stopVoice();
+    this.cancelStrike();
     $("arrival-film").hidden = true;
     this.phase = "off";
     this.group.visible = false;
@@ -483,7 +496,8 @@ export class GroundLevel {
     if (this.phase !== "play") return;
     this.audio.stopVoice();
     $("drive-hud").hidden = true;
-    showResults("batmobile", win, this.car.elapsed, this.car.score, this.car.health, `${this.car.checkpoint} / ${DRIVE_ROUTE.length} checkpoints`);
+    this.cancelStrike();
+    showResults("batmobile", win, this.car.elapsed, this.car.score, this.car.health, `${this.car.checkpoint} / ${DRIVE_ROUTE.length} checkpoints · ${this.cleanSections} clean sections · ${this.evasions} evasions · ${this.countered} EMP counters`);
     window.gothamAnalytics?.event("level_end",{level_name:"batmobile",success:win,elapsed_seconds:this.car.elapsed,score:this.car.score});
     this.phase = "ended";
     this.onMode("driveEnded");
@@ -531,6 +545,9 @@ export class GroundLevel {
   resetRoad() {
     if (this.phase !== "play") return;
     this.car.recoverToRoute();
+    this.sectionDamaged = true; // Recovery cannot manufacture a clean-section bonus.
+    this.cancelStrike();
+    this.disabled = Math.max(this.disabled, 3);
     this.touch = {};
     this.mouse.steering = false;
     this.mouse.x = 0;
@@ -543,8 +560,11 @@ export class GroundLevel {
     this.car.emp = 6;
     this.disabled = 5;
     if (disrupted) this.audio.ambientRadio("alfred-emp");
-    this.strikeTime = 0;
-    this.strike.visible = false;
+    if (this.strikeTime > 0) {
+      this.countered++;
+      this.reward(150, 'STRIKE INTERRUPTED');
+    }
+    this.cancelStrike();
     this.pulseLife = 1;
     this.pulse.position.copy(this.car.position);
     this.pulse.position.y = 0.3;
@@ -562,7 +582,7 @@ export class GroundLevel {
     if (this.ambushState === 'waiting' && this.car.checkpoint === 2 && z < -130 && z > -630) {
       this.ambushState = 'active'; this.ambushHealth = this.car.health;
       this.ambushMines.forEach(m => m.visible = true);
-      this.strikeTime = 0; this.strike.visible = false;
+      this.cancelStrike();
       this.radio('AMBUSH / Mines under the railway. EMP within 90 metres, or weave through the gaps.');
     }
     const panel = $('drive-ambush');
@@ -585,6 +605,60 @@ export class GroundLevel {
     }
     panel.hidden = this.ambushState === 'waiting' || (this.ambushState === 'complete' && this.car.elapsed-this.ambushEnd > 6);
     panel.classList.toggle('cleared', this.ambushState === 'complete');
+  }
+  reward(points, label) {
+    this.car.score += points;
+    $('drive-reward').textContent = `${label} · +${points}`;
+    this.rewardUntil = this.time + 3;
+  }
+  cancelStrike() {
+    this.strikeTime = 0;
+    this.strikeMarkers.forEach(m => m.visible = false);
+    this.effects?.target(this.car.position, this.car.position, false);
+    $('drive-threat').hidden = true;
+  }
+  beginStrike() {
+    const goal = DRIVE_ROUTE[this.car.checkpoint];
+    const distance = Math.hypot(goal.x-this.car.position.x, goal.z-this.car.position.z);
+    const previous = DRIVE_ROUTE[this.car.checkpoint-1];
+    const leavingCorner = previous && Math.hypot(previous.x-this.car.position.x, previous.z-this.car.position.z) < 90;
+    // Keep intersections readable. Barrages belong on long, open stretches.
+    if (distance < 160 || leavingCorner || this.car.checkpoint >= 4 || this.ambushState === 'active') return;
+    this.strikeNumber++;
+    this.barrage = this.car.checkpoint >= 2 && this.strikeNumber % 2 === 0;
+    this.strikeDuration = this.barrage ? 3.2 : 2.6;
+    this.strikeTime = this.strikeDuration;
+    this.attackTimer = this.car.checkpoint < 2 ? 11 : 8;
+    const forward = new T.Vector3(-Math.sin(this.car.yaw), 0, -Math.cos(this.car.yaw));
+    this.strike.position.copy(this.car.position).addScaledVector(forward, this.car.speed * .6);
+    this.strike.position.y = .12;
+    const side = new T.Vector3(Math.cos(this.car.yaw), 0, -Math.sin(this.car.yaw));
+    this.strikeMarkers.forEach((m,i) => {
+      if (i) m.position.copy(this.strike.position).addScaledVector(side, i === 1 ? -10 : 10);
+      m.visible = i === 0 || this.barrage;
+      m.material.color.setHex(this.barrage ? 0xffaa55 : 0xff6045);
+    });
+    this.radio(this.barrage ? 'THREAT / Three-point barrage. Clear the marked road or use EMP.' : 'THREAT / Drone strike marked. Keep moving or use EMP.');
+  }
+  updateStrike(wallDt) {
+    const panel = $('drive-threat');
+    panel.hidden = this.strikeTime <= 0;
+    if (this.strikeTime <= 0) return;
+    this.strikeTime = Math.max(0, this.strikeTime - wallDt);
+    const markers = this.strikeMarkers.filter(m => m.visible);
+    const danger = markers.some(m => this.car.position.distanceTo(m.position) < 8);
+    panel.classList.toggle('safe', !danger);
+    panel.querySelector('strong').textContent = `${this.barrage ? 'THREE-POINT BARRAGE' : 'DRONE STRIKE'} · ${this.strikeTime.toFixed(1)}s`;
+    panel.querySelector('span').textContent = danger ? (this.car.emp <= 0 ? 'IN BLAST ZONE · MOVE OR EMP' : 'IN BLAST ZONE · KEEP MOVING') : 'CLEAR OF BLAST · KEEP CLEAR';
+    panel.querySelector('i').style.transform = `scaleX(${this.strikeTime / this.strikeDuration})`;
+    markers.forEach(m => m.material.opacity = .65 + Math.sin(this.time * 20) * .2);
+    if (this.strikeTime === 0) {
+      if (danger) this.car.damage(14); // Overlapping rings still cause just one hit.
+      else { this.evasions++; this.reward(this.barrage ? 200 : 100, 'CLEAN EVASION'); }
+      markers.forEach(m => this.effects.emit(m.position, this.barrage ? 24 : 70));
+      this.audio.explosion();
+      this.cancelStrike();
+    }
   }
   controls() {
     const k = this.keys,
@@ -646,6 +720,12 @@ export class GroundLevel {
       const oldHealth = this.car.health,
         passed = this.car.update(Math.min(wallDt,.25), input, this.obstacles, true, wallDt);
       if (passed) {
+        if (!this.sectionDamaged && this.car.damageTaken === this.sectionDamageStart) {
+          this.cleanSections++; this.reward(200, 'CLEAN SECTION');
+        }
+        this.sectionDamaged = false;
+        this.sectionDamageStart = this.car.damageTaken;
+        this.cancelStrike(); this.attackTimer = Math.max(this.attackTimer, 5);
         this.audio.shot(true);
         this.radio(passed.line);
         if (this.car.done) {
@@ -683,34 +763,11 @@ export class GroundLevel {
       }
       this.mines.forEach(m=>{if(m.userData.light)m.userData.light.visible=Math.sin(this.time*5+m.position.z)>.1;});
       this.effects.target(this.drones[0].position,this.strike.position,this.strikeTime>0);
-      if (this.attackTimer <= 0 && this.disabled <= 0 && this.car.elapsed > 15) {
-        this.attackTimer = this.car.checkpoint < 2 ? 11 : this.car.checkpoint < 4 ? 8 : 6;
-        this.strikeTime = this.car.checkpoint < 2 ? 2.6 : 2.1;
-        this.strike.position
-          .copy(this.car.position)
-          .add(
-            new T.Vector3(
-              -Math.sin(this.car.yaw) * this.car.speed * 0.6,
-              0,
-              -Math.cos(this.car.yaw) * this.car.speed * 0.6,
-            ),
-          );
-        this.strike.position.y = 0.12;
-        this.strike.visible = true;
-        this.radio("THREAT / Drone strike marked. Keep moving or use EMP.");
-      }
-      if (this.strikeTime > 0) {
-        this.strikeTime -= wallDt;
-        this.strike.material.opacity = 0.45 + Math.sin(this.time * 20) * 0.3;
-        if (this.strikeTime <= 0) {
-          if (this.car.position.distanceTo(this.strike.position) < 8)
-            this.car.damage(14);
-          this.effects.emit(this.strike.position,70);
-          this.audio.explosion();
-          this.strike.visible = false;
-        }
-      }
+      if (this.attackTimer <= 0 && this.disabled <= 0 && this.car.elapsed > 15 && this.strikeTime <= 0) this.beginStrike();
+      this.updateStrike(wallDt);
+      $('drive-reward').style.opacity = this.time < this.rewardUntil ? 1 : 0;
       if (this.car.health < oldHealth) {
+        this.sectionDamaged = true;
         this.effects.emit(this.car.position,35);
         this.shake = .22;
         document.body.classList.add("hit");
@@ -783,7 +840,7 @@ export class GroundLevel {
         ) + " M";
       $("drive-goal").textContent = goal.name;
       $("drive-progress").textContent =
-        `ROUTE ${this.car.checkpoint + 1} / ${DRIVE_ROUTE.length} · ${Math.round(Math.hypot(goal.x - this.car.position.x, goal.z - this.car.position.z))} M`;
+        `ROUTE ${this.car.checkpoint + 1} / ${DRIVE_ROUTE.length} · ${this.car.score.toLocaleString()} PTS`;
       const turnDistance = Math.hypot(goal.x-this.car.position.x, goal.z-this.car.position.z);
       $("drive-turn").classList.toggle("turn-urgent", turnDistance < 130 || this.car.roadContact);
       $("drive-turn").textContent = this.car.roadContact ? "CURB CONTACT · steer back into the lane" :

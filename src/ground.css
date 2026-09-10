@@ -515,4 +515,12 @@
 #drive-ambush strong,#drive-ambush span{display:block;font-size:11px;line-height:1.5}
 #drive-ambush span{font-size:10px;color:#d5e0e7;margin-top:4px}
 #drive-ambush.cleared{border-color:#8cddca;background:#0b211ce8;color:#adf0da}
+#drive-threat{position:relative;margin-top:8px;padding:8px 9px 11px;background:#231512ee;border-left:3px solid #ff9169;color:#ffd0af;overflow:hidden}
+#drive-threat strong,#drive-threat span{display:block;font-size:10px;line-height:1.5}
+#drive-threat span{font-size:9px;color:#e3eaf0;margin-top:3px}
+#drive-threat i{position:absolute;bottom:0;left:0;right:0;height:3px;background:#ff9169;transform-origin:left}
+#drive-threat.safe{border-color:#9adbd6;background:#0b2124ee;color:#bceae5}
+#drive-threat.safe i{background:#9adbd6}
+#drive-reward{font-size:10px;letter-spacing:1px;color:#bceae5;margin-top:7px;transition:opacity .2s;text-shadow:0 2px 3px #000}
+@media(max-height:500px){#drive-threat{padding:5px 7px 8px;margin-top:5px}#drive-threat strong{font-size:9px}#drive-threat span,#drive-reward{font-size:8px}#drive-reward{margin-top:4px}}
 @media(max-height:500px){#drive-ambush{padding:5px;margin-top:5px}#drive-ambush strong{font-size:9px}#drive-ambush span{font-size:8px}}
