@@ -105,3 +105,7 @@ Distinct shared heavy-bomber geometry with wide wings, twin nacelles, underwing 
 
 ## In-game mission radio
 Ten recorded lines: Alfred patrol/relay orders/driving/left turn, Gordon inbound/shelter hit/final evacuation/arrival, Batman air and ground replies. Matching captions, music ducking, repeated-alert throttle, lazy loading and caching. Speech/replies cancel on pause, mute, restart, menu exit and arrival skip. Radio and existing briefing-voice desktop/mobile tests passed, including 10 decoded clips, both replies, pending-load cancellation and muted playback. Additional authorized generation spend exactly 42 vidIQ credits.
+
+
+## Expanded mission conversation — 10 September 2026
+Eight new static clips: theatre, railway, successful EMP disruption, northbound route, cathedral approach, shelter status, relay destroyed and final attack. Location chatter plays once per drive, waits for a quiet gap and expires outside its route segment. Event directions/warnings can interrupt casual dialogue. Briefing scenes shortened from 9 to 7.6 seconds (27 to 22.8 total), unchanged voice playback speed. Existing 18-clip radio desktop/mobile regression, briefing voice regression, targeted location/one-shot/overlap/event tests, 23 unit tests and build passed. Authorized cost 28 vidIQ credits.

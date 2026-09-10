@@ -6,7 +6,7 @@ for(const mobile of [false,true]){
  await p.waitForFunction(()=>window.__batwing.ground.audio.voiceSource && window.__batwing.ground.audio.voiceId==='alfred-patrol');
  assert.match(await p.locator('#radio-caption').innerText(),/ALFRED/);
  await p.keyboard.press('Escape');assert.equal(await p.evaluate(()=>window.__batwing.ground.audio.voiceId),null);assert.ok(await p.locator('#radio-caption').isHidden());
- const lengths=await p.evaluate(async()=>{const {RADIO_LINES}=await import('/src/radio-lines.js');const a=window.__batwing.ground.audio;return Promise.all(Object.keys(RADIO_LINES).map(async id=>(await a.loadVoice(id))?.duration));});assert.ok(lengths.every(d=>d>1&&d<7));assert.equal(lengths.length,10);
+ const lengths=await p.evaluate(async()=>{const {RADIO_LINES}=await import('/src/radio-lines.js');const a=window.__batwing.ground.audio;return Promise.all(Object.keys(RADIO_LINES).map(async id=>(await a.loadVoice(id))?.duration));});assert.ok(lengths.every(d=>d>1&&d<7));assert.equal(lengths.length,18);
  await p.click('#resume');await p.evaluate(()=>{const a=window.__batwing.ground.audio;a.radioMessage('ALFRED / Attack source identified');});
  await p.waitForFunction(()=>window.__batwing.ground.audio.voiceId==='batman-air');
  await p.evaluate(()=>window.__batwing.ground.audio.mute(true));assert.equal(await p.evaluate(()=>window.__batwing.ground.audio.voiceId),null);
@@ -14,5 +14,5 @@ for(const mobile of [false,true]){
  await p.waitForFunction(()=>window.__batwing.ground.audio.voiceId==='batman-drive');
  await p.keyboard.press('Escape');assert.equal(await p.evaluate(()=>window.__batwing.ground.audio.voiceId),null);
  assert.deepEqual(errors,[]);await p.close();}
- console.log('PASS 10 decoded clips, flight/ground triggers and Batman replies, captions, pause and mute, desktop/mobile');
+ console.log('PASS 18 decoded clips, flight/ground triggers and Batman replies, captions, pause and mute, desktop/mobile');
 }finally{await b.close();}

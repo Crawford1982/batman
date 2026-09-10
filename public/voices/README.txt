@@ -6,3 +6,5 @@ Original scripts; synthetic stock performances, no actor clones or film samples.
 Three generation calls, 14 vidIQ credits each; total authorized cost 42 credits.
 
 In-game radio expansion: ten short clips from three additional stock-voice recordings, explicitly authorized at 42 vidIQ credits total. Same Daniel/Bill/Brian voices; original dialogue in src/radio-lines.js. Batched recordings split at sentence gaps and encoded as mono 96 kbps MP3. 512,644 bytes added. No runtime voice generation or additional services.
+
+10 September 2026: eight more original Alfred/Gordon callouts generated in two approved batches, 28 vidIQ credits total; same Daniel and Bill stock voices. Six driving/route/reactive lines and two flight lines. Existing Batman replies reused.

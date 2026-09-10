@@ -406,6 +406,7 @@ export class GroundLevel {
   }
   start() {
     this.audio.stopVoice(); this.audio.radioTimes = {};
+    this.audio.radioSeen = new Set(); this.audio.lastRadioEnd = performance.now();
     if (!this.ready) return;
     window.gothamAnalytics?.event("level_start",{level_name:"batmobile"});
     $("arrival-film").hidden = true;
@@ -530,8 +531,10 @@ export class GroundLevel {
   }
   emp() {
     if (this.phase !== "play" || this.car.emp > 0) return;
+    const disrupted = this.strikeTime > 0 || this.mines.some(m => m.visible && m.position.distanceTo(this.car.position) < 90);
     this.car.emp = 6;
     this.disabled = 5;
+    if (disrupted) this.audio.ambientRadio("alfred-emp");
     this.strikeTime = 0;
     this.strike.visible = false;
     this.pulseLife = 1;
@@ -716,6 +719,13 @@ export class GroundLevel {
         this.car.emp > 0
           ? `EMP RECHARGING / ${this.car.emp.toFixed(1)}s`
           : "EMP READY / F OR CLICK";
+      // Location-specific chatter expires when its stretch is passed; no stale queue.
+      if (this.strikeTime <= 0 && this.attackTimer > 5) {
+        const {x,z} = this.car.position;
+        if (this.car.checkpoint === 1 && x < -100 && x > -420) this.audio.ambientRadio('alfred-theatre');
+        else if (this.car.checkpoint === 2 && z < -180 && z > -600) this.audio.ambientRadio('alfred-railway');
+        else if (this.car.elapsed > 50 && this.car.checkpoint < 4) this.audio.ambientRadio('gordon-hold');
+      }
       const goal = DRIVE_ROUTE[this.car.checkpoint];
       const marker =
         this.checkpoints[this.car.checkpoint].mesh.position.clone();

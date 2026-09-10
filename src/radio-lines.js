@@ -1,4 +1,13 @@
 export const RADIO_LINES = {
+  "alfred-theatre": ["ALFRED", "The theatre district is deserted, sir, but those rooftops are not."],
+  "alfred-railway": ["ALFRED", "The elevated railway will give you cover, keep the car moving."],
+  "alfred-emp": ["ALFRED", "Their tracking signal has dropped, nicely done, sir."],
+  "alfred-relay-down": ["ALFRED", "That relay is offline, their grip on the city is weakening."],
+  "gordon-north": ["GORDON", "Head north into Old Gotham, we are keeping the shelter doors open."],
+  "gordon-approach": ["GORDON", "We can hear your engine, bring the override to the front steps."],
+  "gordon-hold": ["GORDON", "The families are holding on, just get that car here in one piece."],
+  "gordon-last-wave": ["GORDON", "This is their last attack, hold the corridor and we can get everyone out."],
+
   'alfred-patrol': ['ALFRED', 'The city is quiet, sir, take a moment to get your bearings.'],
   'alfred-relays': ['ALFRED', 'Attack source identified, disable the three red command relays.'],
   'alfred-drive': ['ALFRED', 'Take the override to the cathedral and follow the gold route.'],

@@ -806,7 +806,7 @@ function beginBriefing() {
 function updateBriefing(dt) {
   if (document.hidden) return;
   briefingTime += dt;
-  const chapter = Math.min(2, Math.floor(briefingTime / 9));
+  const chapter = Math.min(2, Math.floor(briefingTime / 7.6));
   const shot = BRIEFING[chapter];
   if (chapter !== briefingChapter) {
     briefingChapter = chapter;
@@ -823,7 +823,7 @@ function updateBriefing(dt) {
     void panel.offsetWidth;
     panel.style.animation = "";
   }
-  const progress = (briefingTime % 9) / 9;
+  const progress = (briefingTime % 7.6) / 7.6;
   camera.position
     .copy(shot.eye)
     .add(
@@ -838,7 +838,7 @@ function updateBriefing(dt) {
   camera.updateProjectionMatrix();
   camera.lookAt(shot.target);
   player.position.copy(camera.position);
-  if (briefingTime >= 27) start();
+  if (briefingTime >= 22.8) start();
 }
 function spawnBomber(site) {
   if (enemies.filter((e) => e.kind === "bomber").length >= 3) return;

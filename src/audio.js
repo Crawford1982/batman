@@ -85,7 +85,7 @@ export class AudioSystem {
     source.onended = () => {
       nodes.forEach(node => node.disconnect());
       if (this.voiceSource === source) {
-        this.voiceSource = null; this.voiceId = null; this.mix();
+        this.voiceSource = null; this.voiceId = null; this.lastRadioEnd = performance.now(); this.mix();
         const caption = document.getElementById('radio-caption'); if (caption) caption.hidden = true;
         if (token === this.voiceToken) onDone?.();
       }
@@ -101,7 +101,10 @@ export class AudioSystem {
     let id, reply;
     if (text.includes('The city is quiet')) id = 'alfred-patrol';
     else if (text.includes('Attack source identified')) { id = 'alfred-relays'; reply = 'batman-air'; }
-    else if (text.includes('Final evacuation')) id = 'gordon-final';
+    else if (text.includes('Final evacuation')) { id = 'gordon-last-wave'; reply = 'batman-air'; }
+    else if (text.includes('relay disabled')) id = 'alfred-relay-down';
+    else if (text.includes('Head north')) id = 'gordon-north';
+    else if (text.includes('Bring the override')) id = 'gordon-approach';
     else if (text.includes('Shelter hit')) id = 'gordon-hit';
     else if (text.includes('Bomber inbound')) id = 'gordon-inbound';
     else if (text.includes('Take the override')) { id = 'alfred-drive'; reply = 'batman-drive'; }
@@ -114,6 +117,14 @@ export class AudioSystem {
     if (id === 'gordon-inbound' && this.voiceId) return;
     this.radioTimes[id] = now;
     this.speak(id, reply ? () => this.speak(reply) : null);
+  }
+  ambientRadio(id) {
+    const now = performance.now();
+    this.radioSeen ||= new Set();
+    if (!this.enabled || this.voiceId || this.radioSeen.has(id) || now - (this.lastRadioEnd ?? 0) < 12000) return false;
+    this.radioSeen.add(id);
+    this.speak(id);
+    return true;
   }
   tone(freq, at, len, gain = 0.1, type = "sine") {
     const o = this.ctx.createOscillator(),
