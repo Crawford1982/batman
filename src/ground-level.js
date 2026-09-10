@@ -68,6 +68,7 @@ export class GroundLevel {
     );
     document.body.insertAdjacentHTML("beforeend", `<section id="arrival-film" hidden aria-label="Mission complete"><div class="arrival-top">OPERATION SILENT BELL / GOTHAM CATHEDRAL</div><div class="arrival-copy"><small>GCPD / SECURE CHANNEL</small><h2>The city has a tomorrow.</h2><p>Override accepted. Heat restored.<br>Gordon’s people are safe inside.</p><button id="arrival-skip">VIEW MISSION RESULTS →</button></div></section>`);
     $("arrival-skip").onclick = () => this.endArrival();
+    document.querySelector('.drive-objective').insertAdjacentHTML('beforeend','<div id="drive-ambush" hidden><strong></strong><span></span></div>');
     $("drive-launch").onclick = () => this.start();
     $("drive-back").onclick = () => {
       this.hide();
@@ -192,6 +193,11 @@ export class GroundLevel {
     this.effects = new GroundEffects(this.group);
     this.streets = new StreetDetail(this.group);
     this.makeStreets();
+    this.ambushMines = [-10,0,10].map((offset,i) => {
+      const mine = createMine(); mine.position.set(-522.5+offset,.4,-520-i*32);
+      mine.userData.ambush = true; mine.visible = false; this.group.add(mine); this.mines.push(mine);
+      return mine;
+    });
     this.routeScenes = new RouteScenes(this.group);
     this.junctionGuide = new JunctionGuide(this.group);
     this.obstacles = [...this.world.buildings, ...this.streets.colliders];
@@ -427,7 +433,9 @@ export class GroundLevel {
     this.strikeTime = 0;
     this.strike.visible = false;
     this.pulseLife = 0;
-    for (const m of this.mines) m.visible = true;
+    this.ambushState = 'waiting'; this.ambushEnd = -Infinity;
+    $('drive-ambush').hidden = true;
+    for (const m of this.mines) { m.visible = !m.userData.ambush; m.userData.clearedByEMP = false; }
     this.phase = "play";
     this.onMode("drive");
     this.group.visible = true;
@@ -542,12 +550,41 @@ export class GroundLevel {
     this.pulse.position.y = 0.3;
     const targets = this.drones.map(d=>d.position);
     for (const m of this.mines)
-      if (m.visible && m.position.distanceTo(this.car.position) < 90) { this.effects.emit(m.position,35,true); m.visible = false; }
+      if (m.visible && m.position.distanceTo(this.car.position) < 90) { this.effects.emit(m.position,35,true); m.visible = false; m.userData.clearedByEMP = true; }
     this.effects.discharge(this.car.position,targets);
     this.audio.shot(true);
     this.radio(
       "COUNTERMEASURES / EMP discharged. Drones disrupted for five seconds.",
     );
+  }
+  updateAmbush() {
+    const {z} = this.car.position;
+    if (this.ambushState === 'waiting' && this.car.checkpoint === 2 && z < -130 && z > -630) {
+      this.ambushState = 'active'; this.ambushHealth = this.car.health;
+      this.ambushMines.forEach(m => m.visible = true);
+      this.strikeTime = 0; this.strike.visible = false;
+      this.radio('AMBUSH / Mines under the railway. EMP within 90 metres, or weave through the gaps.');
+    }
+    const panel = $('drive-ambush');
+    if (this.ambushState === 'active') {
+      this.attackTimer = Math.max(this.attackTimer, 3); // Give this encounter its own readable beat.
+      const remaining = this.ambushMines.filter(m => m.visible);
+      if (!remaining.length || z < -630 || this.car.checkpoint > 2) {
+        const cleared = this.ambushMines.every(m => m.userData.clearedByEMP);
+        const bonus = cleared ? 500 : this.car.health >= this.ambushHealth ? 200 : 0;
+        this.car.score += bonus; this.ambushState = 'complete'; this.ambushEnd = this.car.elapsed;
+        this.ambushMines.forEach(m => m.visible = false); this.disabled = Math.max(this.disabled, 6);
+        panel.querySelector('strong').textContent = cleared ? 'AMBUSH DISARMED · +500' : bonus ? 'CLEAN ESCAPE · +200' : 'AMBUSH SURVIVED';
+        panel.querySelector('span').textContent = 'Corridor clear. Continue to the cathedral.';
+        this.radio(cleared ? 'COUNTERMEASURES / Minefield disabled. Corridor clear. +500' : 'ROUTE CLEAR / Continue to the cathedral.');
+      } else {
+        const distance = Math.round(Math.min(...remaining.map(m => m.position.distanceTo(this.car.position))));
+        panel.querySelector('strong').textContent = 'RAILWAY AMBUSH · ' + remaining.length + ' MINES';
+        panel.querySelector('span').textContent = distance <= 90 ? 'IN EMP RANGE · F / CLICK / TOUCH EMP' : `MINEFIELD ${distance} M · EMP RANGE 90 M`;
+      }
+    }
+    panel.hidden = this.ambushState === 'waiting' || (this.ambushState === 'complete' && this.car.elapsed-this.ambushEnd > 6);
+    panel.classList.toggle('cleared', this.ambushState === 'complete');
   }
   controls() {
     const k = this.keys,
@@ -625,6 +662,7 @@ export class GroundLevel {
           }
         }
       }
+      this.updateAmbush();
       this.disabled = Math.max(0, this.disabled - wallDt);
       this.attackTimer -= wallDt;
       this.drones.forEach((d, i) => {
@@ -720,7 +758,7 @@ export class GroundLevel {
           ? `EMP RECHARGING / ${this.car.emp.toFixed(1)}s`
           : "EMP READY / F OR CLICK";
       // Location-specific chatter expires when its stretch is passed; no stale queue.
-      if (this.strikeTime <= 0 && this.attackTimer > 5) {
+      if (this.ambushState !== "active" && this.strikeTime <= 0 && this.attackTimer > 5) {
         const {x,z} = this.car.position;
         if (this.car.checkpoint === 1 && x < -100 && x > -420) this.audio.ambientRadio('alfred-theatre');
         else if (this.car.checkpoint === 2 && z < -180 && z > -600) this.audio.ambientRadio('alfred-railway');

@@ -510,3 +510,9 @@
 .arrival-copy p {font-size:14px;line-height:1.6;color:#bccdd8}
 #arrival-skip {pointer-events:auto;background:#09131cbb;border:1px solid #c7ac7566;color:#dfc68e;padding:14px 20px;font-size:11px}
 @media(max-height:500px){#arrival-film{border-width:12px}.arrival-copy{bottom:4%}.arrival-copy h2{font-size:32px}.arrival-copy p{font-size:12px;margin:8px 0}}
+
+#drive-ambush {border-left:3px solid #ff9270;background:#1c1311ed;padding:9px;margin-top:10px;color:#ffc69b}
+#drive-ambush strong,#drive-ambush span{display:block;font-size:11px;line-height:1.5}
+#drive-ambush span{font-size:10px;color:#d5e0e7;margin-top:4px}
+#drive-ambush.cleared{border-color:#8cddca;background:#0b211ce8;color:#adf0da}
+@media(max-height:500px){#drive-ambush{padding:5px;margin-top:5px}#drive-ambush strong{font-size:9px}#drive-ambush span{font-size:8px}}

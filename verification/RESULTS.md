@@ -109,3 +109,7 @@ Ten recorded lines: Alfred patrol/relay orders/driving/left turn, Gordon inbound
 
 ## Expanded mission conversation — 10 September 2026
 Eight new static clips: theatre, railway, successful EMP disruption, northbound route, cathedral approach, shelter status, relay destroyed and final attack. Location chatter plays once per drive, waits for a quiet gap and expires outside its route segment. Event directions/warnings can interrupt casual dialogue. Briefing scenes shortened from 9 to 7.6 seconds (27 to 22.8 total), unchanged voice playback speed. Existing 18-clip radio desktop/mobile regression, briefing voice regression, targeted location/one-shot/overlap/event tests, 23 unit tests and build passed. Authorized cost 28 vidIQ credits.
+
+
+## Railway mine ambush — 10 September 2026
+One encounter in Chapter II: three staggered mines on the northbound railway corridor, advance warning and EMP range indicator. Disarm all with EMP for 500 points or bypass without damage for 200; damaged survival awards no extra points. Encounter reward cannot repeat. Drone strikes pause during encounter and six seconds of disruption follow completion. Reuses existing mine geometry/effects; no paid assets. Targeted desktop/mobile test passed activation, actual keyboard/touch EMP, score-once guard, bypass reward and restart reset. Full ground regression passed including chapter transition and mobile controls.
