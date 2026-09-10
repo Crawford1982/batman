@@ -9,3 +9,8 @@ batwing-website.zip
 !.env.example
 .DS_Store
 Thumbs.db
+
+# Reproducible trailer intermediates and temporary voice batches
+trailer/picture.mp4
+trailer/soundtrack.m4a
+verification/*-source.mp3
