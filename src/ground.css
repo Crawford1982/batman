@@ -522,5 +522,11 @@
 #drive-threat.safe{border-color:#9adbd6;background:#0b2124ee;color:#bceae5}
 #drive-threat.safe i{background:#9adbd6}
 #drive-reward{font-size:10px;letter-spacing:1px;color:#bceae5;margin-top:7px;transition:opacity .2s;text-shadow:0 2px 3px #000}
+.ground-presentation #drive-radio,.ground-presentation #radio-caption{position:absolute;left:50%;top:auto;bottom:23%;transform:translateX(-50%);width:min(560px,65vw);box-sizing:border-box;padding:10px 16px;border-left:2px solid #d5b777;background:#030b14e8;color:#edf3f7;font:13px/1.5 Manrope,Arial,sans-serif;letter-spacing:0;text-align:center;pointer-events:none}
+.ground-arrival #radio-caption{top:80px;bottom:auto}
+#arrival-film:not([hidden]) .arrival-copy{animation:arrival-copy-in .8s ease-out both}
+@keyframes arrival-copy-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-height:500px){.ground-presentation #drive-radio,.ground-presentation #radio-caption{bottom:15%;width:50vw;padding:6px 10px;font-size:10px}.ground-arrival #radio-caption{top:55px;bottom:auto}}
+@media(prefers-reduced-motion:reduce){#arrival-film:not([hidden]) .arrival-copy{animation:none}#drive-radio,#drive-reward{transition:none}}
 @media(max-height:500px){#drive-threat{padding:5px 7px 8px;margin-top:5px}#drive-threat strong{font-size:9px}#drive-threat span,#drive-reward{font-size:8px}#drive-reward{margin-top:4px}}
 @media(max-height:500px){#drive-ambush{padding:5px;margin-top:5px}#drive-ambush strong{font-size:9px}#drive-ambush span{font-size:8px}}

@@ -10,6 +10,7 @@ import { clamp } from "./flight.js";
 import "./ground.css";
 import { StreetDetail } from "./street-detail.js";
 import { GroundEffects, createMine } from "./ground-effects.js";
+import { GroundCamera } from "./ground-camera.js";
 import { loadPursuitDrone, installPursuitDrone } from "./pursuit-drone.js";
 
 const $ = (id) => document.getElementById(id);
@@ -139,8 +140,8 @@ export class GroundLevel {
     head.position.set(0, 2, -3);
     head.target.position.set(0, 0, -45);
     this.vehicle.add(head, head.target);
-    const rim = new T.PointLight(0xb8c9da, 9, 22, 1);
-    rim.position.set(0, 6, 1);
+    const rim = new T.PointLight(0xadc8e8, 14, 18, 1);
+    rim.position.set(-3, 5, 2);
     this.vehicle.add(rim);
     this.exhaust = new T.Mesh(
       new T.ConeGeometry(0.35, 3, 10),
@@ -211,6 +212,8 @@ export class GroundLevel {
     this.saveQuaternion = new T.Quaternion();
     this.cameraOffset = new T.Vector3();
     this.look = new T.Vector3();
+    this.cameraRig = new GroundCamera();
+    this.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   }
   makeStreets() {
     const points = [{ x: 0, z: 450 }, ...DRIVE_ROUTE],
@@ -401,6 +404,9 @@ export class GroundLevel {
     return this.loading;
   }
   async begin() {
+    document.body.classList.add('ground-presentation');
+    document.body.classList.remove('ground-arrival');
+    this.routeScenes.restorePower(0);
     this.phase = "briefing";
     this.onMode("driveBriefing");
     this.car.reset();
@@ -418,6 +424,9 @@ export class GroundLevel {
     }
   }
   start() {
+    document.body.classList.add('ground-presentation');
+    document.body.classList.remove('ground-arrival');
+    this.routeScenes.restorePower(0);
     this.audio.stopVoice(); this.audio.radioTimes = {};
     this.audio.radioSeen = new Set(); this.audio.lastRadioEnd = performance.now();
     if (!this.ready) return;
@@ -456,12 +465,16 @@ export class GroundLevel {
     $("pause-menu").hidden = true;
     this.vehicle.position.copy(this.car.position);
     this.vehicle.rotation.set(0, 0, 0);
-    this.camera.position.copy(this.car.position).add(new T.Vector3(0, 5, 14));
+    this.cameraRig.reset(this.car.position, this.car.yaw);
+    this.camera.position.copy(this.cameraRig.eye);
+    this.look.copy(this.cameraRig.look); this.camera.lookAt(this.look);
+    this.camera.fov = 54; this.camera.updateProjectionMatrix();
     this.radio(
       "ALFRED / Take the override to the cathedral. Follow the gold route.",
     );
   }
   hide() {
+    document.body.classList.remove('ground-presentation', 'ground-arrival');
     this.audio.stopVoice();
     this.cancelStrike();
     $("arrival-film").hidden = true;
@@ -523,6 +536,8 @@ export class GroundLevel {
       this.phase = "arrival"; this.onMode("driveArrival"); this.arrivalTime = 0;
       this.arrivalEye = this.camera.position.clone();
       this.arrivalLook = this.look.clone();
+      this.arrivalFov = this.camera.fov;
+      document.body.classList.add('ground-arrival');
       $("pause-menu").hidden = true; $("arrival-film").hidden = false;
       this.audio.shot(true);
       this.audio.speak("gordon-safe");
@@ -534,6 +549,7 @@ export class GroundLevel {
   endArrival() {
     this.audio.stopVoice();
     if (this.phase !== "arrival") return;
+    document.body.classList.remove('ground-arrival');
     this.phase = "ended"; this.onMode("driveEnded");
     $("arrival-film").hidden = true; $("pause-menu").hidden = false;
   }
@@ -552,6 +568,7 @@ export class GroundLevel {
     this.mouse.steering = false;
     this.mouse.x = 0;
     this.car.invulnerable = 2;
+    this.cameraRig.reset(this.car.position, this.car.yaw);
     this.radio("ALFRED / Back on route. The clock is still running.");
   }
   emp() {
@@ -689,13 +706,19 @@ export class GroundLevel {
       this.controls(); // Controller menu button can skip, just like Escape.
       if (this.phase !== "arrival") return;
       this.arrivalTime += dt;
+      this.time += dt;
+      this.streets.update(this.time, this.car.position);
+      this.routeScenes.update(this.car.position);
       const progress = Math.min(1, this.arrivalTime / 6);
       const ease = progress * progress * (3 - 2 * progress);
-      if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      this.routeScenes.restorePower(Math.min(1, this.arrivalTime / 2.5));
+      if (!this.reducedMotion.matches) {
         const eye = this.car.position.clone().add(new T.Vector3(16, 8, 20));
         const look = this.car.position.clone().add(new T.Vector3(0, 4, -8));
         this.camera.position.lerpVectors(this.arrivalEye, eye, ease);
         this.camera.lookAt(this.arrivalLook.clone().lerp(look, ease));
+        this.camera.fov = this.arrivalFov + (46-this.arrivalFov)*ease;
+        this.camera.updateProjectionMatrix();
       }
       this.world.update(dt, this.car.position, this.time);
       this.audio.update(0, false);
@@ -788,20 +811,14 @@ export class GroundLevel {
       this.wheelSpin = (this.wheelSpin || 0) + (this.car.speed * dt) / 0.6;
       for (const w of this.wheels)
         w.mesh.rotation.x = w.rotation + this.wheelSpin;
-      this.cameraOffset
-        .set(-this.car.steer * Math.min(Math.abs(this.car.speed)/25,1)*1.2, 3.1, input.boost ? 15 : 12.5)
-        .applyAxisAngle(new T.Vector3(0, 1, 0), this.car.yaw)
-        .add(this.car.position);
-      this.camera.position.lerp(this.cameraOffset, 1 - Math.exp(-dt * 6));
-      this.look
-        .set(-this.car.steer*3, 1.1, -17)
-        .applyAxisAngle(new T.Vector3(0, 1, 0), this.car.yaw)
-        .add(this.car.position);
+      this.cameraRig.update(dt, this.car, input.boost, this.reducedMotion.matches);
+      this.camera.position.copy(this.cameraRig.eye);
+      this.look.copy(this.cameraRig.look);
       this.camera.up.set(0, 1, 0);
       this.shake = Math.max(0,(this.shake||0)-dt);
-      this.camera.position.x += Math.sin(this.time*75)*this.shake*.35;
+      if (!this.reducedMotion.matches) this.camera.position.x += Math.sin(this.time*75)*this.shake*.35;
       this.camera.lookAt(this.look);
-      this.camera.fov += ((input.boost ? 62 : 54) - this.camera.fov) * (1-Math.exp(-dt*2));
+      this.camera.fov += ((54+this.cameraRig.boost*5) - this.camera.fov) * (1-Math.exp(-dt*3));
       this.camera.fov = clamp(this.camera.fov, 48, 70);
       this.camera.updateProjectionMatrix();
       const left = Math.max(0, Math.ceil(300 - this.car.elapsed));
@@ -860,7 +877,11 @@ export class GroundLevel {
     this.pulse.visible = this.pulseLife > 0;
     this.pulse.scale.setScalar((1 - this.pulseLife) * 90 + 2);
     this.pulse.material.opacity = this.pulseLife;
-    $("drive-radio").style.opacity = this.time < this.messageUntil ? 1 : 0;
+    const caption = $('radio-caption');
+    const dedicatedThreat = /^THREAT|^AMBUSH|^COUNTERMEASURES|^ROUTE CLEAR/.test($('drive-radio').textContent);
+    const showRadio = this.time < this.messageUntil && !(caption && !caption.hidden) &&
+      !(dedicatedThreat && (!$('drive-threat').hidden || !$('drive-ambush').hidden));
+    $("drive-radio").style.opacity = showRadio ? 1 : 0;
     this.streets.update(this.time, this.car.position);
     this.routeScenes.update(this.car.position);
     this.junctionGuide.update(this.car.checkpoint, this.car.position);

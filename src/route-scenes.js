@@ -12,7 +12,7 @@ export class RouteScenes {
     const glass=new T.MeshStandardMaterial({color:0x17232c,emissive:0xd19745,emissiveIntensity:.48,metalness:.3,roughness:.23});
     const set=(x,z)=>{const g=new T.Group();g.position.set(x,0,z);parent.add(g);this.sets.push(g);return g;};
     const boxes=(g,list)=>{const batches=new Map();for(const [x,y,z,w,h,d,mat]of list){const geo=new T.BoxGeometry(w,h,d);geo.translate(x,y,z);const a=batches.get(mat)||[];a.push(geo);batches.set(mat,a);}for(const [mat,a]of batches){g.add(new T.Mesh(mergeGeometries(a),mat));a.forEach(v=>v.dispose());}};
-    const sign=(g,text,sub,x,y,z,w,h)=>{const c=document.createElement('canvas');c.width=1024;c.height=256;const ctx=c.getContext('2d');ctx.fillStyle='#111820';ctx.fillRect(0,0,1024,256);ctx.strokeStyle='#bc9556';ctx.lineWidth=5;ctx.strokeRect(10,10,1004,236);ctx.textAlign='center';ctx.fillStyle='#ffe4aa';ctx.font='60px Georgia';ctx.fillText(text,512,116);ctx.font='22px sans-serif';ctx.fillStyle='#c7b79d';ctx.fillText(sub,512,185);const tex=new T.CanvasTexture(c);tex.colorSpace=T.SRGBColorSpace;const mesh=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshBasicMaterial({map:tex}));mesh.position.set(x,y,z);g.add(mesh);};
+    const sign=(g,text,sub,x,y,z,w,h)=>{const c=document.createElement('canvas');c.width=1024;c.height=256;const ctx=c.getContext('2d');ctx.fillStyle='#111820';ctx.fillRect(0,0,1024,256);ctx.strokeStyle='#bc9556';ctx.lineWidth=5;ctx.strokeRect(10,10,1004,236);ctx.textAlign='center';ctx.fillStyle='#ffe4aa';ctx.font='60px Georgia';ctx.fillText(text,512,116);ctx.font='22px sans-serif';ctx.fillStyle='#c7b79d';ctx.fillText(sub,512,185);const tex=new T.CanvasTexture(c);tex.colorSpace=T.SRGBColorSpace;const mesh=new T.Mesh(new T.PlaneGeometry(w,h),new T.MeshBasicMaterial({map:tex}));mesh.position.set(x,y,z);g.add(mesh);return mesh;};
     const theatre=set(-250,-26),a=[];
     a.push([0,15,-1,58,22,2,stone],[0,7,3,52,1,9,red],[0,6.4,3,52,.18,9,trim]);
     for(const x of [-26,-18,18,26]){a.push([x,15,.3,1.5,22,2,trim],[x,27,.3,3,1,3,trim]);}
@@ -27,9 +27,20 @@ export class RouteScenes {
     boxes(rail,r);sign(rail,'GOTHAM TRANSIT','ELEVATED LINE  /  SERVICE SUSPENDED',0,16.1,6.2,29,3);
     const arrival=set(-1100,-913),c=[];
     for(const x of [-12,12]){c.push([x,5,-2,3,10,3,stone],[x,10.1,-2,4,.4,4,trim],[x,6,0,1.2,4,.2,warm]);}
-    c.push([0,5,-3,19,10,2,stone],[0,4,-1.8,11,7,.3,glass]);boxes(arrival,c);
-    sign(arrival,'GOTHAM EMERGENCY COMMAND','DELIVER THE OVERRIDE  /  GORDON IS WAITING',0,11,0,31,4);
+    this.shelterGlass = glass.clone();
+    c.push([0,5,-3,19,10,2,stone],[0,4,-1.8,11,7,.3,this.shelterGlass]);for(const x of [-3.5,0,3.5])c.push([x,4,-1.5,.22,7,.3,trim]);c.push([0,5,-1.5,11,.2,.3,trim]);boxes(arrival,c);
+    this.arrivalSign = sign(arrival,'GOTHAM EMERGENCY COMMAND','DELIVER THE OVERRIDE  /  GORDON IS WAITING',0,11,0,31,4);
+    this.restoredSign = sign(arrival,'GOTHAM EMERGENCY COMMAND','POWER RESTORED  /  SHELTERS SECURE',0,11,0,31,4);
     const flood=new T.SpotLight(0xffd5a0,350,70,.8,.7,1.3);flood.position.set(0,15,0);flood.target.position.set(0,0,23);arrival.add(flood,flood.target);
+    this.arrivalFlood = flood;
+    this.restorePower(0);
+  }
+  restorePower(progress) {
+    const p = Math.max(0, Math.min(1, progress));
+    this.arrivalSign.visible = p < .5; this.restoredSign.visible = p >= .5;
+    this.shelterGlass.emissiveIntensity = .08 + p*.95;
+    this.arrivalFlood.intensity = 220 + p*250;
+    this.arrivalFlood.color.setRGB(.55+p*.45, .7+p*.08, 1-p*.48);
   }
   update(position){for(const g of this.sets)g.visible=g.position.distanceTo(position)<430;}
 }

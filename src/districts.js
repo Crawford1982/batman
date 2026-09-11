@@ -127,7 +127,16 @@ export function createDistricts(scene, collisions) {
     const a = (i * Math.PI) / 4;
     shape("gold", new T.BoxGeometry(0.7, 30, 0.7), -1100, 70, -925, [0, 0, a]);
   }
-  box("copper", -1100, 14, -926, 20, 28, 2);
+  box("steel", -1100, 14, -926, 20, 28, 2);
+  // Recessed bronze-framed doors read at street distance without new materials.
+  for (const side of [-1, 1]) {
+    const x = -1100 + side*5;
+    for (const y of [5, 14, 23]) {
+      box('copper', x, y, -924.8, 8.8, 7.8, .35);
+      box('steel', x, y, -924.5, 7.8, 6.8, .4);
+    }
+    box('copper', -1100+side*.45, 12, -924, .3, 3, .5);
+  }
 
   // Docks: gantry cranes, stacked freight, a power station and industrial chimneys.
   box("steel", 1420, 32, 1050, 115, 64, 90);
