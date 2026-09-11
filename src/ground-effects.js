@@ -36,10 +36,11 @@ export class GroundEffects {
 }
 
 const armor=new T.MeshStandardMaterial({color:0x333e47,metalness:.7,roughness:.38});
-const rim=new T.MeshStandardMaterial({color:0x859097,metalness:.7,roughness:.3});
+const rim=new T.MeshStandardMaterial({color:0x46545c,metalness:.55,roughness:.55});
 const red=new T.MeshBasicMaterial({color:0xff4835});
 const base=new T.CylinderGeometry(1.8,2.2,.42,16),cap=new T.CylinderGeometry(1.25,1.65,.45,12),band=new T.TorusGeometry(1.7,.08,5,32),leg=new T.BoxGeometry(.4,.18,1.2),bolt=new T.CylinderGeometry(.1,.1,.15,6);
-export function createMine(){const g=new T.Group();const add=(geo,mat,x,y,z)=>{const m=new T.Mesh(geo,mat);m.position.set(x,y,z);g.add(m);return m;};add(base,armor,0,0,0);add(cap,rim,0,.4,0);const light=add(band,red,0,.24,0);light.rotation.x=Math.PI/2;g.userData.light=light;
+export function createMine(){const g=new T.Group();const add=(geo,mat,x,y,z)=>{const m=new T.Mesh(geo,mat);m.position.set(x,y,z);g.add(m);return m;};add(base,armor,0,0,0);add(cap,rim,0,.4,0);const light=add(band,rim,0,.24,0);light.rotation.x=Math.PI/2;
   for(let i=0;i<6;i++){const a=i*Math.PI/3;const l=add(leg,armor,Math.sin(a)*1.85,-.1,Math.cos(a)*1.85);l.rotation.y=a;add(bolt,rim,Math.sin(a)*1.42,.46,Math.cos(a)*1.42);}
   const sensor=add(new T.SphereGeometry(.28,10,8),red,0,.8,0);sensor.scale.y=.5;
+  for(let i=0;i<6;i++){const a=i*Math.PI/3;const strip=add(leg,red,Math.sin(a)*1.65,.35,Math.cos(a)*1.65);strip.scale.set(.65,.45,.35);strip.rotation.y=a;}
   const batches=new Map();g.updateMatrixWorld(true);g.children.forEach(m=>{const geo=m.geometry.clone().applyMatrix4(m.matrix);const list=batches.get(m.material)||[];list.push(geo.toNonIndexed());batches.set(m.material,list);geo.dispose();});g.clear();for(const [mat,list]of batches){const m=new T.Mesh(mergeGeometries(list),mat);g.add(m);if(mat===red)g.userData.light=m;list.forEach(geo=>geo.dispose());}return g;}

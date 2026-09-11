@@ -23,8 +23,8 @@ export class StreetDetail {
       c.strokeStyle='#080d1280';c.lineWidth=2;for(let i=0;i<8;i++){c.beginPath();let x=random()*w,y=random()*h;c.moveTo(x,y);for(let j=0;j<8;j++){x+=(random()-.5)*35;y+=random()*25;c.lineTo(x,y);}c.stroke();}
     });this.roadMap.wrapS=this.roadMap.wrapT=T.RepeatWrapping;this.roadMap.repeat.set(3,55);this.roadMap.anisotropy=4;
     const mat={
-      stone:new T.MeshStandardMaterial({map:masonry,color:0x83909d,roughness:.82}),
-      trim:new T.MeshStandardMaterial({color:0x87919a,roughness:.68,metalness:.22}),
+      stone:new T.MeshStandardMaterial({map:masonry,color:0x83909d,roughness:.82,vertexColors:true}),
+      trim:new T.MeshStandardMaterial({color:0x87919a,roughness:.68,metalness:.22,vertexColors:true}),
       iron:new T.MeshStandardMaterial({color:0x23313b,roughness:.5,metalness:.65}),
       glass:new T.MeshStandardMaterial({map:windowMap,emissiveMap:windowMap,emissive:0xffdaa0,emissiveIntensity:.55,roughness:.24,metalness:.4}),
       gold:new T.MeshBasicMaterial({color:0xf9c883}),
@@ -42,13 +42,18 @@ export class StreetDetail {
         const center=Math.min(start+70,length),root=new T.Group();
         root.position.set(a.x+Math.sin(angle)*center,0,a.z+Math.cos(angle)*center);root.rotation.y=angle;parent.add(root);
         const parts={}; const poolParts=[];
-        const add=(key,geo,x,y,z,rx=0,ry=0,rz=0)=>{geo.applyMatrix4(new T.Matrix4().compose(new T.Vector3(x,y,z),new T.Quaternion().setFromEuler(new T.Euler(rx,ry,rz)),new T.Vector3(1,1,1)));(parts[key]??=[]).push(geo.toNonIndexed());geo.dispose();};
+        let stoneTint=new T.Color(1,1,1),trimTint=new T.Color(1,1,1);
+        const add=(key,geo,x,y,z,rx=0,ry=0,rz=0)=>{geo.applyMatrix4(new T.Matrix4().compose(new T.Vector3(x,y,z),new T.Quaternion().setFromEuler(new T.Euler(rx,ry,rz)),new T.Vector3(1,1,1)));const flat=geo.toNonIndexed();if(key==='stone'||key==='trim'){const tint=key==='stone'?stoneTint:trimTint;const colors=new Float32Array(flat.attributes.position.count*3);for(let i=0;i<colors.length;i+=3){colors[i]=tint.r;colors[i+1]=tint.g;colors[i+2]=tint.b;}flat.setAttribute('color',new T.BufferAttribute(colors,3));}(parts[key]??=[]).push(flat);geo.dispose();};
         const box=(key,x,y,z,w,h,d)=>add(key,new T.BoxGeometry(w,h,d),x,y,z);
         const end=Math.min(start+140,length);
         for(let t=start+18;t<end-8;t+=32){
           if(t<28||t>length-32)continue;
           const z=t-center;
           for(const side of [-1,1]){
+            const style=(Math.floor(t/32)+section+(side===1?2:0))%3;
+            // Three frontage families, still merged into the same material batches.
+            stoneTint.setRGB(...(style===0?[.8,.73,.66]:style===1?[.59,.66,.72]:[.88,.84,.76]));
+            trimTint.setRGB(...(style===0?[.7,.62,.51]:style===1?[.48,.55,.62]:[.8,.79,.73]));
             const height=old?19+random()*15:29+random()*23;
             // Open gaps between frontages retain alley views into the skyline.
             box('stone',side*32,height/2,z,12,height,27);
@@ -58,16 +63,19 @@ export class StreetDetail {
             for(const y of [5.7,height-1,height+.2])box('trim',side*25.7,y,z,1.5,.5,28.5);
             box('snow',side*32,height+.45,z,13,.25,28);
             for(const dz of [-12,-4,4,12]){
+              if(style===1&&Math.abs(dz)===4)continue;
               box('trim',side*25.7,height/2,z+dz,.9,height,.7);
               if(old){add('iron',new T.ConeGeometry(.7,3,4),side*25.7,height+1.8,z+dz);}
             }
+            if(style===1)for(let y=10;y<height-3;y+=9.6)box('trim',side*25.5,y,z,1.2,.5,28);
+            if(style===2){box('iron',side*25.2,5.1,z,2,.6,26);for(const dz of [-10,10])box('trim',side*25.2,height-3,z+dz,1.7,3,2);}
             for(let y=8;y<height-2;y+=4.8)for(const dz of [-8,0,8]){
               box(random()>.2?'glass':'iron',side*25.92,y,z+dz,.18,3.3,4.8);
               box('trim',side*25.5,y-1.9,z+dz,1.1,.32,5.5);
             }
             // Recessed ground-floor doors, piers and glowing display windows.
             for(const dz of [-8,0,8]){box('glass',side*25.85,2.5,z+dz,.2,3.8,5.5);box('iron',side*25.5,4.8,z+dz,1.8,.4,6.5);box('trim',side*25.4,.6,z+dz,1.2,.3,6);if(old)add('trim',new T.TorusGeometry(2.75,.18,5,16,Math.PI),side*25.25,3,z+dz,0,Math.PI/2);}
-            if(old){box('iron',side*25.0,11,z,2.5,.2,24);for(const zz of [-10,-5,0,5,10])box('iron',side*23.8,12,z+zz,.12,2,.12);box('iron',side*23.8,13,z,.14,.14,24);}
+            if(old&&style!==2){box('iron',side*25.0,11,z,2.5,.2,24);for(const zz of [-10,-5,0,5,10])box('iron',side*23.8,12,z+zz,.12,2,.12);box('iron',side*23.8,13,z,.14,.14,24);}
             // Drain, bollards, snow banks and utility cabinet.
             for(let zz=-2;zz<=2;zz+=.5)box('iron',side*17.7,.07,z+zz,1.4,.06,.16);
             for(const dz of [-12,12]){add('iron',new T.CylinderGeometry(.17,.24,1.35,6),side*20,.9,z+dz);box('gold',side*20,1.35,z+dz,.3,.13,.3);}

@@ -111,6 +111,18 @@ export function createDistricts(scene, collisions) {
     }
   shape("gold", new T.TorusGeometry(16, 1, 6, 40), -1100, 70, -926);
   shape("roof", new T.TorusGeometry(18, 2, 8, 40), -1100, 70, -926);
+  // Inset stained-glass sectors and dark mullions give the rose window depth.
+  shape('steel', new T.CircleGeometry(15.8,48), -1100,70,-925.8);
+  for(let i=0;i<12;i++){
+    shape(i%3===0?'gold':i%3===1?'blue':'copper',new T.CircleGeometry(14.8,4,i*Math.PI/6+.035,Math.PI/6-.07),-1100,70,-925.6);
+  }
+  shape('roof',new T.TorusGeometry(6,.6,6,32),-1100,70,-925);
+  for(const y of [8,46,92])box('roof',-1100,y,-926,92,.7,1.4);
+  for(const side of [-1,1])for(const x of [29,35]){
+    box('steel',-1100+side*x,25,-926.2,3.4,25,.5);
+    shape('roof',new T.TorusGeometry(1.7,.35,5,12,Math.PI),-1100+side*x,37.5,-925.7);
+    box('copper',-1100+side*x,25,-925.7,.18,24,.3);
+  }
   for (const side of [-1, 1]) {
     box("roof", -1100 + side * 45, 46, -926, 4, 92, 5);
     box("roof", -1100 + side * 22, 23, -926, 3, 46, 4);
