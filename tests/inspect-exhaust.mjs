@@ -1,0 +1,26 @@
+import assert from 'node:assert/strict';
+import {chromium} from '@playwright/test';
+const b=await chromium.launch({channel:'msedge',headless:true});const p=await b.newPage({viewport:{width:1280,height:800}});
+await p.goto('http://localhost:4173/?test=1');await p.waitForFunction(()=>window.__batwing?.ready);await p.click('#start-ground');await p.waitForFunction(()=>window.__batwing.state.groundReady);await p.click('#drive-launch');
+const checked=await p.evaluate(async()=>{
+ const T=await import('/node_modules/three/build/three.module.js'),g=window.__batwing.ground;
+ g.audio.stopVoice();
+ const analyser=g.audio.ctx.createAnalyser();analyser.fftSize=2048;g.audio.driveScore.connect(analyser);
+ await new Promise(r=>setTimeout(r,1200));
+ const bins=new Float32Array(analyser.frequencyBinCount);analyser.getFloatFrequencyData(bins);
+ const hz=g.audio.ctx.sampleRate/analyser.fftSize;
+ const audible=Math.max(...bins.slice(Math.ceil(200/hz),Math.floor(1500/hz)));
+ g.audio.driveScore.disconnect(analyser);analyser.disconnect();
+ g.phase='paused';g.exhaust.visible=true;
+ g.exhaust.geometry.computeBoundingBox();
+ const root=g.exhaust.geometry.boundingBox.min.y;
+ g.exhaust.scale.y=2;
+ g.camera.position.copy(g.car.position).add(new T.Vector3(5,2,11));
+ g.camera.lookAt(g.car.position.clone().add(new T.Vector3(0,.3,3)));
+ return {audible,root,parent:g.exhaust.parent===g.art,height:g.exhaust.position.y};
+});
+assert.ok(checked.audible > -70,JSON.stringify(checked));
+assert.equal(checked.root,0);assert.equal(checked.parent,true);assert.equal(checked.height,.65);
+await p.screenshot({path:'verification/exhaust-after.png'});
+console.log('PASS real driving music has midrange output; exhaust anchored to body at zero-based geometry root',checked);
+await b.close();

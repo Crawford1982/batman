@@ -146,7 +146,7 @@ export class GroundLevel {
     rim.position.set(-3, 5, 2);
     this.vehicle.add(rim);
     this.exhaust = new T.Mesh(
-      new T.ConeGeometry(0.35, 3, 10),
+      new T.ConeGeometry(0.28, 3, 12).translate(0, 1.5, 0),
       new T.ShaderMaterial({
         uniforms: { time: { value: 0 }, boost: { value: 0 } },
         vertexShader: 'varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
@@ -159,8 +159,8 @@ export class GroundLevel {
       }),
     );
     this.exhaust.rotation.x = Math.PI / 2;
-    this.exhaust.position.set(0, 1, 5.4);
-    this.vehicle.add(this.exhaust);
+    this.exhaust.position.set(0, .65, 4.3);
+    this.art.add(this.exhaust);
     this.pulse = new T.Mesh(
       new T.TorusGeometry(1, 0.006, 6, 64),
       new T.MeshBasicMaterial({

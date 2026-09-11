@@ -174,6 +174,14 @@ export class AudioSystem {
       const beat = this.driveStep || 0, root = [55, 65.406, 49, 58.27][Math.floor(beat / 16) % 4];
       const pulse = [1, 2, 1, 1.5, 1, 2, 1.1892, 1.5][beat % 8];
       this.tone(root * pulse, now, .29, .06, "triangle", "drive");
+      this.tone(root * pulse * 4, now, .23, .055, "triangle", "drive");
+      // A clear upper-register theme survives small phone speakers.
+      const theme = [4, 0, 5.993, 5.34, 4.757, 0, 5.34, 3.564];
+      if (beat % 2 === 0) {
+        const note = theme[Math.floor(beat / 2) % theme.length];
+        if (note) this.tone(root * note * 2, now, .54, .07, "triangle", "drive");
+      }
+      if (beat % 4 === 2) this.tone(180, now, .12, .065, "triangle", "drive");
       if (beat % 8 === 0) {
         this.tone(root * 2, now, 2.3, .035, "sine", "drive");
         this.tone(root * 2.9966, now, 2.3, .018, "triangle", "drive");
