@@ -278,3 +278,12 @@
 #bomber-threat.critical {border-color:#ff8065;background:#ff806520;color:#ffaf94}
 #bomber-threat.critical i {background:#ff8065}
 @media(max-height:500px){#bomber-threat{padding:4px 6px;margin:5px 0}#bomber-eta{font-size:9px}#bomber-route{font-size:8px;margin:2px 0}}
+/* One objective panel: priority, threat timing, then city status. */
+#mission-hud{box-sizing:border-box;width:270px;padding:12px 14px}
+#mission-order{margin-top:6px;font-size:20px;line-height:1.1}
+#bomber-threat{border:0;padding:0 0 10px;margin:8px 0 10px;background:none;border-bottom:1px solid #c7ab6b40}
+#bomber-threat.critical{background:none;border-color:#ff806560}
+#bomber-route{margin:4px 0 7px}
+#mission-hud.has-bomber #mission-detail{display:none}
+@media(max-width:700px){#mission-hud{width:min(190px,calc(100vw - 192px));padding:9px 10px}#mission-order{font-size:17px}#bomber-eta{font-size:10px}}
+@media(max-height:550px){#mission-hud{width:220px;padding:8px 10px}#mission-order{font-size:15px}#bomber-threat{margin:5px 0 7px;padding-bottom:6px}#bomber-route{margin:2px 0 4px}}

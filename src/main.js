@@ -1000,6 +1000,8 @@ function updateMissionHUD() {
       ? "Destroy the red uplinks. Cannons and homing missiles both work."
       : "Three final bombers. No reinforcements. Clear the evacuation corridor.";
   const threat = $("bomber-threat");
+  $("mission-detail").hidden = !!bomber;
+  $("mission-hud").classList.toggle("has-bomber", !!bomber);
   threat.hidden = !bomber;
   if (bomber) {
     const seconds = Math.max(0, Math.ceil(objective.mesh.position.distanceTo(objective.destination) / 12));
