@@ -15,7 +15,8 @@ import { loadPursuitDrone, installPursuitDrone } from "./pursuit-drone.js";
 
 const $ = (id) => document.getElementById(id);
 export class GroundLevel {
-  constructor({ scene, camera, world, audio, keys, mouse, onMode, onExit }) {
+  constructor({ scene, camera, world, audio, keys, mouse, onMode, onExit, feedback }) {
+    this.feedback = feedback;
     Object.assign(this, {
       scene,
       camera,
@@ -424,6 +425,7 @@ export class GroundLevel {
     }
   }
   start({handover = false} = {}) {
+    this.feedback.reset();
     document.body.classList.add('ground-presentation');
     document.body.classList.remove('ground-arrival');
     this.routeScenes.restorePower(0);
@@ -625,6 +627,7 @@ export class GroundLevel {
     panel.classList.toggle('cleared', this.ambushState === 'complete');
   }
   reward(points, label) {
+    this.feedback.reward(`${label} · +${points}`, this.car.position);
     this.car.score += points;
     $('drive-reward').textContent = `${label} · +${points}`;
     this.rewardUntil = this.time + 3;
@@ -744,6 +747,7 @@ export class GroundLevel {
       const oldHealth = this.car.health,
         passed = this.car.update(Math.min(wallDt,.25), input, this.obstacles, true, wallDt);
       if (passed) {
+        this.feedback.reward("CHECKPOINT · +500", this.car.position);
         if (!this.sectionDamaged && this.car.damageTaken === this.sectionDamageStart) {
           this.cleanSections++; this.reward(200, 'CLEAN SECTION');
         }
@@ -793,9 +797,7 @@ export class GroundLevel {
       if (this.car.health < oldHealth) {
         this.sectionDamaged = true;
         this.effects.emit(this.car.position,35);
-        this.shake = .22;
-        document.body.classList.add("hit");
-        setTimeout(() => document.body.classList.remove("hit"), 200);
+        this.feedback.hit(oldHealth - this.car.health, "batmobile");
       }
       if (this.car.health <= 0 || this.car.elapsed >= 300) {
         this.finish(false);
@@ -816,8 +818,6 @@ export class GroundLevel {
       this.camera.position.copy(this.cameraRig.eye);
       this.look.copy(this.cameraRig.look);
       this.camera.up.set(0, 1, 0);
-      this.shake = Math.max(0,(this.shake||0)-dt);
-      if (!this.reducedMotion.matches) this.camera.position.x += Math.sin(this.time*75)*this.shake*.35;
       this.camera.lookAt(this.look);
       this.camera.fov += ((54+this.cameraRig.boost*5) - this.camera.fov) * (1-Math.exp(-dt*3));
       this.camera.fov = clamp(this.camera.fov, 48, 70);

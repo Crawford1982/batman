@@ -103,7 +103,9 @@ assert.equal(
   await page.locator("#pause-title").textContent(),
   "The night is yours.",
 );
-await page.click("#restart");
+await page.click("#handover-exit");
+await page.click("#start");
+await page.click("#skip-briefing");
 assert.equal((await page.evaluate(() => window.__batwing.state)).kills, 0);
 await page.evaluate(() => {
   const g = window.__batwing;

@@ -19,6 +19,13 @@ await p.waitForFunction(
 await p.waitForTimeout(700);
 await p.screenshot({ path: "verification/ground-briefing.png" });
 await p.click("#drive-launch");
+assert.ok(await p.evaluate(() => {
+  const g = window.__batwing.ground;
+  const original = g.mines[0].position.clone();
+  g.mines[0].position.copy(g.car.position); g.mines[0].visible = true;
+  g.update(.016); g.mines[0].visible = false; g.mines[0].position.copy(original);
+  return document.getElementById('damage-feedback').classList.contains('active');
+}));
 await p.keyboard.down("w");
 await p.waitForFunction(() => window.__batwing.state.groundPosition[2] < 430);
 await p.keyboard.up("w");

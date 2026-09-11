@@ -2,6 +2,8 @@ import { chapterCard, clearPresentation, showResults } from "./presentation.js";
 import { updateEnemy } from "./enemy-ai.js";
 import { GroundLevel } from "./ground-level.js";
 import { ChapterHandover } from "./handover.js";
+import { PlayerFeedback } from "./feedback.js";
+import "./feedback.css";
 import { Minimap } from "./minimap.js";
 import "./minimap.css";
 import { Mission, BRIEFING, FLIGHT_DURATION, FINAL_DEFENCE } from "./mission.js";
@@ -232,12 +234,12 @@ function remove(arr, i) {
 }
 function damage(n) {
   if (flight.damage(n)) {
-    document.body.classList.add("hit");
-    setTimeout(() => document.body.classList.remove("hit"), 220);
+    feedback.hit(n, "batwing");
     if (flight.health <= 0) finish(false);
   }
 }
 function start() {
+  feedback.reset();
   audio.radioTimes = {};
   clearPresentation();
   window.gothamAnalytics?.event("level_start",{level_name:"batwing"});
@@ -476,7 +478,9 @@ function input() {
   }
   return { x, y, yaw, roll, throttle, boost, fire };
 }
+const feedback = new PlayerFeedback(audio);
 const ground = new GroundLevel({
+  feedback,
   scene,
   camera,
   world,
@@ -736,6 +740,7 @@ function frame(now) {
   last = now;
   t += dt;
   update(dt, wallDt);
+  feedback.update(camera, mode === "play" || mode === "drive");
   // A 0x0 window (minimised, mid-rotation, hidden pane) leaves the composer's
   // render targets empty; drawing into them only spams GL errors.
   if (!innerWidth || !innerHeight || document.hidden) return;
@@ -947,6 +952,7 @@ function updateProjectiles(dt) {
             if (victim.kind === "relay") {
               victim.mesh.visible = false;
               score += 1000;
+              feedback.reward("RELAY DISABLED · +1000", flight.position);
               notice(
                 `ALFRED / ${victim.name} relay disabled. ${mission.disabled} of 3 offline.`,
                 6,
@@ -956,6 +962,7 @@ function updateProjectiles(dt) {
               remove(enemies, enemies.indexOf(victim));
               kills++;
               score += bomber ? 750 : 250;
+              feedback.reward(bomber ? "BOMBER DOWN · +750" : "DRONE DOWN · +250", flight.position);
               notice(
                 bomber
                   ? "GORDON / Bomber destroyed. Shelter is safe. +750"
