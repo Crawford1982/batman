@@ -747,6 +747,7 @@ function frame(now) {
   audio.missionMix({ driving: mode === "drive", speed: ground.car.speed, boost: ground.boosting, danger: ground.pursuitState === "warning" || ground.pursuitState === "attack" || ground.strikeTime > 0 || ground.ambushState === "active", remaining });
   $("timer").dataset.clockState = mode === "play" ? clockState(remaining) : "normal";
   $("drive-time").dataset.clockState = mode === "drive" ? clockState(remaining) : "normal";
+  document.body.classList.toggle('jet-boosting', mode === 'drive' && ground.boosting && ground.car.speed > 15);
   feedback.update(camera, mode === "play" || mode === "drive");
   // A 0x0 window (minimised, mid-rotation, hidden pane) leaves the composer's
   // render targets empty; drawing into them only spams GL errors.

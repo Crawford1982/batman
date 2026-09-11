@@ -73,6 +73,7 @@ export class GroundLevel {
     $("arrival-skip").onclick = () => this.endArrival();
     document.querySelector('.drive-objective').insertAdjacentHTML('beforeend','<div id="drive-ambush" hidden><strong></strong><span></span></div>');
     document.querySelector('.drive-objective').insertAdjacentHTML('beforeend', '<div id="drive-threat" hidden><strong></strong><span></span><i></i></div><div id="drive-reward" role="status"></div>');
+    $('drive-hud').insertAdjacentHTML('afterbegin', '<div class="boost-streaks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>');
     $("drive-launch").onclick = () => this.start();
     $("drive-back").onclick = () => {
       this.hide();

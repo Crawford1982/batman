@@ -212,7 +212,7 @@ export class AudioSystem {
     this.turbineFilter.frequency.setTargetAtTime(target.cutoff, now, .3);
     this.turbineGain.gain.setTargetAtTime(driving ? .012 : 0, now, .1);
     this.melody.gain.setTargetAtTime(state === "critical" ? 0 : 1, now, .3);
-    if (driving && boost && !this.wasBoosting) this.air(.007, 1, 950);
+    if (driving && boost && !this.wasBoosting) this.air(.035, .65, 1700);
     if (state !== "normal" && second !== this.lastClockSecond && second > 0) this.air(.012, 12, 1400);
     this.wasBoosting = driving && boost; this.lastClockSecond = second;
   }
