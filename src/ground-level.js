@@ -730,6 +730,7 @@ export class GroundLevel {
       return;
     }
     const input = this.controls();
+    this.boosting = !!input.boost;
     if (this.phase === "paused" || this.phase === "ended") return;
     this.time += dt;
     this.effects.update(dt);

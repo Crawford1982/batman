@@ -2,3 +2,7 @@
 #damage-feedback.active{opacity:1}
 .floating-reward{position:fixed;z-index:8;pointer-events:none;color:#e8ce8c;font:600 12px/1.4 Manrope,Arial,sans-serif;letter-spacing:.8px;text-shadow:0 2px 5px #000}
 @media(max-width:700px),(max-height:500px){.floating-reward{font-size:10px}}
+[data-clock-state="warning"]{color:#e8b65e!important}
+[data-clock-state="critical"]{color:#ff7868!important;animation:clock-urgency 1s ease-in-out infinite}
+@keyframes clock-urgency{50%{opacity:.6}}
+@media(prefers-reduced-motion:reduce){[data-clock-state="critical"]{animation:none}}

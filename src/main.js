@@ -18,7 +18,7 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { Flight, clamp, insideBuilding, segmentDistance } from "./flight.js";
 import { createWorld } from "./world.js";
-import { AudioSystem } from "./audio.js";
+import { AudioSystem, clockState } from "./audio.js";
 import { frameStep, FpsSampler, nextPixelRatio } from "./frame-clock.js";
 import "./style.css";
 const $ = (id) => document.getElementById(id);
@@ -740,6 +740,10 @@ function frame(now) {
   last = now;
   t += dt;
   update(dt, wallDt);
+  const remaining = mode === "drive" ? 300 - ground.car.elapsed : mode === "play" ? FLIGHT_DURATION - elapsed : Infinity;
+  audio.missionMix({ driving: mode === "drive", speed: ground.car.speed, boost: ground.boosting, remaining });
+  $("timer").dataset.clockState = mode === "play" ? clockState(remaining) : "normal";
+  $("drive-time").dataset.clockState = mode === "drive" ? clockState(remaining) : "normal";
   feedback.update(camera, mode === "play" || mode === "drive");
   // A 0x0 window (minimised, mid-rotation, hidden pane) leaves the composer's
   // render targets empty; drawing into them only spams GL errors.

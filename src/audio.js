@@ -1,4 +1,9 @@
 import { RADIO_LINES } from "./radio-lines.js";
+export function turbineTargets(speed) {
+  const fraction = Math.min(70, Math.max(0, Math.abs(speed))) / 70;
+  return { frequency: 55 + fraction * 100, cutoff: 180 + fraction * 820 };
+}
+export const clockState = seconds => seconds < 15 ? "critical" : seconds < 60 ? "warning" : "normal";
 export class AudioSystem {
   constructor() {
     this.enabled = true;
@@ -18,6 +23,15 @@ export class AudioSystem {
       this.master = this.ctx.createGain();
       this.master.gain.value = this.enabled ? 0.26 : 0;
       this.master.connect(this.ctx.destination);
+      this.melody = this.ctx.createGain(); this.melody.connect(this.master);
+      this.turbine = this.ctx.createOscillator(); this.turbine.type = "sawtooth";
+      this.turbineFilter = this.ctx.createBiquadFilter(); this.turbineFilter.type = "lowpass";
+      this.turbineGain = this.ctx.createGain(); this.turbineGain.gain.value = 0;
+      this.turbine.connect(this.turbineFilter); this.turbineFilter.connect(this.turbineGain);
+      this.turbineGain.connect(this.master); this.turbine.start();
+      this.airBuffer = this.ctx.createBuffer(1, Math.ceil(this.ctx.sampleRate * .25), this.ctx.sampleRate);
+      const air = this.airBuffer.getChannelData(0);
+      for (let i = 0; i < air.length; i++) air[i] = (Math.random() * 2 - 1) * (1 - i / air.length) ** 2;
       this.engine = this.ctx.createOscillator();
       this.engine.type = "sawtooth";
       this.engine.frequency.value = 45;
@@ -126,7 +140,7 @@ export class AudioSystem {
     this.speak(id);
     return true;
   }
-  tone(freq, at, len, gain = 0.1, type = "sine") {
+  tone(freq, at, len, gain = 0.1, type = "sine", melodic = false) {
     const o = this.ctx.createOscillator(),
       g = this.ctx.createGain();
     o.type = type;
@@ -135,7 +149,7 @@ export class AudioSystem {
     g.gain.linearRampToValueAtTime(gain, at + 0.1);
     g.gain.exponentialRampToValueAtTime(0.0001, at + len);
     o.connect(g);
-    g.connect(this.master);
+    g.connect(melodic ? this.melody : this.master);
     o.start(at);
     o.stop(at + len + 0.1);
   }
@@ -147,7 +161,7 @@ export class AudioSystem {
       0.2,
     );
     this.engGain.gain.setTargetAtTime(
-      playing ? 0.055 : 0.008,
+      playing ? (this.driving ? 0.03 : 0.055) : 0.008,
       this.ctx.currentTime,
       0.3,
     );
@@ -155,12 +169,33 @@ export class AudioSystem {
       const notes = [73.416, 87.307, 110, 103.826, 65.406, 87.307, 98, 73.416],
         n = notes[Math.floor(this.step / 4) % 8];
       this.tone(n, this.ctx.currentTime, 3.8, 0.11, "triangle");
-      this.tone(n * 2.002, this.ctx.currentTime, 4.4, 0.025);
+      this.tone(n * 2.002, this.ctx.currentTime, 4.4, 0.025, "sine", true);
       if (this.step % 2 === 0)
-        this.tone(n * 4, this.ctx.currentTime, 0.9, 0.026);
+        this.tone(n * 4, this.ctx.currentTime, 0.9, 0.026, "sine", true);
       this.next = this.ctx.currentTime + 0.9;
       this.step++;
     }
+  }
+  missionMix({ driving = false, speed = 0, boost = false, remaining = Infinity } = {}) {
+    this.driving = driving;
+    const state = clockState(remaining), second = Math.ceil(remaining);
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime, target = turbineTargets(speed);
+    this.turbine.frequency.setTargetAtTime(target.frequency, now, .25);
+    this.turbineFilter.frequency.setTargetAtTime(target.cutoff, now, .3);
+    this.turbineGain.gain.setTargetAtTime(driving ? .012 : 0, now, .1);
+    this.melody.gain.setTargetAtTime(state === "critical" ? 0 : 1, now, .3);
+    if (driving && boost && !this.wasBoosting) this.air(.007, 1, 950);
+    if (state !== "normal" && second !== this.lastClockSecond && second > 0) this.air(.012, 12, 1400);
+    this.wasBoosting = driving && boost; this.lastClockSecond = second;
+  }
+  air(volume, rate, cutoff) {
+    const source = this.ctx.createBufferSource(), filter = this.ctx.createBiquadFilter(), gain = this.ctx.createGain();
+    source.buffer = this.airBuffer; source.playbackRate.value = rate;
+    filter.type = "lowpass"; filter.frequency.value = cutoff; gain.gain.value = volume;
+    source.connect(filter); filter.connect(gain); gain.connect(this.master);
+    source.onended = () => { source.disconnect(); filter.disconnect(); gain.disconnect(); };
+    source.start();
   }
   shot(missile = false) {
     if (!this.ctx) return;
