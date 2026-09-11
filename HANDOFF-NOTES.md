@@ -26,3 +26,9 @@
 - Test commands run: npm test; tests/ground.mjs; tests/browser.mjs;
   tests/audio-clock.mjs; tests/presentation.mjs; tests/ground-presentation.mjs;
   tests/drone-strikes.mjs; npm run build.
+
+- Follow-up: task 5 HUD consolidation passed desktop/portrait/landscape and bomber checks.
+- Task 6 measured download progress passed a throttled-network browser check.
+- Task 7 moved Vite/Playwright to devDependencies; npm install, 36 tests and build passed.
+- Added push/PR test-build CI. Release NOT performed: quota reached 100% before merge/deploy.
+- Remaining: review final commits, merge polish/feedback-pass into main, push and deploy Pages.
