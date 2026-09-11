@@ -1,6 +1,7 @@
 import { chapterCard, clearPresentation, showResults } from "./presentation.js";
 import { updateEnemy } from "./enemy-ai.js";
 import { GroundLevel } from "./ground-level.js";
+import { ChapterHandover } from "./handover.js";
 import { Minimap } from "./minimap.js";
 import "./minimap.css";
 import { Mission, BRIEFING, FLIGHT_DURATION, FINAL_DEFENCE } from "./mission.js";
@@ -303,6 +304,11 @@ function finish(win, reason = "") {
     reason || (win ? "The skies are clear. Take the encrypted override to Gordon at the cathedral." : "The Batwing is down. Gotham needs its guardian.");
   $("resume").hidden = true;
   $("pause-menu").hidden = false;
+  if (win) {
+    $("pause-menu").hidden = true;
+    mode = 'handover';
+    handover.start();
+  }
 }
 $("start").onclick = beginBriefing;
 $("skip-briefing").onclick = start;
@@ -311,6 +317,7 @@ $("resume").onclick = pause;
 $("restart").onclick = () =>
   mode.startsWith("drive") ? ground.start() : start();
 $("exit").onclick = () => {
+  handover.cancel();
   clearPresentation();
   audio.stopVoice();
   ground.hide();
@@ -329,7 +336,11 @@ $("close-manual").onclick = () => {
   $("manual").hidden = true;
 };
 $("sound").onchange = () => audio.mute(!$("sound").checked);
-addEventListener("keydown", (e) => {
+  addEventListener("keydown", (e) => {
+    if(mode==='handover'){
+      if(['Escape','Space','Enter'].includes(e.code)){e.preventDefault();handover.skip();}
+      return;
+    }
   if (
     ["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(
       e.code,
@@ -489,6 +500,20 @@ function beginGround() {
 }
 $("start-ground").onclick = beginGround;
 $("next-level").onclick = beginGround;
+const handover = new ChapterHandover({ground,camera,player,flight,world,audio,
+  prepare:()=>{
+    for(const k in keys)keys[k]=false;
+    mouse.fire=false;mouse.steering=false;
+    player.visible=false;
+    for(const a of [enemies,shots,particles])while(a.length)remove(a,0);
+    for(const r of mission.relays)r.mesh.visible=false;
+    for(const r of world.rings)r.visible=false;
+    ground.car.reset();ground.group.visible=true;ground.phase='briefing';
+    ground.vehicle.position.copy(ground.car.position);ground.vehicle.rotation.set(0,0,0);
+    ground.routeScenes.restorePower(0);
+  },
+  complete:()=>ground.start({handover:true}),exit:()=>$('exit').click(),
+});
 const camOffset = new T.Vector3(),
   look = new T.Vector3(),
   temp = new T.Vector3();
@@ -497,6 +522,13 @@ const minimap = new Minimap(
   world.buildings,
 );
 function update(dt, wallDt = dt) {
+  if(mode==='handover'){
+    const pad=Array.from(navigator.getGamepads?.()||[]).find(Boolean);
+    const pressed=!!pad?.buttons[9]?.pressed;
+    if(pressed&&!handover.padPressed)handover.skip();
+    handover.padPressed=pressed;
+    handover.update(Math.min(wallDt,.1));return;
+  }
   if (mode.startsWith("drive")) {
     ground.update(dt, wallDt);
     return;
@@ -783,6 +815,7 @@ if (testMode)
     beginBriefing,
     ground,
     beginGround,
+    handover,
   });
 
 function beginBriefing() {

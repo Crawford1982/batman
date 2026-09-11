@@ -423,7 +423,7 @@ export class GroundLevel {
       console.error("Batmobile load failed", e);
     }
   }
-  start() {
+  start({handover = false} = {}) {
     document.body.classList.add('ground-presentation');
     document.body.classList.remove('ground-arrival');
     this.routeScenes.restorePower(0);
@@ -441,6 +441,7 @@ export class GroundLevel {
     this.shake = 0;
     this.time = 0;
     this.touch = {};
+    this.messageUntil = 0; $('drive-radio').textContent = '';
     this.mouse.active = false;
     this.mouse.steering = false;
     this.mouse.x = 0;
@@ -469,7 +470,7 @@ export class GroundLevel {
     this.camera.position.copy(this.cameraRig.eye);
     this.look.copy(this.cameraRig.look); this.camera.lookAt(this.look);
     this.camera.fov = 54; this.camera.updateProjectionMatrix();
-    this.radio(
+    if (!handover) this.radio(
       "ALFRED / Take the override to the cathedral. Follow the gold route.",
     );
   }

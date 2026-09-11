@@ -79,8 +79,8 @@ await p.click("#start");
 await p.click("#skip-briefing");
 assert.equal((await p.evaluate(() => window.__batwing.state)).mode, "play");
 await p.evaluate(() => window.__batwing.finish(true));
-await p.click("#next-level");
-await p.click("#drive-launch");
+await p.click("#handover-skip");
+await p.waitForFunction(()=>window.__batwing.state.mode==='drive');
 assert.equal((await p.evaluate(() => window.__batwing.state)).mode, "drive");
 console.log(
   "DESKTOP",
