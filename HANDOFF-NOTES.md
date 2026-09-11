@@ -32,3 +32,7 @@
 - Task 7 moved Vite/Playwright to devDependencies; npm install, 36 tests and build passed.
 - Added push/PR test-build CI. Release NOT performed: quota reached 100% before merge/deploy.
 - Remaining: review final commits, merge polish/feedback-pass into main, push and deploy Pages.
+
+- Release resumed with owner authorization after quota reset. Re-ran all 36 unit tests,
+  production build, desktop/mobile flight, driving and handover failure/retry checks: passed.
+- Prior no-push/no-deploy restriction superseded by owner's release instruction.
