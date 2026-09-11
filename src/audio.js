@@ -24,6 +24,8 @@ export class AudioSystem {
       this.master.gain.value = this.enabled ? 0.26 : 0;
       this.master.connect(this.ctx.destination);
       this.melody = this.ctx.createGain(); this.melody.connect(this.master);
+      this.flightScore = this.ctx.createGain(); this.flightScore.connect(this.melody);
+      this.driveScore = this.ctx.createGain(); this.driveScore.gain.value = 0; this.driveScore.connect(this.melody);
       this.turbine = this.ctx.createOscillator(); this.turbine.type = "sawtooth";
       this.turbineFilter = this.ctx.createBiquadFilter(); this.turbineFilter.type = "lowpass";
       this.turbineGain = this.ctx.createGain(); this.turbineGain.gain.value = 0;
@@ -149,7 +151,8 @@ export class AudioSystem {
     g.gain.linearRampToValueAtTime(gain, at + 0.1);
     g.gain.exponentialRampToValueAtTime(0.0001, at + len);
     o.connect(g);
-    g.connect(melodic ? this.melody : this.master);
+    g.connect(melodic === "drive" ? this.driveScore : melodic ? this.flightScore : this.master);
+    o.onended = () => { o.disconnect(); g.disconnect(); };
     o.start(at);
     o.stop(at + len + 0.1);
   }
@@ -165,10 +168,24 @@ export class AudioSystem {
       this.ctx.currentTime,
       0.3,
     );
+    const now = this.ctx.currentTime;
+    if (this.driving && playing && now >= (this.nextDrive || 0)) {
+      // Original 96 BPM minor ostinato: no downloaded music or additional payload.
+      const beat = this.driveStep || 0, root = [55, 65.406, 49, 58.27][Math.floor(beat / 16) % 4];
+      const pulse = [1, 2, 1, 1.5, 1, 2, 1.1892, 1.5][beat % 8];
+      this.tone(root * pulse, now, .29, .06, "triangle", "drive");
+      if (beat % 8 === 0) {
+        this.tone(root * 2, now, 2.3, .035, "sine", "drive");
+        this.tone(root * 2.9966, now, 2.3, .018, "triangle", "drive");
+      }
+      if (beat % 2 === 0) this.tone(42, now, .19, .055, "sine", "drive");
+      if (this.danger && beat % 2) this.tone(root * 4, now, .16, .035, "triangle", "drive");
+      this.driveStep = beat + 1; this.nextDrive = now + .3125;
+    }
     if (this.ctx.currentTime >= this.next) {
       const notes = [73.416, 87.307, 110, 103.826, 65.406, 87.307, 98, 73.416],
         n = notes[Math.floor(this.step / 4) % 8];
-      this.tone(n, this.ctx.currentTime, 3.8, 0.11, "triangle");
+      this.tone(n, this.ctx.currentTime, 3.8, 0.11, "triangle", true);
       this.tone(n * 2.002, this.ctx.currentTime, 4.4, 0.025, "sine", true);
       if (this.step % 2 === 0)
         this.tone(n * 4, this.ctx.currentTime, 0.9, 0.026, "sine", true);
@@ -176,11 +193,13 @@ export class AudioSystem {
       this.step++;
     }
   }
-  missionMix({ driving = false, speed = 0, boost = false, remaining = Infinity } = {}) {
-    this.driving = driving;
+  missionMix({ driving = false, speed = 0, boost = false, remaining = Infinity, danger = false } = {}) {
+    this.driving = driving; this.danger = danger;
     const state = clockState(remaining), second = Math.ceil(remaining);
     if (!this.ctx) return;
     const now = this.ctx.currentTime, target = turbineTargets(speed);
+    this.flightScore.gain.setTargetAtTime(driving ? 0 : 1, now, .6);
+    this.driveScore.gain.setTargetAtTime(driving ? (danger ? 1 : .75) : 0, now, .4);
     this.turbine.frequency.setTargetAtTime(target.frequency, now, .25);
     this.turbineFilter.frequency.setTargetAtTime(target.cutoff, now, .3);
     this.turbineGain.gain.setTargetAtTime(driving ? .012 : 0, now, .1);

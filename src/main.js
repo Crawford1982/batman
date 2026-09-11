@@ -744,7 +744,7 @@ function frame(now) {
   t += dt;
   update(dt, wallDt);
   const remaining = mode === "drive" ? 300 - ground.car.elapsed : mode === "play" ? FLIGHT_DURATION - elapsed : Infinity;
-  audio.missionMix({ driving: mode === "drive", speed: ground.car.speed, boost: ground.boosting, remaining });
+  audio.missionMix({ driving: mode === "drive", speed: ground.car.speed, boost: ground.boosting, danger: ground.pursuitState === "warning" || ground.pursuitState === "attack" || ground.strikeTime > 0 || ground.ambushState === "active", remaining });
   $("timer").dataset.clockState = mode === "play" ? clockState(remaining) : "normal";
   $("drive-time").dataset.clockState = mode === "drive" ? clockState(remaining) : "normal";
   feedback.update(camera, mode === "play" || mode === "drive");

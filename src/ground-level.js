@@ -459,6 +459,7 @@ export class GroundLevel {
     this.cleanSections = 0; this.sectionDamaged = false;
     this.sectionDamageStart = this.car.damageTaken;
     this.rewardUntil = 0; $('drive-reward').textContent = '';
+    this.pursuitState = 'waiting'; this.pursuitTime = 0;
     this.ambushState = 'waiting'; this.ambushEnd = -Infinity;
     $('drive-ambush').hidden = true;
     for (const m of this.mines) { m.visible = !m.userData.ambush; m.userData.clearedByEMP = false; }
@@ -566,6 +567,7 @@ export class GroundLevel {
   resetRoad() {
     if (this.phase !== "play") return;
     this.car.recoverToRoute();
+    if (["warning", "attack"].includes(this.pursuitState)) this.pursuitState = "complete";
     this.sectionDamaged = true; // Recovery cannot manufacture a clean-section bonus.
     this.cancelStrike();
     this.disabled = Math.max(this.disabled, 3);
@@ -579,6 +581,9 @@ export class GroundLevel {
   emp() {
     if (this.phase !== "play" || this.car.emp > 0) return;
     const disrupted = this.strikeTime > 0 || this.mines.some(m => m.visible && m.position.distanceTo(this.car.position) < 90);
+    if (this.pursuitState === 'warning') {
+      this.pursuitState = 'complete'; this.reward(250, 'PURSUIT BROKEN'); this.attackTimer = 9;
+    }
     this.car.emp = 6;
     this.disabled = 5;
     if (disrupted) this.audio.ambientRadio("alfred-emp");
@@ -598,6 +603,34 @@ export class GroundLevel {
     this.radio(
       "COUNTERMEASURES / EMP discharged. Drones disrupted for five seconds.",
     );
+  }
+  updatePursuit(dt) {
+    const c = this.car;
+    if (this.pursuitState === 'waiting' && c.checkpoint === 1 && c.position.x < -120 && c.position.x > -300) {
+      this.cancelStrike(); this.pursuitState = 'warning'; this.pursuitTime = 3;
+      this.pursuitDamage = c.damageTaken;
+      this.radio('GORDON / Interceptor closing over the theatre. Keep moving. EMP can break its attack.');
+    }
+    if (this.pursuitState === 'warning') {
+      this.attackTimer = 8;
+      this.pursuitTime -= dt;
+      const panel = $('drive-threat'); panel.hidden = false; panel.classList.remove('safe');
+      panel.querySelector('strong').textContent = `INTERCEPTOR CLOSING · ${Math.max(0,this.pursuitTime).toFixed(1)}s`;
+      panel.querySelector('span').textContent = 'KEEP MOVING · SAVE EMP FOR THE STRIKE';
+      panel.querySelector('i').style.transform = `scaleX(${Math.max(0,this.pursuitTime)/3})`;
+      if (c.checkpoint !== 1 || c.position.x < -380) {
+        this.pursuitState = 'complete'; this.cancelStrike();
+        this.reward(250, 'INTERCEPTOR OUTRUN');
+      } else if (this.pursuitTime <= 0 && this.disabled <= 0) {
+        this.beginStrike();
+        if (this.strikeTime > 0) this.pursuitState = 'attack';
+        else { this.pursuitState = 'complete'; this.cancelStrike(); }
+      }
+    } else if (this.pursuitState === 'attack' && this.strikeTime <= 0) {
+      this.pursuitState = 'complete'; this.disabled = Math.max(this.disabled, 6); this.attackTimer = 9;
+      if (c.damageTaken === this.pursuitDamage) this.reward(250, 'PURSUIT BROKEN');
+      this.radio('GORDON / Interceptor falling back. Take the northbound turn.');
+    }
   }
   updateAmbush() {
     const {z} = this.car.position;
@@ -671,7 +704,7 @@ export class GroundLevel {
     const markers = this.strikeMarkers.filter(m => m.visible);
     const danger = markers.some(m => this.car.position.distanceTo(m.position) < 8);
     panel.classList.toggle('safe', !danger);
-    panel.querySelector('strong').textContent = `${this.barrage ? 'THREE-POINT BARRAGE' : 'DRONE STRIKE'} · ${this.strikeTime.toFixed(1)}s`;
+    panel.querySelector('strong').textContent = `${this.pursuitState === "attack" ? "INTERCEPTOR STRIKE" : this.barrage ? 'THREE-POINT BARRAGE' : 'DRONE STRIKE'} · ${this.strikeTime.toFixed(1)}s`;
     panel.querySelector('span').textContent = danger ? (this.car.emp <= 0 ? 'IN BLAST ZONE · MOVE OR EMP' : 'IN BLAST ZONE · KEEP MOVING') : 'CLEAR OF BLAST · KEEP CLEAR';
     panel.querySelector('i').style.transform = `scaleX(${this.strikeTime / this.strikeDuration})`;
     markers.forEach(m => m.material.opacity = .65 + Math.sin(this.time * 20) * .2);
@@ -778,10 +811,19 @@ export class GroundLevel {
       this.attackTimer -= wallDt;
       this.drones.forEach((d, i) => {
         const a=this.time*.38+i*Math.PI;
+        const pursuing = i === 0 && ['warning','attack'].includes(this.pursuitState);
         const entry=Math.max(0,1-this.time/5)*100;
         d.position.copy(this.car.position).add(new T.Vector3(Math.sin(a)*11,27+i*5,Math.cos(a)*48-entry).applyAxisAngle(new T.Vector3(0,1,0),this.car.yaw));
+        d.userData.pursuitBlend = (d.userData.pursuitBlend || 0) + ((pursuing ? 1 : 0) - (d.userData.pursuitBlend || 0)) * (1-Math.exp(-dt*2));
+        const blend = d.userData.pursuitBlend;
+        if (blend > .001) {
+          const close = new T.Vector3(7,12,-38).applyAxisAngle(new T.Vector3(0,1,0),this.car.yaw).add(this.car.position);
+          d.position.lerp(close, blend);
+        }
         // Fixed-wing aircraft bank through a level orbit, never point nose-down at the car.
         d.rotation.set(0,this.car.yaw+Math.atan2(-11*Math.cos(a),48*Math.sin(a)),Math.sin(a)*.16);
+        d.rotation.y += Math.atan2(Math.sin(this.car.yaw-d.rotation.y),Math.cos(this.car.yaw-d.rotation.y))*blend;
+        d.rotation.z += (.12-d.rotation.z)*blend;
         if(this.disabled>0){d.rotation.z+=Math.sin(this.time*19+i)*.16;d.position.y+=Math.sin(this.time*6)*.7;}
         if(d.userData.lights)d.userData.lights.visible=this.disabled<=0 || Math.sin(this.time*35)>0.6;
       });
@@ -795,13 +837,14 @@ export class GroundLevel {
       this.mines.forEach(m=>{if(m.userData.light)m.userData.light.visible=Math.sin(this.time*5+m.position.z)>.1;});
       this.effects.target(this.drones[0].position,this.strike.position,this.strikeTime>0);
       const openingReady = this.car.checkpoint >= 1 || this.car.elapsed >= 25;
-      if (this.attackTimer <= 0 && this.disabled <= 0 && openingReady && this.strikeTime <= 0) {
+      if (this.attackTimer <= 0 && this.disabled <= 0 && this.pursuitState !== "warning" && openingReady && this.strikeTime <= 0) {
         if (!this.openingWarned && this.strikeNumber === 0) {
           this.openingWarned = true; this.attackTimer = 3;
           this.radio(GROUND_CONTACT);
         } else this.beginStrike();
       }
       this.updateStrike(wallDt);
+      this.updatePursuit(wallDt);
       $('drive-reward').style.opacity = this.time < this.rewardUntil ? 1 : 0;
       if (this.car.health < oldHealth) {
         this.sectionDamaged = true;
