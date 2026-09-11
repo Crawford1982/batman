@@ -14,6 +14,13 @@ await p.waitForFunction(()=>document.querySelector('#game').getBoundingClientRec
 await p.evaluate(()=>{window.__batwing.start();window.__batwing.finish(false);});
 assert.ok(await p.locator('#restart').isVisible());
 assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+await p.evaluate(async()=>{
+  localStorage.setItem('gotham-best-results',JSON.stringify({batmobile:{time:240,score:100}}));
+  const {showResults}=await import('/src/presentation.js');
+  showResults('batmobile',true,223,200,90,'6 / 6 checkpoints');
+});
+assert.match(await p.locator('#chapter-results').innerText(),/NEW BEST · −0:17/);
+assert.match(await p.locator('#chapter-results').innerText(),/finished with 1:17 remaining/);
 await p.screenshot({path:'verification/chapter-results-mobile.png'});
 console.log('PASS scorecard, replay cleanup, pause cleanup, mobile results');
 } finally {await b.close();}

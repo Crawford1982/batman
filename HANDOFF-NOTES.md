@@ -11,3 +11,5 @@
   ticks and a separate melodic bus that fades during the final 15 seconds.
 - Task 2 validation: monotonic target/boundary tests, driving regression and audio-clock
   browser checks covering both chapters, pause gating and reset. Owner should audition mix.
+- Task 3: one-key best-result storage with legacy migration; new-best delta and time
+  remaining on wins. Tested ties, failures, corrupt/private storage and mobile result text.
