@@ -17,6 +17,7 @@ import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
 import { Flight, clamp, insideBuilding, segmentDistance } from "./flight.js";
 import { createWorld } from "./world.js";
 import { AudioSystem } from "./audio.js";
+import { frameStep, FpsSampler, nextPixelRatio } from "./frame-clock.js";
 import "./style.css";
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -77,9 +78,7 @@ let ready = false,
   noticeTimer = 0,
   target = null,
   hitUntil = 0,
-  frameCount = 0,
   fps = 60,
-  fpsTime = 0,
   low = matchMedia("(pointer:coarse)").matches,
   gamepadPause = false;
 const keys = {},
@@ -730,41 +729,42 @@ function update(dt, wallDt = dt) {
   }
   audio.update(flight.speed, mode === "play");
 }
+const sampler = new FpsSampler(2);
 function frame(now) {
   requestAnimationFrame(frame);
-  const frameSeconds = (now - last) / 1000;
-  const dt = Math.min(frameSeconds, 0.05);
+  const { dt, wallDt, stalled } = frameStep((now - last) / 1000);
   last = now;
   t += dt;
-  update(dt, Math.max(0, frameSeconds));
+  update(dt, wallDt);
+  // A 0x0 window (minimised, mid-rotation, hidden pane) leaves the composer's
+  // render targets empty; drawing into them only spams GL errors.
+  if (!innerWidth || !innerHeight || document.hidden) return;
   renderer.info.reset();
   if (low) renderer.render(scene, camera);
   else composer.render();
-  frameCount++;
-  fpsTime += frameSeconds;
-  if (fpsTime >= 2) {
-    fps = frameCount / fpsTime;
-    frameCount = 0;
-    fpsTime = 0;
-    if ($("quality").value === "auto" && low && fps < 28 && (mode === "play" || mode === "drive")) {
-      renderer.setPixelRatio(Math.max(.6, renderer.getPixelRatio() * .85));
+  const sample = sampler.push(wallDt, stalled);
+  if (sample === null) return;
+  fps = sample;
+  if ($("quality").value !== "auto" || !(mode === "play" || mode === "drive")) return;
+  if (low) {
+    const ratio = nextPixelRatio(renderer.getPixelRatio(), fps, {
+      floor: 0.6,
+      ceil: Math.min(devicePixelRatio, 1),
+    });
+    if (ratio !== renderer.getPixelRatio()) {
+      renderer.setPixelRatio(ratio);
       composer.setSize(innerWidth, innerHeight);
     }
-    if (
-      $("quality").value === "auto" &&
-      fps < 42 &&
-      !low &&
-      (mode === "play" || mode === "drive")
-    ) {
-      low = true;
-      renderer.setPixelRatio(Math.min(1, 1280 / innerWidth));
-      bloom.enabled = false;
-      world.setQuality(true);
-      composer.setSize(innerWidth, innerHeight);
-    }
+  } else if (fps < 42) {
+    low = true;
+    renderer.setPixelRatio(Math.min(1, 1280 / innerWidth));
+    bloom.enabled = false;
+    world.setQuality(true);
+    composer.setSize(innerWidth, innerHeight);
   }
 }
 addEventListener("resize", () => {
+  if (!innerWidth || !innerHeight) return;
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
