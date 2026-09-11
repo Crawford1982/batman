@@ -3,6 +3,7 @@ import { updateEnemy } from "./enemy-ai.js";
 import { GroundLevel } from "./ground-level.js";
 import { ChapterHandover } from "./handover.js";
 import { PlayerFeedback } from "./feedback.js";
+import { modelProgress } from "./loading-progress.js";
 import "./feedback.css";
 import { Minimap } from "./minimap.js";
 import "./minimap.css";
@@ -109,6 +110,7 @@ function quality() {
 }
 $("quality").onchange = quality;
 quality();
+$("loading").textContent = modelProgress(0, 0);
 new GLTFLoader().load(
   `${import.meta.env.BASE_URL}batwing.glb`,
   (g) => {
@@ -134,10 +136,11 @@ new GLTFLoader().load(
     ready = true;
     $("start").disabled = false;
     $("start").textContent = "BEGIN OPERATION  →";
-    $("loading").textContent = "AIRCRAFT ONLINE · GOTHAM AWAITS";
+    $("loading").hidden = true;
   },
-  undefined,
+  (event) => { $("loading").textContent = modelProgress(event.loaded, event.total); },
   (e) => {
+    $("loading").hidden = false;
     $("loading").textContent = "Aircraft failed to load. Reload to retry.";
     $("error").hidden = false;
     $("error").textContent = e.message;
