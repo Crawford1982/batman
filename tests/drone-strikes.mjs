@@ -11,6 +11,19 @@ try {
     await page.click('#start-ground');
     await page.waitForFunction(()=>window.__batwing.state.groundReady);
     await page.click('#drive-launch');
+    const opening = await page.evaluate(() => {
+      const g = window.__batwing.ground;
+      g.car.elapsed = 24; g.attackTimer = 0; g.update(.01);
+      const quiet = g.strikeTime === 0 && !g.openingWarned;
+      g.car.elapsed = 25; g.update(.01);
+      const warned = g.openingWarned && g.strikeTime === 0 && document.getElementById('drive-radio').textContent.includes("They've found you");
+      for (let i=0;i<31;i++) g.update(.1,.1);
+      const strike = g.strikeTime > 0;
+      g.start(); g.car.checkpoint=1; g.car.elapsed=10; g.attackTimer=0; g.update(.01);
+      const checkpoint = g.openingWarned && g.strikeTime===0;
+      g.start(); return {quiet,warned,strike,checkpoint};
+    });
+    assert.deepEqual(opening,{quiet:true,warned:true,strike:true,checkpoint:true});
     await page.waitForTimeout(3500); // Let the opening title and radio line clear.
     await page.evaluate(()=>{
       const g=window.__batwing.ground;

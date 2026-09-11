@@ -1,3 +1,5 @@
+// Text-only tactical cue; no recording is claimed or requested for this line.
+export const GROUND_CONTACT = "GORDON / They've found you. Keep moving—drones are lining up an attack.";
 export const RADIO_LINES = {
   "alfred-theatre": ["ALFRED", "The theatre district is deserted, sir, but those rooftops are not."],
   "alfred-railway": ["ALFRED", "The elevated railway will give you cover, keep the car moving."],

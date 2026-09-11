@@ -11,6 +11,7 @@ import "./ground.css";
 import { StreetDetail } from "./street-detail.js";
 import { GroundEffects, createMine } from "./ground-effects.js";
 import { GroundCamera } from "./ground-camera.js";
+import { GROUND_CONTACT } from "./radio-lines.js";
 import { loadPursuitDrone, installPursuitDrone } from "./pursuit-drone.js";
 
 const $ = (id) => document.getElementById(id);
@@ -454,6 +455,7 @@ export class GroundLevel {
     this.pulseLife = 0;
     this.cancelStrike();
     this.strikeNumber = 0; this.evasions = 0; this.countered = 0;
+    this.openingWarned = false;
     this.cleanSections = 0; this.sectionDamaged = false;
     this.sectionDamageStart = this.car.damageTaken;
     this.rewardUntil = 0; $('drive-reward').textContent = '';
@@ -792,7 +794,13 @@ export class GroundLevel {
       }
       this.mines.forEach(m=>{if(m.userData.light)m.userData.light.visible=Math.sin(this.time*5+m.position.z)>.1;});
       this.effects.target(this.drones[0].position,this.strike.position,this.strikeTime>0);
-      if (this.attackTimer <= 0 && this.disabled <= 0 && this.car.elapsed > 15 && this.strikeTime <= 0) this.beginStrike();
+      const openingReady = this.car.checkpoint >= 1 || this.car.elapsed >= 25;
+      if (this.attackTimer <= 0 && this.disabled <= 0 && openingReady && this.strikeTime <= 0) {
+        if (!this.openingWarned && this.strikeNumber === 0) {
+          this.openingWarned = true; this.attackTimer = 3;
+          this.radio(GROUND_CONTACT);
+        } else this.beginStrike();
+      }
       this.updateStrike(wallDt);
       $('drive-reward').style.opacity = this.time < this.rewardUntil ? 1 : 0;
       if (this.car.health < oldHealth) {

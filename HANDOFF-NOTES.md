@@ -13,3 +13,16 @@
   browser checks covering both chapters, pause gating and reset. Owner should audition mix.
 - Task 3: one-key best-result storage with legacy migration; new-best delta and time
   remaining on wins. Tested ties, failures, corrupt/private storage and mobile result text.
+- Task 4: opening strikes wait for checkpoint 1 or 25 seconds, then a three-second
+  warning. Later cadence and corner/ambush protections remain intact. The warning is
+  text-only Gordon dialogue; existing recordings were not changed or fabricated.
+- Task 4 validation: desktop/mobile opening boundary and warning-lead checks added
+  to drone-strikes.mjs; barrage, EMP, damage, bonus and replay checks passed.
+- All 35 unit tests pass; final production build passes (existing bundle-size warning).
+- Deferred tasks 5–7 (flight HUD, Batwing loading readout, dependencies/CI) to stop
+  safely before the 60% allowance ceiling. Latest check: 52% used / 48% remaining.
+- Next: owner audition of turbine mix and hit/reward feel on a real phone; then HUD
+  simplification with before/after captures. No real-device performance claim is made.
+- Test commands run: npm test; tests/ground.mjs; tests/browser.mjs;
+  tests/audio-clock.mjs; tests/presentation.mjs; tests/ground-presentation.mjs;
+  tests/drone-strikes.mjs; npm run build.
