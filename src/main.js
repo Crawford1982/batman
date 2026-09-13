@@ -39,6 +39,22 @@ try {
   throw e;
 }
 renderer.info.autoReset = false;
+// Mobile browsers drop the WebGL context under memory pressure. Pausing and
+// waiting for the restore beats a silent black canvas.
+let contextLost = false;
+$("game").addEventListener("webglcontextlost", (e) => {
+  e.preventDefault();
+  contextLost = true;
+  if (mode === "play" || mode === "drive") pause();
+  $("error").hidden = false;
+  $("error").textContent =
+    "Graphics paused. The browser reset WebGL; the game will resume when it is restored.";
+});
+$("game").addEventListener("webglcontextrestored", () => {
+  contextLost = false;
+  $("error").hidden = true;
+  composer.setSize(innerWidth, innerHeight);
+});
 renderer.setSize(innerWidth, innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
 renderer.toneMapping = T.ACESFilmicToneMapping;
@@ -809,7 +825,7 @@ function frame(now) {
   feedback.update(camera, mode === "play" || mode === "drive");
   // A 0x0 window (minimised, mid-rotation, hidden pane) leaves the composer's
   // render targets empty; drawing into them only spams GL errors.
-  if (!innerWidth || !innerHeight || document.hidden) return;
+  if (!innerWidth || !innerHeight || document.hidden || contextLost) return;
   renderer.info.reset();
   if (low) renderer.render(scene, camera);
   else composer.render();
@@ -867,6 +883,7 @@ window.__batwing = {
       groundCheckpoint: ground.car.checkpoint,
       groundTime: ground.car.elapsed,
       groundPosition: ground.car.position.toArray(),
+      contextLost,
     };
   },
   start,
