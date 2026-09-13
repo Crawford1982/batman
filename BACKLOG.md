@@ -6,6 +6,7 @@ Chapter II street architecture, signs, wet asphalt, lighting, railway passage, a
 
 ## Next — ranked
 
+0. **Real-device session.** Ten minutes on a physical phone (touch stick, audio unlock on first tap, turbine mix on the speaker) and a headphones audition of the countdown ticks. Everything below is desktop-emulation verified only. Owner task; no agent can close it.
 1. **Browser performance and physical-device profiling.** Benchmark the GTX 1650 and actual phones, add vehicle/environment LOD and tune resolution scaling. The Intel HD 4600 sample remains below target; establish a reliable frame budget before adding content. Medium difficulty, very high impact. **Recommended next pass.**
 2. **Distinct architectural landmarks.** Bespoke theatre frontage, industrial utility runs and a more detailed cathedral plaza, reducing remaining repeated façade patterns. Medium difficulty, high impact.
 3. **Driving feel and tire feedback.** Physical controller tuning, skid ribbons, tire audio and stronger wet-road grip cues. Medium difficulty, high impact.

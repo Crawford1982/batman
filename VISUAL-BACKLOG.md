@@ -23,4 +23,5 @@ Updated 13 September 2026. Free assets only. Keep gameplay, instant browser acce
 - WebGPU only after a specific measured bottleneck justifies shader/post-processing migration.
 
 ## Release gates
+Payload: run `npm run compress` on every new model before commit and judge size from `dist/assets/*.glb`, not the source file. The first theatre block was 4.8 MB uncompressed and loaded at the start of Chapter II; compressed it is 0.79 MB. Do not extend the masonry until that is the habit.
 Before/after pictures at identical positions; safe collision envelopes; fallback when assets fail; source/licence record; compressed bytes and texture sizes; relevant tests and production build. Never fill remaining usage merely because it is available.
