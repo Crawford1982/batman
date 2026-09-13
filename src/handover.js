@@ -27,6 +27,7 @@ export class ChapterHandover {
     this.time = 0;
     this.revealed = false;
     this.skipRequested = false;
+    this.revealTime = 0;
     this.padPressed = false;
     document.body.classList.add("handover-active");
     this.panel.hidden = false;
@@ -57,6 +58,7 @@ export class ChapterHandover {
   reveal() {
     if (this.revealed) return;
     this.revealed = true;
+    this.revealTime = this.time;
     this.prepare();
     this.title.textContent = "TAKE THE STREETS BACK.";
     this.copy.textContent = this.failed
@@ -70,7 +72,7 @@ export class ChapterHandover {
     if (!this.active) return;
     this.skipRequested = true;
     this.time = Math.max(this.time, 8);
-    this.reveal();
+    if (this.ground.ready) this.reveal();
     this.audio.stopVoice();
     this.update(0);
   }
@@ -84,14 +86,17 @@ export class ChapterHandover {
     if (!this.active || document.hidden) return;
     this.time += dt;
     const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (this.time >= 2) this.reveal();
+    if (this.time >= 2 && this.ground.ready) this.reveal();
+    if (!this.ground.ready && !this.failed && this.time >= 2)
+      this.copy.textContent =
+        "Preparing the Batmobile� You can return to the menu if the connection stalls.";
     if (!this.revealed) {
       if (!reduced) this.player.position.addScaledVector(this.flight.forward, dt * 35);
       this.world.update(dt, this.player.position, this.time);
-      this.shade.style.opacity = String(Math.max(0, (this.time - 1.2) / 0.8));
+      this.shade.style.opacity = String(Math.min(0.55, Math.max(0, (this.time - 1.2) / 0.8)));
     } else {
       const p = this.ground.car.position;
-      const angle = 0.65 + (reduced ? 0 : Math.min(1, (this.time - 2) / 5) * 0.35);
+      const angle = 0.65 + (reduced ? 0 : Math.min(1, (this.time - this.revealTime) / 5) * 0.35);
       this.camera.position
         .copy(p)
         .add(new T.Vector3(Math.sin(angle) * 15, 2.8, -Math.cos(angle) * 15));
@@ -103,11 +108,15 @@ export class ChapterHandover {
       this.ground.streets.update(this.time, p);
       this.ground.routeScenes.update(p);
       this.shade.style.opacity = this.ground.ready
-        ? String(Math.max(0, 1 - (this.time - 2) / 0.8))
+        ? String(Math.max(0, 1 - (this.time - this.revealTime) / 0.8))
         : "1";
     }
     this.audio.update(0, false);
-    if (this.time >= 8 && this.ground.ready && !this.failed) {
+    if (
+      (this.skipRequested || (this.revealed && this.time - this.revealTime >= 6)) &&
+      this.ground.ready &&
+      !this.failed
+    ) {
       this.cancel();
       this.complete();
     }

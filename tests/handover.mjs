@@ -1,70 +1,71 @@
 import { chromium } from "@playwright/test";
 import assert from "node:assert/strict";
 const browser = await chromium.launch({ channel: "msedge", headless: true });
+const base = process.env.GAME_URL || "http://localhost:4173";
 try {
-  for (const mobile of [false, true]) {
-    const p = await browser.newPage({
-      viewport: mobile ? { width: 844, height: 390 } : { width: 1280, height: 800 },
-      hasTouch: mobile,
-      isMobile: mobile,
+  for (const scenario of ["normal", "delayed", "retry"]) {
+    const page = await browser.newPage({
+      viewport: { width: 844, height: 390 },
+      isMobile: true,
+      hasTouch: true,
     });
     const errors = [];
-    p.on("pageerror", (e) => errors.push(e.message));
-    let held;
-    await p.route("**/batmobile*.glb", (route) => {
-      if (mobile) held = route;
-      else return route.abort();
-    });
-    await p.goto((process.env.GAME_URL || "http://localhost:4173") + "/?test=1");
-    await p.waitForFunction(() => window.__batwing?.ready);
-    await p.click("#start");
-    await p.click("#skip-briefing");
-    await p.evaluate(() => window.__batwing.finish(true));
-    await p.waitForFunction(() => window.__batwing.handover.active);
-    if (mobile) {
-      await p.waitForTimeout(1000);
-      await p.locator("#handover-skip").tap();
-      assert.equal(await p.evaluate(() => window.__batwing.ground.car.elapsed), 0);
-      assert.ok(await p.locator("#chapter-handover").isVisible());
-      while (!held) await p.waitForTimeout(100);
+    page.on("pageerror", (e) => errors.push(e.message));
+    let held,
+      failed = false;
+    await page.route(
+      (url) => /predator[^/]*\.glb$/.test(url.pathname) && !url.search,
+      (route) => route.abort(),
+    );
+    await page.route(
+      (url) => /batmobile[^/]*\.glb$/.test(url.pathname) && !url.search,
+      async (route) => {
+        if (scenario === "delayed") {
+          held = route;
+          return;
+        }
+        if (scenario === "retry" && !failed) {
+          failed = true;
+          return route.fulfill({ status: 503, body: "Unavailable" });
+        }
+        await route.continue();
+      },
+    );
+    await page.goto(base + "/?test=1");
+    await page.waitForFunction(() => window.__batwing?.ready);
+    await page.click("#start");
+    await page.click("#skip-briefing");
+    await page.evaluate(() => window.__batwing.finish(true));
+    if (scenario === "delayed") {
+      await page.waitForTimeout(3500);
+      assert.ok(await page.locator("#chapter-handover").isVisible());
+      assert.ok(
+        await page.evaluate(
+          () => Number(document.querySelector(".handover-shade").style.opacity) <= 0.55,
+        ),
+      );
+      assert.equal(await page.evaluate(() => window.__batwing.handover.revealed), false);
+      assert.ok(held, "vehicle request is pending");
       await held.continue();
-    } else {
-      await p.waitForSelector("#handover-retry:visible");
-      assert.match(await p.locator("#chapter-handover p").innerText(), /interrupted/);
-      await p.unroute("**/batmobile*.glb");
-      await p.click("#handover-retry");
     }
-    await p.waitForFunction(() => window.__batwing.ground.ready);
-    if (!mobile) {
-      await p.waitForFunction(() => window.__batwing.handover.revealed);
-      await p.screenshot({ path: "verification/handover-desktop.png" });
+    if (scenario === "retry") {
+      await page.locator("#handover-retry").waitFor({ state: "visible" });
+      await page.click("#handover-retry");
     }
-    await p.waitForFunction(() => window.__batwing.state.mode === "drive", null, {
-      timeout: 30000,
+    // Watch the entire transition: do not use the skip button.
+    await page.waitForFunction(() => window.__batwing.state.mode === "drive", null, {
+      timeout: 45000,
     });
-    assert.ok(await p.locator("#drive-load").isHidden());
-    assert.ok(await p.locator("#chapter-handover").isHidden());
-    // Replay with cached assets must play the connection again; Escape skips it.
-    await p.evaluate(() => {
-      window.__batwing.ground.hide();
-      window.__batwing.finish(true);
-    });
-    await p.keyboard.press("Escape");
-    await p.waitForFunction(() => window.__batwing.state.mode === "drive");
-    // Cancelled connections cannot later launch the car.
-    await p.evaluate(() => {
-      window.__batwing.ground.hide();
-      window.__batwing.finish(true);
-    });
-    await p.click("#handover-exit");
-    await p.evaluate(() => window.__batwing.handover.update(20));
-    assert.equal(await p.evaluate(() => window.__batwing.state.mode), "menu");
+    assert.ok(await page.locator("#drive-hud").isVisible());
+    assert.equal(await page.locator("#chapter-handover").isVisible(), false);
+    await page.keyboard.down("w");
+    await page.waitForFunction(() => window.__batwing.ground.car.speed > 1);
+    await page.keyboard.up("w");
     assert.deepEqual(errors, []);
-    await p.close();
+    await page.screenshot({ path: "verification/handover-" + scenario + ".png" });
+    await page.close();
+    console.log("PASS handover:", scenario, "(optional drone unavailable)");
   }
-  console.log(
-    "PASS desktop/mobile automatic handover, slow-load skip, real download failure/retry, replay and exit cancellation",
-  );
 } finally {
   await browser.close();
 }

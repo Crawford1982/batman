@@ -2,7 +2,7 @@ import { chapterCard, clearPresentation, showResults } from "./presentation.js";
 import { JunctionGuide } from "./junction-guide.js";
 import { RouteScenes } from "./route-scenes.js";
 import * as T from "three";
-import { createModelLoader } from "./model-loader.js";
+import { loadModelWithTimeout } from "./model-loader.js";
 import batmobileUrl from "./models/batmobile.glb?url";
 import { Driving, DRIVE_ROUTE, driveSteering, routeCue } from "./driving.js";
 import { createEnemy } from "./enemy.js";
@@ -354,11 +354,14 @@ export class GroundLevel {
   async load() {
     if (this.ready) return;
     if (this.loading) return this.loading;
-    this.loading = loadPursuitDrone()
-      .then((template) => {
-        this.drones.forEach((d, i) => installPursuitDrone(d, template, i));
+    // Enemy visuals are optional; they must never block entering the car.
+    loadPursuitDrone()
+      .then((template) => this.drones.forEach((d, i) => installPursuitDrone(d, template, i)))
+      .catch(() => {}); // Existing procedural drones remain playable.
+    this.loading = Promise.resolve()
+      .then(() => {
         return new Promise((resolve, reject) =>
-          createModelLoader().load(
+          loadModelWithTimeout(
             batmobileUrl,
             (g) => {
               const model = g.scene;
