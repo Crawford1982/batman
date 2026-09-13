@@ -2,6 +2,7 @@ import { TheatreBlock } from "./theatre-block.js";
 import { createDistricts, districtAt, reservedPlot } from "./districts.js";
 import * as T from "three";
 import { installHeightFog, installWindowShader } from "./lighting.js";
+import { createSkyline } from "./skyline.js";
 export function rng(seed = 1989) {
   return () => {
     seed = (seed * 1664525 + 1013904223) >>> 0;
@@ -77,6 +78,8 @@ export function createWorld(scene) {
         w: 30 + rand() * 30,
         d: 30 + rand() * 30,
         h,
+        seed: rand(),
+        seed2: rand(),
       });
     }
   const geo = new T.BoxGeometry(1, 1, 1),
@@ -109,12 +112,88 @@ export function createWorld(scene) {
     dummy.scale.set(b.w + 1, 1.2, b.d + 1);
     dummy.updateMatrix();
     roofs.setMatrixAt(i, dummy.matrix);
-    dummy.position.y = b.h + 5;
-    dummy.scale.set(b.w * 0.48, 9, b.d * 0.48);
+    // Silhouette families. Setback towers step in twice, slabs carry a
+    // rooftop plant room at one corner, Deco towers get a tapered cap, low
+    // commercial blocks stay flat with a parapet.
+    const family =
+      b.h > 150 && b.seed > 0.55 ? "deco" : b.h > 110 ? "setback" : b.h > 40 ? "slab" : "low";
+    b.family = family;
+    if (family === "setback") {
+      dummy.position.set(b.x, b.h + 7, b.z);
+      dummy.scale.set(b.w * 0.72, 14, b.d * 0.72);
+    } else if (family === "slab") {
+      dummy.position.set(
+        b.x + (b.seed - 0.5) * b.w * 0.5,
+        b.h + 3.5,
+        b.z + (b.seed2 - 0.5) * b.d * 0.5,
+      );
+      dummy.scale.set(b.w * 0.3, 6, b.d * 0.3);
+    } else {
+      dummy.position.set(b.x, b.h + 0.4, b.z);
+      dummy.scale.set(b.w * 0.96, 0.2, b.d * 0.96);
+    }
     dummy.updateMatrix();
     tops.setMatrixAt(i, dummy.matrix);
   });
-  scene.add(blocks, roofs, tops);
+  const setbacks = buildings.filter((b) => b.family === "setback"),
+    decos = buildings.filter((b) => b.family === "deco"),
+    upper = new T.InstancedMesh(geo, mat, setbacks.length),
+    caps = new T.InstancedMesh(
+      new T.ConeGeometry(0.5, 1, 4, 1).rotateY(Math.PI / 4),
+      new T.MeshStandardMaterial({ color: 0x6d7d93, roughness: 0.6, metalness: 0.4 }),
+      decos.length,
+    );
+  setbacks.forEach((b, i) => {
+    dummy.position.set(b.x, b.h + 14 + 6, b.z);
+    dummy.scale.set(b.w * 0.45, 12, b.d * 0.45);
+    dummy.updateMatrix();
+    upper.setMatrixAt(i, dummy.matrix);
+  });
+  decos.forEach((b, i) => {
+    dummy.position.set(b.x, b.h + 14, b.z);
+    dummy.scale.set(Math.min(b.w, b.d) * 0.9, 28, Math.min(b.w, b.d) * 0.9);
+    dummy.updateMatrix();
+    caps.setMatrixAt(i, dummy.matrix);
+  });
+  // Rooftop clutter: water tanks and vent boxes, what you actually see from
+  // the Batwing. Dark metal so they read as silhouette against lit streets.
+  const tankBuildings = buildings.filter((b) => b.family !== "deco" && b.seed2 > 0.45),
+    tanks = new T.InstancedMesh(
+      new T.CylinderGeometry(0.5, 0.5, 1, 8),
+      new T.MeshStandardMaterial({ color: 0x2c333d, roughness: 0.7, metalness: 0.5 }),
+      tankBuildings.length,
+    ),
+    vents = new T.InstancedMesh(
+      geo,
+      new T.MeshStandardMaterial({ color: 0x3a4250, roughness: 0.8, metalness: 0.4 }),
+      buildings.length * 2,
+    );
+  tankBuildings.forEach((b, i) => {
+    const r = 1.6 + b.seed * 1.4;
+    dummy.position.set(
+      b.x + (0.5 - b.seed) * b.w * 0.7,
+      b.h + 1.2 + r * 1.1,
+      b.z + (b.seed2 - 0.5) * b.d * 0.7,
+    );
+    dummy.scale.set(r * 2, r * 2.2, r * 2);
+    dummy.updateMatrix();
+    tanks.setMatrixAt(i, dummy.matrix);
+  });
+  buildings.forEach((b, i) => {
+    for (const k of [0, 1]) {
+      const sx = 2 + b.seed * 2.5,
+        sz = 1.5 + b.seed2 * 2;
+      dummy.position.set(
+        b.x + (k ? -0.5 : 0.5) * (0.3 + b.seed2 * 0.4) * b.w,
+        b.h + 1.2 + 0.9,
+        b.z + (k ? 0.5 : -0.5) * (0.3 + b.seed * 0.4) * b.d,
+      );
+      dummy.scale.set(sx, 1.8, sz);
+      dummy.updateMatrix();
+      vents.setMatrixAt(i * 2 + k, dummy.matrix);
+    }
+  });
+  scene.add(blocks, roofs, tops, upper, caps, tanks, vents);
   const spireBuildings = buildings.filter((b) => b.h > 140 && rand() > 0.4),
     spires = [];
   const antennas = new T.InstancedMesh(
@@ -139,7 +218,7 @@ export function createWorld(scene) {
   scene.add(antennas, beacons);
   // Spatial instance batches allow the GPU to skip whole distant city blocks.
   const cityCells = [];
-  for (const source of [blocks, roofs, tops, antennas, beacons]) {
+  for (const source of [blocks, roofs, tops, upper, caps, tanks, vents, antennas, beacons]) {
     const cells = new Map(),
       matrix = new T.Matrix4(),
       color = new T.Color();
@@ -344,6 +423,7 @@ export function createWorld(scene) {
     rings.push(ring);
   }
   const theatreBlock = new TheatreBlock(scene, buildings);
+  const skyline = createSkyline(scene);
   return {
     theatreBlock,
     buildings,
@@ -357,6 +437,7 @@ export function createWorld(scene) {
       for (const cell of cityCells)
         cell.mesh.visible = Math.hypot(cell.x - pos.x, cell.z - pos.z) < (pos.y < 25 ? 1450 : 2700);
       districts.update(t);
+      skyline.update(t);
       sky.position.copy(pos);
       sky.material.uniforms.time.value = t;
       for (let i = 0; i < spires.length; i++) spires[i].visible = Math.sin(t * 2 + i) > 0.1;
