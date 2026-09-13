@@ -271,7 +271,7 @@ export class AudioSystem {
     const now = this.ctx.currentTime,
       target = turbineTargets(speed);
     this.flightScore.gain.setTargetAtTime(driving ? 0 : 1, now, 0.6);
-    this.driveScore.gain.setTargetAtTime(driving ? (danger ? 1 : 0.75) : 0, now, 0.4);
+    this.driveScore.gain.setTargetAtTime(driving ? (danger ? 1.25 : 1) : 0, now, 0.4);
     this.turbine.frequency.setTargetAtTime(target.frequency, now, 0.25);
     this.turbineFilter.frequency.setTargetAtTime(target.cutoff, now, 0.3);
     this.turbineGain.gain.setTargetAtTime(driving ? 0.012 : 0, now, 0.1);
