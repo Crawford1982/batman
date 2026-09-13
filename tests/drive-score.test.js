@@ -28,13 +28,13 @@ test("driving score switches buses and adds threat rhythm without affecting turb
   a.missionMix({ driving: true, speed: 30 });
   a.update(30, true);
   assert.equal(a.flightScore.gain.value, 0);
-  assert.equal(a.driveScore.gain.value, 0.75);
+  assert.equal(a.driveScore.gain.value, 1);
   assert.ok(a.tones.some((t) => t[5] === "drive"));
   a.ctx.currentTime = 1.4;
   a.tones = [];
   a.missionMix({ driving: true, speed: 30, danger: true });
   a.update(30, true);
-  assert.equal(a.driveScore.gain.value, 1);
+  assert.equal(a.driveScore.gain.value, 1.25);
   assert.ok(a.tones.some((t) => t[5] === "drive" && t[2] === 0.16));
   a.ctx.currentTime = 2;
   a.tones = [];
