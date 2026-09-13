@@ -4,7 +4,8 @@ import { DRIVE_ROUTE } from './driving.js';
 
 // Street architecture is merged by material in 140 m cells. Only nearby cells render.
 export class StreetDetail {
-  constructor(parent) {
+  constructor(parent, theatreBlock) {
+    this.theatreBlock=theatreBlock;
     this.chunks = []; this.colliders = []; this.beams = []; this.vents = [];
     const texture = (w,h,draw) => { const c=document.createElement('canvas');c.width=w;c.height=h;draw(c.getContext('2d'),w,h);const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;return t; };
     let seed=1989; const random=()=>((seed=(seed*1664525+1013904223)>>>0)/4294967296);
@@ -91,6 +92,7 @@ export class StreetDetail {
         const sign=new T.Mesh(new T.PlaneGeometry(16,4),new T.MeshBasicMaterial({map:signMap}));sign.position.set(-25.2,6.1,0);sign.rotation.y=Math.PI/2;root.add(sign);
         for(const [key,list]of Object.entries(parts)){const merged=mergeGeometries(list);root.add(new T.Mesh(merged,mat[key]));for(const g of list)g.dispose();}
         if(poolParts.length){root.add(new T.Mesh(mergeGeometries(poolParts),poolMat));poolParts.forEach(g=>g.dispose());}
+        root.userData.theatreReplacement = section===1 && start===140;
         this.chunks.push(root);
       }
     }
@@ -114,5 +116,5 @@ export class StreetDetail {
     }
     const batches=new Map();for(const m of [...this.landmarks.children]){if(!m.isMesh)continue;m.updateMatrix();const geo=m.geometry.clone().applyMatrix4(m.matrix).toNonIndexed();const list=batches.get(m.material)||[];list.push(geo);batches.set(m.material,list);this.landmarks.remove(m);m.geometry.dispose();}for(const [material,list]of batches){this.landmarks.add(new T.Mesh(mergeGeometries(list),material));list.forEach(g=>g.dispose());}
   }
-  update(t,pos){for(const c of this.chunks)c.visible=Math.hypot(c.position.x-pos.x,c.position.z-pos.z)<330;this.beams.forEach((b,i)=>{b.rotation.z=Math.sin(t*.27+i*2)*.28;b.rotation.x=Math.sin(t*.19+i)*.2;});}
+  update(t,pos){for(const c of this.chunks)c.visible=Math.hypot(c.position.x-pos.x,c.position.z-pos.z)<330 && !(c.userData.theatreReplacement && this.theatreBlock?.ready && !this.theatreBlock.disabled);this.beams.forEach((b,i)=>{b.rotation.z=Math.sin(t*.27+i*2)*.28;b.rotation.x=Math.sin(t*.19+i)*.2;});}
 }

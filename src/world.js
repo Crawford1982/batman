@@ -1,3 +1,4 @@
+import { TheatreBlock } from "./theatre-block.js";
 import { createDistricts, districtAt, reservedPlot } from "./districts.js";
 import * as T from "three";
 export function rng(seed = 1989) {
@@ -339,7 +340,9 @@ export function createWorld(scene) {
     scene.add(ring);
     rings.push(ring);
   }
+  const theatreBlock = new TheatreBlock(scene, buildings);
   return {
+    theatreBlock,
     buildings,
     moon,
     rings,
@@ -347,6 +350,7 @@ export function createWorld(scene) {
       mat.emissiveIntensity = 0.15 + (0.5 * value) / 100;
     },
     update(dt, pos, t) {
+      theatreBlock.update(pos);
       for (const cell of cityCells) cell.mesh.visible=Math.hypot(cell.x-pos.x,cell.z-pos.z)<(pos.y<25?1450:2700);
       districts.update(t);
       sky.position.copy(pos);

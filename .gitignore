@@ -14,3 +14,8 @@ Thumbs.db
 trailer/picture.mp4
 trailer/soundtrack.m4a
 verification/*-source.mp3
+
+# Local visual review/import intermediates
+verification/city-import/
+verification/director-2026-09-13/
+verification/theatre-evidence.json

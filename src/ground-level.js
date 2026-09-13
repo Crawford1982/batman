@@ -202,7 +202,7 @@ export class GroundLevel {
     this.strikeTime = 0;
     this.mines = [];
     this.effects = new GroundEffects(this.group);
-    this.streets = new StreetDetail(this.group);
+    this.streets = new StreetDetail(this.group, this.world.theatreBlock);
     this.makeStreets();
     this.ambushMines = [-10,0,10].map((offset,i) => {
       const mine = createMine(); mine.position.set(-522.5+offset,.4,-520-i*32);
