@@ -25,6 +25,11 @@ import { frameStep, FpsSampler, nextPixelRatio } from "./frame-clock.js";
 import { createGradePass } from "./lighting.js";
 import "./style.css";
 const $ = (id) => document.getElementById(id);
+// A brief wide, high, banked pull-in before the tight chase cam takes over on
+// launch; seconds, a fixed offset blended toward the normal chase camOffset.
+const LAUNCH_REVEAL = 2.6;
+const launchOffset = new T.Vector3(-58, 62, 165);
+const launchEye = new T.Vector3();
 const params = new URLSearchParams(location.search);
 const testMode = params.has("test");
 let renderer;
@@ -97,6 +102,7 @@ let ready = false,
   target = null,
   hitUntil = 0,
   fps = 60,
+  launchTime = LAUNCH_REVEAL,
   low = matchMedia("(pointer:coarse)").matches,
   gamepadPause = false;
 const keys = {},
@@ -297,7 +303,15 @@ function start() {
   modelPivot.rotation.set(0, 0, 0);
   player.position.copy(flight.position);
   player.quaternion.copy(flight.quaternion);
-  camBase.copy(flight.position).add(new T.Vector3(0, 10, 30));
+  // A brief wide, high, banked pull-in before the tight chase cam takes over;
+  // skipped instantly for reduced motion, and by the player touching any control.
+  const reducedLaunch = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  launchTime = reducedLaunch ? LAUNCH_REVEAL : 0;
+  launchEye
+    .copy(reducedLaunch ? new T.Vector3(0, 9, 29) : launchOffset)
+    .applyQuaternion(flight.quaternion)
+    .add(flight.position);
+  camBase.copy(launchEye);
   camera.position.copy(camBase);
   audio.start();
   chapterCard("CHAPTER I / OPERATION SILENT BELL", "A guardian above Gotham");
@@ -728,10 +742,21 @@ function update(dt, wallDt = dt) {
         new T.Quaternion().setFromEuler(new T.Euler(flight.pitch * 0.4, flight.yaw, 0, "YXZ")),
       )
       .add(flight.position);
-    // Smooth the rig's own position, then copy it, so the hit shake that
-    // feedback.update adds afterwards never feeds back into the next lerp.
-    camBase.lerp(camOffset, 1 - Math.exp(-dt * 5));
-    camera.position.copy(camBase);
+    if (launchTime < LAUNCH_REVEAL) {
+      launchTime += dt;
+      if (Object.values(keys).some(Boolean) || mouse.active || touch.fire || touch.boost)
+        launchTime = LAUNCH_REVEAL;
+      const p = Math.min(1, launchTime / LAUNCH_REVEAL);
+      const ease = p * p * (3 - 2 * p);
+      launchEye.copy(launchOffset).applyQuaternion(flight.quaternion).add(flight.position);
+      camBase.lerpVectors(launchEye, camOffset, ease);
+      camera.position.copy(camBase);
+    } else {
+      // Smooth the rig's own position, then copy it, so the hit shake that
+      // feedback.update adds afterwards never feeds back into the next lerp.
+      camBase.lerp(camOffset, 1 - Math.exp(-dt * 5));
+      camera.position.copy(camBase);
+    }
     look.copy(flight.position).addScaledVector(flight.forward, 70);
     camera.up.set(-Math.sin(flight.roll * 0.12), 1, 0);
     camera.lookAt(look);
@@ -921,6 +946,7 @@ if (testMode)
     ground,
     beginGround,
     handover,
+    camera,
   });
 
 function beginBriefing() {
