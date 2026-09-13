@@ -8,7 +8,7 @@ try {
     const p = await b.newPage({ viewport: { width: 1280, height: 800 } });
     const errors = [];
     p.on("pageerror", (e) => errors.push(e.message));
-    if (variant === "failed") await p.route("**/environment/theatre-kit.glb", (r) => r.abort());
+    if (variant === "failed") await p.route("**/theatre-kit*.glb", (r) => r.abort());
     await p.goto("http://localhost:4173/?test=1" + (variant === "legacy" ? "&legacyCity=1" : ""));
     await p.waitForFunction(() => window.__batwing?.ready);
     await p.click("#start-ground");

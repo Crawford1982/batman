@@ -13,6 +13,7 @@ import "./mission.css";
 import { createEnemy, createBomber } from "./enemy.js";
 import * as T from "three";
 import { createModelLoader } from "./model-loader.js";
+import batwingUrl from "./models/batwing.glb?url";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
@@ -105,7 +106,7 @@ $("quality").onchange = quality;
 quality();
 $("loading").textContent = modelProgress(0, 0);
 createModelLoader().load(
-  `${import.meta.env.BASE_URL}batwing.glb`,
+  batwingUrl,
   (g) => {
     aircraft = g.scene;
     const box = new T.Box3().setFromObject(aircraft),

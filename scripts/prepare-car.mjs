@@ -11,7 +11,7 @@ await doc.transform(
   simplify({ simplifier: MeshoptSimplifier, ratio: 0.3, error: 0.001 }),
   prune(),
 );
-await io.write("public/batmobile.glb", doc);
+await io.write("src/models/batmobile.glb", doc);
 console.log(
   "Car triangles",
   doc
