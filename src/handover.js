@@ -89,7 +89,7 @@ export class ChapterHandover {
     if (this.time >= 2 && this.ground.ready) this.reveal();
     if (!this.ground.ready && !this.failed && this.time >= 2)
       this.copy.textContent =
-        "Preparing the Batmobile� You can return to the menu if the connection stalls.";
+        "Preparing the Batmobile… You can return to the menu if the connection stalls.";
     if (!this.revealed) {
       if (!reduced) this.player.position.addScaledVector(this.flight.forward, dt * 35);
       this.world.update(dt, this.player.position, this.time);
