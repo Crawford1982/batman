@@ -22,6 +22,7 @@ import { Flight, clamp, insideBuilding, segmentDistance } from "./flight.js";
 import { createWorld } from "./world.js";
 import { AudioSystem, clockState } from "./audio.js";
 import { frameStep, FpsSampler, nextPixelRatio } from "./frame-clock.js";
+import { createGradePass } from "./lighting.js";
 import "./style.css";
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -69,6 +70,8 @@ const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(new T.Vector2(innerWidth, innerHeight), 0.4, 0.55, 0.75);
 composer.addPass(bloom);
+const grade = createGradePass();
+composer.addPass(grade);
 composer.addPass(new OutputPass());
 const mission = new Mission(scene);
 let briefingTime = 0,
@@ -779,6 +782,7 @@ function update(dt, wallDt = dt) {
   }
   if (mode === "play" || mode === "menu" || mode === "briefing") {
     world.update(dt, player.position, t);
+    grade.uniforms.time.value = t;
     for (let i = particles.length - 1; i >= 0; i--) {
       const p = particles[i];
       p.life -= dt;

@@ -1,6 +1,7 @@
 import { TheatreBlock } from "./theatre-block.js";
 import { createDistricts, districtAt, reservedPlot } from "./districts.js";
 import * as T from "three";
+import { installHeightFog, installWindowShader } from "./lighting.js";
 export function rng(seed = 1989) {
   return () => {
     seed = (seed * 1664525 + 1013904223) >>> 0;
@@ -12,7 +13,8 @@ export function createWorld(scene) {
     buildings = [],
     dummy = new T.Object3D();
   scene.background = new T.Color("#050b19");
-  scene.fog = new T.FogExp2("#101d30", 0.00165);
+  installHeightFog();
+  scene.fog = new T.FogExp2("#101d30", 0.0019);
   const sky = new T.Mesh(
     new T.SphereGeometry(3300, 32, 20),
     new T.ShaderMaterial({
@@ -25,12 +27,14 @@ export function createWorld(scene) {
     }),
   );
   scene.add(sky);
-  scene.add(new T.HemisphereLight(0x9ebde2, 0x172033, 2.0));
-  const moonlight = new T.DirectionalLight(0xb6d5ff, 3);
-  moonlight.position.set(-250, 700, -600);
+  // Less flat sky fill, a low cold moon so tops and leading edges catch a
+  // rim, and a warm bounce from the streets below.
+  scene.add(new T.HemisphereLight(0x8fb0d8, 0x0d1420, 1.1));
+  const moonlight = new T.DirectionalLight(0xbcd6ff, 2.6);
+  moonlight.position.set(-520, 360, -700);
   scene.add(moonlight);
-  const fill = new T.DirectionalLight(0xeabf87, 0.8);
-  fill.position.set(300, 120, 200);
+  const fill = new T.DirectionalLight(0xe0955a, 0.55);
+  fill.position.set(120, -300, 90);
   scene.add(fill);
   const texCanvas = document.createElement("canvas");
   texCanvas.width = 128;
@@ -47,13 +51,13 @@ export function createWorld(scene) {
   facade.colorSpace = T.SRGBColorSpace;
   facade.anisotropy = 4;
   const mat = new T.MeshStandardMaterial({
-    map: facade,
-    emissiveMap: facade,
+    color: 0x66748a,
     emissive: 0xffffff,
     emissiveIntensity: 0.65,
-    roughness: 0.8,
-    metalness: 0.25,
+    roughness: 0.85,
+    metalness: 0.15,
   });
+  installWindowShader(mat);
   for (let x = -33; x <= 33; x++)
     for (let z = -33; z <= 33; z++) {
       if (Math.abs(x) <= 0 || Math.abs(z) <= 0 || rand() < 0.12 || reservedPlot(x * 95, z * 95))
