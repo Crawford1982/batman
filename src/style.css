@@ -19,6 +19,26 @@ canvas#game {
   height: 100%;
   touch-action: none;
 }
+/* A long press on a phone must not turn controls and HUD labels into
+   selectable text or raise the copy/lookup callout. Prose pages and the
+   pause/results copy stay selectable by opting back in below. */
+button,
+label,
+select,
+#hud,
+#drive-hud,
+#touch,
+#drive-touch,
+.menu-content,
+footer {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+button,
+select {
+  touch-action: manipulation;
+}
 button,
 select {
   font: inherit;
