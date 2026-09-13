@@ -36,3 +36,25 @@
 - Release resumed with owner authorization after quota reset. Re-ran all 36 unit tests,
   production build, desktop/mobile flight, driving and handover failure/retry checks: passed.
 - Prior no-push/no-deploy restriction superseded by owner's release instruction.
+
+## 13 September 2026 — post-release commits and hardening
+
+Landed on main after the release (not covered by the notes above):
+- e7673a6 adaptive driving score and theatre interceptor pursuit set-piece at checkpoint 1.
+- df0dcc0 driving melody clarified, exhaust anchored to the rear nozzle.
+- ab956ac boost edge streaks and turbine surge.
+- 9f71805 first theatre block replaced with CC0 Quaternius masonry (see VISUAL-BACKLOG.md).
+
+Hardening pass (separate PRs):
+- #1 Models compressed with meshopt + WebP: 16.4 MB -> 2.9 MB. `npm run compress` after any prepare script.
+- #2 Prettier, .editorconfig, .gitattributes; flight camera shake no longer feeds back into the chase lerp.
+- #3 CI runs tests/browser.mjs and tests/ground.mjs on Ubuntu through Playwright-installed Edge.
+- #4 Models served as content-hashed assets/<name>-<hash>.glb so browsers cache them past Pages' 10-minute max-age.
+- #5 Driving score bus raised from 0.75 to 1.0 at rest (owner found Chapter II music quiet).
+- #6 WebGL context loss pauses with a message and recovers on restore; tests/context-lost.mjs.
+
+Rule for future environment work: any new model must go through `npm run compress` before commit, and its
+uncompressed size is not the number that matters — check `dist/assets/*.glb` after a build.
+
+Still owner-only: real phone session (touch stick, audio unlock, turbine mix on speaker), headphones audition
+of the countdown ticks, and direction for the Chapter I entrance and cathedral ending cinematics.
