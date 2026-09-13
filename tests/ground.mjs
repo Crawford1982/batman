@@ -72,13 +72,15 @@ await p.click("#handover-skip");
 await p.waitForFunction(() => window.__batwing.state.mode === "drive");
 assert.equal((await p.evaluate(() => window.__batwing.state)).mode, "drive");
 console.log("DESKTOP", JSON.stringify(await p.evaluate(() => window.__batwing.state)));
+// Free the desktop page first; on software GL both rendering at once stalls navigation.
+await p.close();
 const m = await b.newPage({
   viewport: { width: 844, height: 390 },
   isMobile: true,
   hasTouch: true,
 });
 m.on("pageerror", (e) => errors.push(e.message));
-await m.goto((process.env.GAME_URL || "http://localhost:4173") + "/?test=1");
+await m.goto((process.env.GAME_URL || "http://localhost:4173") + "/?test=1", { timeout: 90000 });
 await m.waitForFunction(() => window.__batwing?.ready);
 await m.locator("#start-ground").tap();
 await m.waitForFunction(() => window.__batwing.state.groundReady);
