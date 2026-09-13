@@ -53,15 +53,23 @@ export class Mission {
     return 3 - this.remaining.length;
   }
   outcome(elapsed, bombers) {
-    if (this.city <= 0 || elapsed >= FLIGHT_DURATION) return 'lost';
-    if (this.finalStarted !== null && this.disabled === 3 && this.finalRaids === 3 &&
-        elapsed - this.finalStarted >= FINAL_DEFENCE && bombers === 0) return 'won';
+    if (this.city <= 0 || elapsed >= FLIGHT_DURATION) return "lost";
+    if (
+      this.finalStarted !== null &&
+      this.disabled === 3 &&
+      this.finalRaids === 3 &&
+      elapsed - this.finalStarted >= FINAL_DEFENCE &&
+      bombers === 0
+    )
+      return "won";
     return null;
   }
   update(dt, elapsed, bombers = 0) {
     if (this.disabled === 3 && elapsed >= 60 && this.finalStarted === null) {
-      this.phase = 'defend'; this.finalStarted = elapsed; this.nextRaid = 0;
-    } else if (this.finalStarted === null) this.phase = elapsed < 25 ? 'patrol' : 'intercept';
+      this.phase = "defend";
+      this.finalStarted = elapsed;
+      this.nextRaid = 0;
+    } else if (this.finalStarted === null) this.phase = elapsed < 25 ? "patrol" : "intercept";
     for (const r of this.remaining) {
       r.core.rotation.y += dt;
       r.ring.rotation.z += dt * 0.4;
@@ -69,7 +77,7 @@ export class Mission {
     if (this.phase === "patrol") return null;
     this.nextRaid -= dt;
     if (this.nextRaid <= 0 && bombers < 3) {
-      if (this.phase === 'defend') {
+      if (this.phase === "defend") {
         if (this.finalRaids >= 3) return null;
         this.finalRaids++;
         this.nextRaid = 14;
@@ -85,16 +93,13 @@ export class Mission {
     const bombers = enemies.filter((e) => e.kind === "bomber");
     if (bombers.length)
       return bombers.reduce((a, b) =>
-        a.mesh.position.distanceTo(a.destination) <
-        b.mesh.position.distanceTo(b.destination)
+        a.mesh.position.distanceTo(a.destination) < b.mesh.position.distanceTo(b.destination)
           ? a
           : b,
       );
     return (
       this.remaining.sort(
-        (a, b) =>
-          a.mesh.position.distanceTo(position) -
-          b.mesh.position.distanceTo(position),
+        (a, b) => a.mesh.position.distanceTo(position) - b.mesh.position.distanceTo(position),
       )[0] || null
     );
   }

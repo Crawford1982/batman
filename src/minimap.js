@@ -8,8 +8,7 @@ export function mapPoint(x, z) {
 export class Minimap {
   constructor(canvas, buildings, destinationElement) {
     this.canvas = canvas;
-    this.destination =
-      destinationElement || document.getElementById("map-destination");
+    this.destination = destinationElement || document.getElementById("map-destination");
     canvas.width = canvas.height = SIZE;
     this.ctx = canvas.getContext("2d");
     this.base = document.createElement("canvas");
@@ -23,12 +22,7 @@ export class Minimap {
     c.fillStyle = "#253b4a";
     for (const b of buildings) {
       const [x, y] = mapPoint(b.x - b.w / 2, b.z - b.d / 2);
-      c.fillRect(
-        x,
-        y,
-        Math.max(1, (b.w / 6900) * SIZE),
-        Math.max(1, (b.d / 6900) * SIZE),
-      );
+      c.fillRect(x, y, Math.max(1, (b.w / 6900) * SIZE), Math.max(1, (b.d / 6900) * SIZE));
     }
     c.strokeStyle = "#7da5b355";
     c.lineWidth = 2;
@@ -80,10 +74,7 @@ export class Minimap {
     const [px, py] = mapPoint(flight.position.x, flight.position.z);
     const objective = mission.objective(flight.position, enemies);
     if (objective) {
-      const [x, y] = mapPoint(
-        objective.mesh.position.x,
-        objective.mesh.position.z,
-      );
+      const [x, y] = mapPoint(objective.mesh.position.x, objective.mesh.position.z);
       c.strokeStyle = "#f4c679";
       c.lineWidth = 2;
       c.setLineDash([5, 5]);
@@ -125,10 +116,19 @@ export class Minimap {
     for (const e of enemies) {
       const [x, y] = mapPoint(e.mesh.position.x, e.mesh.position.z);
       if (e.kind === "bomber") {
-        const [tx,ty] = mapPoint(e.destination.x,e.destination.z);
-        c.strokeStyle = '#ffb77588'; c.lineWidth = 1.5; c.setLineDash([3,4]);
-        c.beginPath(); c.moveTo(x,y); c.lineTo(tx,ty); c.stroke(); c.setLineDash([]);
-        c.strokeStyle = '#ffb775'; c.beginPath(); c.arc(tx,ty,8,0,Math.PI*2); c.stroke();
+        const [tx, ty] = mapPoint(e.destination.x, e.destination.z);
+        c.strokeStyle = "#ffb77588";
+        c.lineWidth = 1.5;
+        c.setLineDash([3, 4]);
+        c.beginPath();
+        c.moveTo(x, y);
+        c.lineTo(tx, ty);
+        c.stroke();
+        c.setLineDash([]);
+        c.strokeStyle = "#ffb775";
+        c.beginPath();
+        c.arc(tx, ty, 8, 0, Math.PI * 2);
+        c.stroke();
       }
       c.fillStyle = e.kind === "bomber" ? "#ffb775" : "#ff7968";
       c.beginPath();

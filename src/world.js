@@ -40,8 +40,7 @@ export function createWorld(scene) {
   c.fillRect(0, 0, 128, 256);
   for (let y = 8; y < 256; y += 12)
     for (let x = 5; x < 128; x += 10) {
-      c.fillStyle =
-        rand() > 0.42 ? (rand() > 0.2 ? "#b39b68" : "#819eae") : "#192632";
+      c.fillStyle = rand() > 0.42 ? (rand() > 0.2 ? "#b39b68" : "#819eae") : "#192632";
       c.fillRect(x, y, 3, 5);
     }
   const facade = new T.CanvasTexture(texCanvas);
@@ -57,12 +56,7 @@ export function createWorld(scene) {
   });
   for (let x = -33; x <= 33; x++)
     for (let z = -33; z <= 33; z++) {
-      if (
-        Math.abs(x) <= 0 ||
-        Math.abs(z) <= 0 ||
-        rand() < 0.12 ||
-        reservedPlot(x * 95, z * 95)
-      )
+      if (Math.abs(x) <= 0 || Math.abs(z) <= 0 || rand() < 0.12 || reservedPlot(x * 95, z * 95))
         continue;
       const district = districtAt(x * 95, z * 95);
       const h =
@@ -142,22 +136,34 @@ export function createWorld(scene) {
   // Spatial instance batches allow the GPU to skip whole distant city blocks.
   const cityCells = [];
   for (const source of [blocks, roofs, tops, antennas, beacons]) {
-    const cells = new Map(), matrix = new T.Matrix4(), color = new T.Color();
-    for (let i=0;i<source.count;i++) {
-      source.getMatrixAt(i,matrix);
-      const x=Math.floor(matrix.elements[12]/700), z=Math.floor(matrix.elements[14]/700), key=x+','+z;
-      if (!cells.has(key)) cells.set(key,{x:(x+.5)*700,z:(z+.5)*700,indices:[]});
+    const cells = new Map(),
+      matrix = new T.Matrix4(),
+      color = new T.Color();
+    for (let i = 0; i < source.count; i++) {
+      source.getMatrixAt(i, matrix);
+      const x = Math.floor(matrix.elements[12] / 700),
+        z = Math.floor(matrix.elements[14] / 700),
+        key = x + "," + z;
+      if (!cells.has(key)) cells.set(key, { x: (x + 0.5) * 700, z: (z + 0.5) * 700, indices: [] });
       cells.get(key).indices.push(i);
     }
     scene.remove(source);
     for (const cell of cells.values()) {
-      const mesh=new T.InstancedMesh(source.geometry,source.material,cell.indices.length);
-      cell.indices.forEach((i,j)=>{source.getMatrixAt(i,matrix);mesh.setMatrixAt(j,matrix);if(source.instanceColor){source.getColorAt(i,color);mesh.setColorAt(j,color);}});
-      mesh.computeBoundingSphere();scene.add(mesh);cityCells.push({mesh,x:cell.x,z:cell.z});
+      const mesh = new T.InstancedMesh(source.geometry, source.material, cell.indices.length);
+      cell.indices.forEach((i, j) => {
+        source.getMatrixAt(i, matrix);
+        mesh.setMatrixAt(j, matrix);
+        if (source.instanceColor) {
+          source.getColorAt(i, color);
+          mesh.setColorAt(j, color);
+        }
+      });
+      mesh.computeBoundingSphere();
+      scene.add(mesh);
+      cityCells.push({ mesh, x: cell.x, z: cell.z });
     }
     source.dispose();
   }
-
 
   const ground = new T.Mesh(
     new T.PlaneGeometry(8000, 8000),
@@ -201,10 +207,7 @@ export function createWorld(scene) {
     emissiveIntensity: 0.25,
   });
   for (let i = 0; i < 5; i++) {
-    const m = new T.Mesh(
-      new T.BoxGeometry(100 - i * 14, 60, 90 - i * 12),
-      stone,
-    );
+    const m = new T.Mesh(new T.BoxGeometry(100 - i * 14, 60, 90 - i * 12), stone);
     m.position.y = 30 + i * 52;
     tower.add(m);
   }
@@ -270,11 +273,7 @@ export function createWorld(scene) {
   const starsGeo = new T.BufferGeometry(),
     stars = [];
   for (let i = 0; i < 1300; i++) {
-    stars.push(
-      (rand() - 0.5) * 6000,
-      450 + rand() * 2200,
-      (rand() - 0.5) * 6000,
-    );
+    stars.push((rand() - 0.5) * 6000, 450 + rand() * 2200, (rand() - 0.5) * 6000);
   }
   starsGeo.setAttribute("position", new T.Float32BufferAttribute(stars, 3));
   scene.add(
@@ -351,12 +350,12 @@ export function createWorld(scene) {
     },
     update(dt, pos, t) {
       theatreBlock.update(pos);
-      for (const cell of cityCells) cell.mesh.visible=Math.hypot(cell.x-pos.x,cell.z-pos.z)<(pos.y<25?1450:2700);
+      for (const cell of cityCells)
+        cell.mesh.visible = Math.hypot(cell.x - pos.x, cell.z - pos.z) < (pos.y < 25 ? 1450 : 2700);
       districts.update(t);
       sky.position.copy(pos);
       sky.material.uniforms.time.value = t;
-      for (let i = 0; i < spires.length; i++)
-        spires[i].visible = Math.sin(t * 2 + i) > 0.1;
+      for (let i = 0; i < spires.length; i++) spires[i].visible = Math.sin(t * 2 + i) > 0.1;
       snowPoints.position.copy(pos);
       const a = snowGeo.attributes.position.array;
       for (let i = 0; i < a.length; i += 3) {

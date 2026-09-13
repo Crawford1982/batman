@@ -50,12 +50,7 @@ const scene = new T.Scene(),
   audio = new AudioSystem();
 const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
-const bloom = new UnrealBloomPass(
-  new T.Vector2(innerWidth, innerHeight),
-  0.4,
-  0.55,
-  0.75,
-);
+const bloom = new UnrealBloomPass(new T.Vector2(innerWidth, innerHeight), 0.4, 0.55, 0.75);
 composer.addPass(bloom);
 composer.addPass(new OutputPass());
 const mission = new Mission(scene);
@@ -101,9 +96,7 @@ function notice(text, duration = 4) {
 function quality() {
   const q = $("quality").value;
   low = q === "low" || (q === "auto" && matchMedia("(pointer:coarse)").matches);
-  renderer.setPixelRatio(
-    low ? Math.min(devicePixelRatio, 1) : Math.min(devicePixelRatio, 1.5),
-  );
+  renderer.setPixelRatio(low ? Math.min(devicePixelRatio, 1) : Math.min(devicePixelRatio, 1.5));
   bloom.enabled = !low;
   world.setQuality(low);
   composer.setSize(innerWidth, innerHeight);
@@ -138,7 +131,9 @@ createModelLoader().load(
     $("start").textContent = "BEGIN OPERATION  →";
     $("loading").hidden = true;
   },
-  (event) => { $("loading").textContent = modelProgress(event.loaded, event.total); },
+  (event) => {
+    $("loading").textContent = modelProgress(event.loaded, event.total);
+  },
   (e) => {
     $("loading").hidden = false;
     $("loading").textContent = "Aircraft failed to load. Reload to retry.";
@@ -180,8 +175,7 @@ const shotGeo = new T.SphereGeometry(0.4, 6, 4),
   hostileMat = new T.MeshBasicMaterial({ color: 0xff624b }),
   missileMat = new T.MeshBasicMaterial({ color: 0x91e6ff });
 function shoot(missile = false) {
-  if (mode !== "play" || (missile ? missileCooldown > 0 : t - lastShot < 0.12))
-    return;
+  if (mode !== "play" || (missile ? missileCooldown > 0 : t - lastShot < 0.12)) return;
   if (missile) {
     missileCooldown = 3;
     audio.shot(true);
@@ -245,14 +239,13 @@ function start() {
   feedback.reset();
   audio.radioTimes = {};
   clearPresentation();
-  window.gothamAnalytics?.event("level_start",{level_name:"batwing"});
+  window.gothamAnalytics?.event("level_start", { level_name: "batwing" });
   audio.stopVoice();
   hitUntil = 0;
   ground.hide();
   $("next-level").hidden = true;
   if (!ready) return;
-  for (const arr of [enemies, shots, particles])
-    while (arr.length) remove(arr, 0);
+  for (const arr of [enemies, shots, particles]) while (arr.length) remove(arr, 0);
   flight.reset();
   mission.reset();
   for (const r of world.rings) r.visible = true;
@@ -272,7 +265,8 @@ function start() {
   modelPivot.rotation.set(0, 0, 0);
   player.position.copy(flight.position);
   player.quaternion.copy(flight.quaternion);
-  camera.position.copy(flight.position).add(new T.Vector3(0, 10, 30));
+  camBase.copy(flight.position).add(new T.Vector3(0, 10, 30));
+  camera.position.copy(camBase);
   audio.start();
   chapterCard("CHAPTER I / OPERATION SILENT BELL", "A guardian above Gotham");
   notice("ALFRED / The city is quiet. Get your bearings. Follow the gold heading marker.", 7);
@@ -299,18 +293,33 @@ function pause() {
 function finish(win, reason = "") {
   audio.stopVoice();
   $("hud").hidden = true;
-  showResults("batwing", win, elapsed, score, flight.health, `${kills} targets / ${mission.disabled} relays`);
-  window.gothamAnalytics?.event("level_end",{level_name:"batwing",success:win,elapsed_seconds:elapsed,score});
+  showResults(
+    "batwing",
+    win,
+    elapsed,
+    score,
+    flight.health,
+    `${kills} targets / ${mission.disabled} relays`,
+  );
+  window.gothamAnalytics?.event("level_end", {
+    level_name: "batwing",
+    success: win,
+    elapsed_seconds: elapsed,
+    score,
+  });
   $("next-level").hidden = !win;
   mode = "ended";
   $("pause-title").textContent = win ? "The night is yours." : "Signal lost.";
   $("pause-copy").textContent =
-    reason || (win ? "The skies are clear. Take the encrypted override to Gordon at the cathedral." : "The Batwing is down. Gotham needs its guardian.");
+    reason ||
+    (win
+      ? "The skies are clear. Take the encrypted override to Gordon at the cathedral."
+      : "The Batwing is down. Gotham needs its guardian.");
   $("resume").hidden = true;
   $("pause-menu").hidden = false;
   if (win) {
     $("pause-menu").hidden = true;
-    mode = 'handover';
+    mode = "handover";
     handover.start();
   }
 }
@@ -318,8 +327,7 @@ $("start").onclick = beginBriefing;
 $("skip-briefing").onclick = start;
 $("pause").onclick = pause;
 $("resume").onclick = pause;
-$("restart").onclick = () =>
-  mode.startsWith("drive") ? ground.start() : start();
+$("restart").onclick = () => (mode.startsWith("drive") ? ground.start() : start());
 $("exit").onclick = () => {
   handover.cancel();
   clearPresentation();
@@ -340,16 +348,15 @@ $("close-manual").onclick = () => {
   $("manual").hidden = true;
 };
 $("sound").onchange = () => audio.mute(!$("sound").checked);
-  addEventListener("keydown", (e) => {
-    if(mode==='handover'){
-      if(['Escape','Space','Enter'].includes(e.code)){e.preventDefault();handover.skip();}
-      return;
+addEventListener("keydown", (e) => {
+  if (mode === "handover") {
+    if (["Escape", "Space", "Enter"].includes(e.code)) {
+      e.preventDefault();
+      handover.skip();
     }
-  if (
-    ["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(
-      e.code,
-    )
-  )
+    return;
+  }
+  if (["Space", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.code))
     e.preventDefault();
   keys[e.code] = true;
   if (!e.repeat) {
@@ -380,7 +387,7 @@ $("game").addEventListener("pointermove", (e) => {
   if (e.pointerType === "mouse" && (mode === "play" || mode === "drive")) {
     if (mode === "drive" && !mouse.steering) return;
     if (mode === "drive") {
-      mouse.x = clamp((e.clientX - mouse.steerOrigin) / Math.min(innerWidth * .22, 240), -1, 1);
+      mouse.x = clamp((e.clientX - mouse.steerOrigin) / Math.min(innerWidth * 0.22, 240), -1, 1);
       return;
     }
     mouse.x = clamp((e.clientX / innerWidth - 0.5) * 2, -1, 1);
@@ -395,12 +402,25 @@ $("game").addEventListener("pointerdown", (e) => {
     if (mode === "drive") ground.emp();
   }
   if (e.button === 2) {
-    if (mode === "drive") { mouse.steering = true; mouse.steerOrigin = e.clientX; mouse.x = 0; }
-    else shoot(true);
+    if (mode === "drive") {
+      mouse.steering = true;
+      mouse.steerOrigin = e.clientX;
+      mouse.x = 0;
+    } else shoot(true);
   }
 });
-addEventListener("pointerup", (e) => { if (e.button === 0) mouse.fire = false; if (e.button === 2) { mouse.steering = false; mouse.x = 0; } });
-addEventListener("pointercancel", () => { mouse.fire = false; mouse.steering = false; mouse.x = 0; });
+addEventListener("pointerup", (e) => {
+  if (e.button === 0) mouse.fire = false;
+  if (e.button === 2) {
+    mouse.steering = false;
+    mouse.x = 0;
+  }
+});
+addEventListener("pointercancel", () => {
+  mouse.fire = false;
+  mouse.steering = false;
+  mouse.x = 0;
+});
 addEventListener("contextmenu", (e) => e.preventDefault());
 let stickId = null;
 const stick = $("stick"),
@@ -420,11 +440,14 @@ stick.onpointerdown = (e) => {
 stick.onpointermove = (e) => {
   if (e.pointerId === stickId) stickMove(e);
 };
-stick.onpointerup = stick.onpointercancel = stick.onlostpointercapture = () => {
-  stickId = null;
-  touch.x = touch.y = 0;
-  knob.style.transform = "";
-};
+stick.onpointerup =
+  stick.onpointercancel =
+  stick.onlostpointercapture =
+    () => {
+      stickId = null;
+      touch.x = touch.y = 0;
+      knob.style.transform = "";
+    };
 document.querySelectorAll("[data-hold]").forEach((b) => {
   const k = b.dataset.hold;
   b.onpointerdown = (e) => {
@@ -437,9 +460,7 @@ $("touch-missile").onpointerdown = () => shoot(true);
 function input() {
   const pad = Array.from(navigator.getGamepads?.() || []).find(Boolean),
     dead = (v) => (Math.abs(v || 0) < 0.13 ? 0 : v);
-  let x =
-      (keys.KeyD || keys.ArrowRight ? 1 : 0) -
-      (keys.KeyA || keys.ArrowLeft ? 1 : 0),
+  let x = (keys.KeyD || keys.ArrowRight ? 1 : 0) - (keys.KeyA || keys.ArrowLeft ? 1 : 0),
     y = (keys.ArrowUp ? 1 : 0) - (keys.ArrowDown ? 1 : 0);
   if (!x && !y && mouse.active) {
     x = mouse.x;
@@ -451,8 +472,7 @@ function input() {
   }
   let yaw = 0,
     roll = (keys.KeyQ ? 1 : 0) - (keys.KeyE ? 1 : 0),
-    throttle =
-      (keys.KeyW || touch.up ? 1 : 0) - (keys.KeyS || touch.down ? 1 : 0),
+    throttle = (keys.KeyW || touch.up ? 1 : 0) - (keys.KeyS || touch.down ? 1 : 0),
     boost = keys.ShiftLeft || touch.boost,
     fire = keys.Space || mouse.fire || touch.fire;
   if (pad) {
@@ -464,10 +484,8 @@ function input() {
       mouse.active = false;
     }
     yaw = dead(pad.axes[2]);
-    roll +=
-      (pad.buttons[4]?.pressed ? 1 : 0) - (pad.buttons[5]?.pressed ? 1 : 0);
-    throttle +=
-      (pad.buttons[12]?.pressed ? 1 : 0) - (pad.buttons[13]?.pressed ? 1 : 0);
+    roll += (pad.buttons[4]?.pressed ? 1 : 0) - (pad.buttons[5]?.pressed ? 1 : 0);
+    throttle += (pad.buttons[12]?.pressed ? 1 : 0) - (pad.buttons[13]?.pressed ? 1 : 0);
     boost ||= pad.buttons[6]?.pressed;
     fire ||= pad.buttons[7]?.pressed;
     if (pad.buttons[0]?.pressed) shoot(true);
@@ -506,34 +524,44 @@ function beginGround() {
 }
 $("start-ground").onclick = beginGround;
 $("next-level").onclick = beginGround;
-const handover = new ChapterHandover({ground,camera,player,flight,world,audio,
-  prepare:()=>{
-    for(const k in keys)keys[k]=false;
-    mouse.fire=false;mouse.steering=false;
-    player.visible=false;
-    for(const a of [enemies,shots,particles])while(a.length)remove(a,0);
-    for(const r of mission.relays)r.mesh.visible=false;
-    for(const r of world.rings)r.visible=false;
-    ground.car.reset();ground.group.visible=true;ground.phase='briefing';
-    ground.vehicle.position.copy(ground.car.position);ground.vehicle.rotation.set(0,0,0);
+const handover = new ChapterHandover({
+  ground,
+  camera,
+  player,
+  flight,
+  world,
+  audio,
+  prepare: () => {
+    for (const k in keys) keys[k] = false;
+    mouse.fire = false;
+    mouse.steering = false;
+    player.visible = false;
+    for (const a of [enemies, shots, particles]) while (a.length) remove(a, 0);
+    for (const r of mission.relays) r.mesh.visible = false;
+    for (const r of world.rings) r.visible = false;
+    ground.car.reset();
+    ground.group.visible = true;
+    ground.phase = "briefing";
+    ground.vehicle.position.copy(ground.car.position);
+    ground.vehicle.rotation.set(0, 0, 0);
     ground.routeScenes.restorePower(0);
   },
-  complete:()=>ground.start({handover:true}),exit:()=>$('exit').click(),
+  complete: () => ground.start({ handover: true }),
+  exit: () => $("exit").click(),
 });
 const camOffset = new T.Vector3(),
+  camBase = new T.Vector3(),
   look = new T.Vector3(),
   temp = new T.Vector3();
-const minimap = new Minimap(
-  $("radar").querySelector("canvas"),
-  world.buildings,
-);
+const minimap = new Minimap($("radar").querySelector("canvas"), world.buildings);
 function update(dt, wallDt = dt) {
-  if(mode==='handover'){
-    const pad=Array.from(navigator.getGamepads?.()||[]).find(Boolean);
-    const pressed=!!pad?.buttons[9]?.pressed;
-    if(pressed&&!handover.padPressed)handover.skip();
-    handover.padPressed=pressed;
-    handover.update(Math.min(wallDt,.1));return;
+  if (mode === "handover") {
+    const pad = Array.from(navigator.getGamepads?.() || []).find(Boolean);
+    const pressed = !!pad?.buttons[9]?.pressed;
+    if (pressed && !handover.padPressed) handover.skip();
+    handover.padPressed = pressed;
+    handover.update(Math.min(wallDt, 0.1));
+    return;
   }
   if (mode.startsWith("drive")) {
     ground.update(dt, wallDt);
@@ -543,10 +571,7 @@ function update(dt, wallDt = dt) {
   if (mode === "play") {
     if (Math.hypot(flight.position.x, flight.position.z) > 3000) {
       const home = Math.atan2(flight.position.x, flight.position.z),
-        delta = Math.atan2(
-          Math.sin(home - flight.yaw),
-          Math.cos(home - flight.yaw),
-        );
+        delta = Math.atan2(Math.sin(home - flight.yaw), Math.cos(home - flight.yaw));
       controls.x = clamp(-delta * 2, -1, 1);
       controls.boost = false;
     }
@@ -596,8 +621,10 @@ function update(dt, wallDt = dt) {
     if (controls.fire) shoot();
     spawnTimer -= dt;
     if (
-      mission.phase !== "patrol" && mission.phase !== "defend" && spawnTimer <= 0 &&
-      enemies.filter(e=>e.kind !== "bomber").length < 2
+      mission.phase !== "patrol" &&
+      mission.phase !== "defend" &&
+      spawnTimer <= 0 &&
+      enemies.filter((e) => e.kind !== "bomber").length < 2
     ) {
       spawn();
       spawnTimer = mission.phase === "defend" ? 12 : 18;
@@ -622,21 +649,28 @@ function update(dt, wallDt = dt) {
       const attack = updateEnemy(e, flight, dt);
       if (attack) {
         const m = new T.Mesh(shotGeo, hostileMat);
-        m.position.copy(e.mesh.position); m.scale.setScalar(1.4); scene.add(m);
-        shots.push({mesh:m,velocity:attack.multiplyScalar(95),life:5,enemy:true});
+        m.position.copy(e.mesh.position);
+        m.scale.setScalar(1.4);
+        scene.add(m);
+        shots.push({ mesh: m, velocity: attack.multiplyScalar(95), life: 5, enemy: true });
       }
-      if (!e.guard && e.mesh.position.distanceTo(flight.position)>1100) remove(enemies,i);
-
+      if (!e.guard && e.mesh.position.distanceTo(flight.position) > 1100) remove(enemies, i);
     }
     updateProjectiles(dt);
     if (mode !== "play") return;
     const previousPhase = mission.phase;
-    const raid = mission.update(wallDt, elapsed, enemies.filter(e=>e.kind === 'bomber').length);
+    const raid = mission.update(wallDt, elapsed, enemies.filter((e) => e.kind === "bomber").length);
     if (mission.phase !== previousPhase) {
-      chapterCard(mission.phase === 'defend' ? '03 / FINAL ATTACK' : '02 / INTERCEPTION', mission.phase === 'defend' ? 'Hold the evacuation corridor' : 'Break the rogue network');
-      notice(mission.phase === 'defend'
-      ? 'GORDON / Relays offline. Final evacuation underway. Stop the last three bombers.'
-      : 'ALFRED / Attack source identified. Disable the three red command relays.', 8);
+      chapterCard(
+        mission.phase === "defend" ? "03 / FINAL ATTACK" : "02 / INTERCEPTION",
+        mission.phase === "defend" ? "Hold the evacuation corridor" : "Break the rogue network",
+      );
+      notice(
+        mission.phase === "defend"
+          ? "GORDON / Relays offline. Final evacuation underway. Stop the last three bombers."
+          : "ALFRED / Attack source identified. Disable the three red command relays.",
+        8,
+      );
     }
     if (raid) spawnBomber(raid);
     if (mission.city <= 0) {
@@ -646,22 +680,26 @@ function update(dt, wallDt = dt) {
       );
       return;
     }
-    const outcome = mission.outcome(elapsed, enemies.filter(e=>e.kind === 'bomber').length);
+    const outcome = mission.outcome(elapsed, enemies.filter((e) => e.kind === "bomber").length);
     if (outcome) {
-      finish(outcome === 'won', outcome === 'won'
-        ? 'Final attack contained. Evacuation complete. Take the override to Gordon in Chapter II.'
-        : 'The evacuation window closed. Disable all three relays and contain the final raid before time runs out.');
+      finish(
+        outcome === "won",
+        outcome === "won"
+          ? "Final attack contained. Evacuation complete. Take the override to Gordon in Chapter II."
+          : "The evacuation window closed. Disable all three relays and contain the final raid before time runs out.",
+      );
       return;
     }
     camOffset
       .set(0, 9, 29 + (flight.speed - 65) * 0.06)
       .applyQuaternion(
-        new T.Quaternion().setFromEuler(
-          new T.Euler(flight.pitch * 0.4, flight.yaw, 0, "YXZ"),
-        ),
+        new T.Quaternion().setFromEuler(new T.Euler(flight.pitch * 0.4, flight.yaw, 0, "YXZ")),
       )
       .add(flight.position);
-    camera.position.lerp(camOffset, 1 - Math.exp(-dt * 5));
+    // Smooth the rig's own position, then copy it, so the hit shake that
+    // feedback.update adds afterwards never feeds back into the next lerp.
+    camBase.lerp(camOffset, 1 - Math.exp(-dt * 5));
+    camera.position.copy(camBase);
     look.copy(flight.position).addScaledVector(flight.forward, 70);
     camera.up.set(-Math.sin(flight.roll * 0.12), 1, 0);
     camera.lookAt(look);
@@ -684,17 +722,23 @@ function update(dt, wallDt = dt) {
     const liveTarget = target && target.hp > 0;
     $("crosshair").classList.toggle("confirmed", t < hitUntil);
     $("target-label").textContent = liveTarget
-      ? `${target.kind === 'relay' ? 'COMMAND RELAY' : target.kind === 'bomber' ? 'HEAVY BOMBER' : target.kind === 'escort' ? 'ESCORT' : 'INTERCEPTOR'} · ${Math.round(target.mesh.position.distanceTo(flight.position))} M · FIRE`
-      : t < hitUntil ? "HIT CONFIRMED" : "";
+      ? `${target.kind === "relay" ? "COMMAND RELAY" : target.kind === "bomber" ? "HEAVY BOMBER" : target.kind === "escort" ? "ESCORT" : "INTERCEPTOR"} · ${Math.round(target.mesh.position.distanceTo(flight.position))} M · FIRE`
+      : t < hitUntil
+        ? "HIT CONFIRMED"
+        : "";
     $("target-armour").hidden = !liveTarget;
     if (liveTarget) {
-      const percent = clamp(target.hp / (target.kind === 'relay' ? 12 : target.kind === 'bomber' ? 9 : 2) * 100, 0, 100);
-      $("target-armour").firstElementChild.style.width = percent + '%';
-      $("target-armour").setAttribute('aria-label', `Target armour ${Math.ceil(percent)} percent`);
+      const percent = clamp(
+        (target.hp / (target.kind === "relay" ? 12 : target.kind === "bomber" ? 9 : 2)) * 100,
+        0,
+        100,
+      );
+      $("target-armour").firstElementChild.style.width = percent + "%";
+      $("target-armour").setAttribute("aria-label", `Target armour ${Math.ceil(percent)} percent`);
     }
     noticeTimer -= dt;
     if (noticeTimer <= 0) $("message").style.opacity = 0;
-    $("attack-warning").hidden = !enemies.some(e=>e.ai?.phase === "warning");
+    $("attack-warning").hidden = !enemies.some((e) => e.ai?.phase === "warning");
     updateMissionHUD();
     minimap.update(flight, mission, enemies, world.rings, t);
   } else if (mode === "briefing") {
@@ -708,16 +752,12 @@ function update(dt, wallDt = dt) {
     camera.lookAt(-15, 438, 0);
     world.moon.position
       .copy(camera.position)
-      .add(
-        temp.subVectors(player.position, camera.position).multiplyScalar(15),
-      );
+      .add(temp.subVectors(player.position, camera.position).multiplyScalar(15));
     world.moon.scale.set(330, 330, 1);
     flame.visible = false;
   }
   if (mode !== "menu") {
-    world.moon.position
-      .copy(camera.position)
-      .add(new T.Vector3(500, 900, -2100));
+    world.moon.position.copy(camera.position).add(new T.Vector3(500, 900, -2100));
     world.moon.scale.set(460, 460, 1);
   }
   if (mode === "play" || mode === "menu" || mode === "briefing") {
@@ -743,11 +783,29 @@ function frame(now) {
   last = now;
   t += dt;
   update(dt, wallDt);
-  const remaining = mode === "drive" ? 300 - ground.car.elapsed : mode === "play" ? FLIGHT_DURATION - elapsed : Infinity;
-  audio.missionMix({ driving: mode === "drive", speed: ground.car.speed, boost: ground.boosting, danger: ground.pursuitState === "warning" || ground.pursuitState === "attack" || ground.strikeTime > 0 || ground.ambushState === "active", remaining });
+  const remaining =
+    mode === "drive"
+      ? 300 - ground.car.elapsed
+      : mode === "play"
+        ? FLIGHT_DURATION - elapsed
+        : Infinity;
+  audio.missionMix({
+    driving: mode === "drive",
+    speed: ground.car.speed,
+    boost: ground.boosting,
+    danger:
+      ground.pursuitState === "warning" ||
+      ground.pursuitState === "attack" ||
+      ground.strikeTime > 0 ||
+      ground.ambushState === "active",
+    remaining,
+  });
   $("timer").dataset.clockState = mode === "play" ? clockState(remaining) : "normal";
   $("drive-time").dataset.clockState = mode === "drive" ? clockState(remaining) : "normal";
-  document.body.classList.toggle('jet-boosting', mode === 'drive' && ground.boosting && ground.car.speed > 15);
+  document.body.classList.toggle(
+    "jet-boosting",
+    mode === "drive" && ground.boosting && ground.car.speed > 15,
+  );
   feedback.update(camera, mode === "play" || mode === "drive");
   // A 0x0 window (minimised, mid-rotation, hidden pane) leaves the composer's
   // render targets empty; drawing into them only spams GL errors.
@@ -872,13 +930,7 @@ function updateBriefing(dt) {
   const progress = (briefingTime % 7.6) / 7.6;
   camera.position
     .copy(shot.eye)
-    .add(
-      new T.Vector3(
-        progress * 75,
-        Math.sin(progress * Math.PI) * 12,
-        -progress * 30,
-      ),
-    );
+    .add(new T.Vector3(progress * 75, Math.sin(progress * Math.PI) * 12, -progress * 30));
   camera.up.set(0, 1, 0);
   camera.fov = 58;
   camera.updateProjectionMatrix();
@@ -891,11 +943,7 @@ function spawnBomber(site) {
   const mesh = createBomber();
   mesh.scale.setScalar(1.35);
   const destination = new T.Vector3(site.x, site.y, site.z);
-  const approach = new T.Vector3(
-    flight.position.x - site.x,
-    0,
-    flight.position.z - site.z,
-  );
+  const approach = new T.Vector3(flight.position.x - site.x, 0, flight.position.z - site.z);
   if (approach.length() < 1) approach.set(0, 0, 1);
   approach.normalize();
   mesh.position.copy(destination).addScaledVector(approach, 1050);
@@ -909,13 +957,18 @@ function spawnBomber(site) {
     name: site.name,
     destination,
   });
-  const bomber = enemies[enemies.length-1];
-  const escort = enemies.find(e=>e.kind !== 'bomber' && !e.guard);
+  const bomber = enemies[enemies.length - 1];
+  const escort = enemies.find((e) => e.kind !== "bomber" && !e.guard);
   if (escort) {
-    escort.kind='escort';escort.guard=bomber;escort.ai=null;
+    escort.kind = "escort";
+    escort.guard = bomber;
+    escort.ai = null;
     // Existing aircraft fly into formation rather than teleporting or raising the cap.
   }
-  notice(`GORDON / Bomber inbound to ${site.name}.${escort ? ' Escort detected.' : ''} Intercept it.`, 7);
+  notice(
+    `GORDON / Bomber inbound to ${site.name}.${escort ? " Escort detected." : ""} Intercept it.`,
+    7,
+  );
 }
 function updateProjectiles(dt) {
   for (let i = shots.length - 1; i >= 0; i--) {
@@ -945,14 +998,10 @@ function updateProjectiles(dt) {
       }
     } else
       for (const victim of [...enemies, ...mission.remaining]) {
-        const radius =
-          victim.kind === "relay" ? 15 : victim.kind === "bomber" ? 13 : 7;
-        if (
-          segmentDistance(victim.mesh.position, prev, shot.mesh.position) <
-          radius
-        ) {
+        const radius = victim.kind === "relay" ? 15 : victim.kind === "bomber" ? 13 : 7;
+        if (segmentDistance(victim.mesh.position, prev, shot.mesh.position) < radius) {
           victim.hp -= shot.missile ? 5 : 1;
-          hitUntil = t + .2;
+          hitUntil = t + 0.2;
           audio.hit();
           hit = true;
           if (victim.hp <= 0) {
@@ -989,38 +1038,45 @@ function updateMissionHUD() {
   world.setGridIntegrity(mission.city);
   const objective = mission.objective(flight.position, enemies),
     bomber = objective?.kind === "bomber";
-  $("district-name").textContent = districtAt(
-    flight.position.x,
-    flight.position.z,
-  );
-  $("mission-order").textContent = mission.phase === "patrol" ? "PATROL / GET YOUR BEARINGS" : bomber
-    ? "INTERCEPT INBOUND BOMBER"
-    : mission.disabled < 3
-      ? "DISABLE COMMAND RELAYS"
-      : "DEFEND THE EVACUATION";
-  $("mission-detail").textContent = mission.phase === "patrol" ? "Enjoy the skyline. An incoming transmission will identify the threat." : bomber
-    ? `${objective.name} under threat. ${Math.ceil(objective.mesh.position.distanceTo(objective.destination) / 12)}s to impact.`
-    : mission.disabled < 3
-      ? "Destroy the red uplinks. Cannons and homing missiles both work."
-      : "Three final bombers. No reinforcements. Clear the evacuation corridor.";
+  $("district-name").textContent = districtAt(flight.position.x, flight.position.z);
+  $("mission-order").textContent =
+    mission.phase === "patrol"
+      ? "PATROL / GET YOUR BEARINGS"
+      : bomber
+        ? "INTERCEPT INBOUND BOMBER"
+        : mission.disabled < 3
+          ? "DISABLE COMMAND RELAYS"
+          : "DEFEND THE EVACUATION";
+  $("mission-detail").textContent =
+    mission.phase === "patrol"
+      ? "Enjoy the skyline. An incoming transmission will identify the threat."
+      : bomber
+        ? `${objective.name} under threat. ${Math.ceil(objective.mesh.position.distanceTo(objective.destination) / 12)}s to impact.`
+        : mission.disabled < 3
+          ? "Destroy the red uplinks. Cannons and homing missiles both work."
+          : "Three final bombers. No reinforcements. Clear the evacuation corridor.";
   const threat = $("bomber-threat");
   $("mission-detail").hidden = !!bomber;
   $("mission-hud").classList.toggle("has-bomber", !!bomber);
   threat.hidden = !bomber;
   if (bomber) {
-    const seconds = Math.max(0, Math.ceil(objective.mesh.position.distanceTo(objective.destination) / 12));
-    $("bomber-eta").textContent = `${seconds <= 25 ? 'FINAL APPROACH' : 'BOMBER INBOUND'} · ${seconds}s`;
+    const seconds = Math.max(
+      0,
+      Math.ceil(objective.mesh.position.distanceTo(objective.destination) / 12),
+    );
+    $("bomber-eta").textContent =
+      `${seconds <= 25 ? "FINAL APPROACH" : "BOMBER INBOUND"} · ${seconds}s`;
     $("bomber-route").textContent = objective.name;
-    $("bomber-progress").style.width = Math.max(0, Math.min(100, seconds/88*100)) + '%';
-    threat.classList.toggle('critical', seconds <= 25);
+    $("bomber-progress").style.width = Math.max(0, Math.min(100, (seconds / 88) * 100)) + "%";
+    threat.classList.toggle("critical", seconds <= 25);
   }
   $("city-value").textContent = mission.city + "%";
   $("city-bar").style.width = mission.city + "%";
   $("city-bar").style.background = mission.city < 40 ? "#ff7358" : "#ddbc7b";
   $("evac-status").textContent =
-    mission.phase === 'defend'
-      ? `PHASE 3 / HOLD ${Math.max(0, Math.ceil(FINAL_DEFENCE-(elapsed-mission.finalStarted)))}s · RAID ${mission.finalRaids}/3`
-      : `${mission.phase === 'patrol' ? '01 / PATROL' : '02 / INTERCEPTION'} · RELAYS ${mission.disabled}/3`;
+    mission.phase === "defend"
+      ? `PHASE 3 / HOLD ${Math.max(0, Math.ceil(FINAL_DEFENCE - (elapsed - mission.finalStarted)))}s · RAID ${mission.finalRaids}/3`
+      : `${mission.phase === "patrol" ? "01 / PATROL" : "02 / INTERCEPTION"} · RELAYS ${mission.disabled}/3`;
   $("objective-marker").hidden = !objective;
   if (objective) {
     const projected = objective.mesh.position.clone().project(camera);

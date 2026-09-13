@@ -69,25 +69,16 @@ export function createDistricts(scene, collisions) {
     );
     batches[key].push(geometry.index ? geometry.toNonIndexed() : geometry);
   }
-  const box = (key, x, y, z, w, h, d) =>
-    shape(key, new T.BoxGeometry(w, h, d), x, y, z);
+  const box = (key, x, y, z, w, h, d) => shape(key, new T.BoxGeometry(w, h, d), x, y, z);
   const collider = (x, z, w, d, h) => collisions.push({ x, z, w, d, h });
 
   // Old Gotham cathedral: twin bell towers, rose window, nave and flying buttresses.
   box("stone", -1100, 48, -1000, 95, 96, 145);
-  shape("roof", new T.CylinderGeometry(0, 69, 38, 4), -1100, 111, -1000, [
-    0,
-    Math.PI / 4,
-    0,
-  ]);
+  shape("roof", new T.CylinderGeometry(0, 69, 38, 4), -1100, 111, -1000, [0, Math.PI / 4, 0]);
   collider(-1100, -1000, 95, 145, 127);
   for (const x of [-1142, -1058]) {
     box("stone", x, 80, -943, 28, 160, 30);
-    shape("roof", new T.ConeGeometry(22, 54, 4), x, 187, -943, [
-      0,
-      Math.PI / 4,
-      0,
-    ]);
+    shape("roof", new T.ConeGeometry(22, 54, 4), x, 187, -943, [0, Math.PI / 4, 0]);
     box("gold", x, 147, -927, 8, 14, 1);
     collider(x, -943, 35, 35, 214);
     for (const y of [18, 76, 132, 160]) box("roof", x, y, -943, 30, 2, 32);
@@ -100,41 +91,36 @@ export function createDistricts(scene, collisions) {
   for (let i = 0; i < 5; i++)
     for (const side of [-1, 1]) {
       box("stone", -1100 + side * 55, 34, -1048 + i * 24, 15, 68, 9);
-      shape(
-        "roof",
-        new T.ConeGeometry(6, 22, 4),
-        -1100 + side * 55,
-        78,
-        -1048 + i * 24,
-      );
+      shape("roof", new T.ConeGeometry(6, 22, 4), -1100 + side * 55, 78, -1048 + i * 24);
       box("gold", -1100 + side * 48, 61, -1048 + i * 24, 1, 27, 6);
     }
   shape("gold", new T.TorusGeometry(16, 1, 6, 40), -1100, 70, -926);
   shape("roof", new T.TorusGeometry(18, 2, 8, 40), -1100, 70, -926);
   // Inset stained-glass sectors and dark mullions give the rose window depth.
-  shape('steel', new T.CircleGeometry(15.8,48), -1100,70,-925.8);
-  for(let i=0;i<12;i++){
-    shape(i%3===0?'gold':i%3===1?'blue':'copper',new T.CircleGeometry(14.8,4,i*Math.PI/6+.035,Math.PI/6-.07),-1100,70,-925.6);
+  shape("steel", new T.CircleGeometry(15.8, 48), -1100, 70, -925.8);
+  for (let i = 0; i < 12; i++) {
+    shape(
+      i % 3 === 0 ? "gold" : i % 3 === 1 ? "blue" : "copper",
+      new T.CircleGeometry(14.8, 4, (i * Math.PI) / 6 + 0.035, Math.PI / 6 - 0.07),
+      -1100,
+      70,
+      -925.6,
+    );
   }
-  shape('roof',new T.TorusGeometry(6,.6,6,32),-1100,70,-925);
-  for(const y of [8,46,92])box('roof',-1100,y,-926,92,.7,1.4);
-  for(const side of [-1,1])for(const x of [29,35]){
-    box('steel',-1100+side*x,25,-926.2,3.4,25,.5);
-    shape('roof',new T.TorusGeometry(1.7,.35,5,12,Math.PI),-1100+side*x,37.5,-925.7);
-    box('copper',-1100+side*x,25,-925.7,.18,24,.3);
-  }
+  shape("roof", new T.TorusGeometry(6, 0.6, 6, 32), -1100, 70, -925);
+  for (const y of [8, 46, 92]) box("roof", -1100, y, -926, 92, 0.7, 1.4);
+  for (const side of [-1, 1])
+    for (const x of [29, 35]) {
+      box("steel", -1100 + side * x, 25, -926.2, 3.4, 25, 0.5);
+      shape("roof", new T.TorusGeometry(1.7, 0.35, 5, 12, Math.PI), -1100 + side * x, 37.5, -925.7);
+      box("copper", -1100 + side * x, 25, -925.7, 0.18, 24, 0.3);
+    }
   for (const side of [-1, 1]) {
     box("roof", -1100 + side * 45, 46, -926, 4, 92, 5);
     box("roof", -1100 + side * 22, 23, -926, 3, 46, 4);
   }
   for (let i = 0; i < 3; i++)
-    shape(
-      "roof",
-      new T.TorusGeometry(13 + i * 2, 0.8, 6, 24, Math.PI),
-      -1100,
-      30,
-      -924 - i * 0.7,
-    );
+    shape("roof", new T.TorusGeometry(13 + i * 2, 0.8, 6, 24, Math.PI), -1100, 30, -924 - i * 0.7);
   for (let i = 0; i < 8; i++) {
     const a = (i * Math.PI) / 4;
     shape("gold", new T.BoxGeometry(0.7, 30, 0.7), -1100, 70, -925, [0, 0, a]);
@@ -142,12 +128,12 @@ export function createDistricts(scene, collisions) {
   box("steel", -1100, 14, -926, 20, 28, 2);
   // Recessed bronze-framed doors read at street distance without new materials.
   for (const side of [-1, 1]) {
-    const x = -1100 + side*5;
+    const x = -1100 + side * 5;
     for (const y of [5, 14, 23]) {
-      box('copper', x, y, -924.8, 8.8, 7.8, .35);
-      box('steel', x, y, -924.5, 7.8, 6.8, .4);
+      box("copper", x, y, -924.8, 8.8, 7.8, 0.35);
+      box("steel", x, y, -924.5, 7.8, 6.8, 0.4);
     }
-    box('copper', -1100+side*.45, 12, -924, .3, 3, .5);
+    box("copper", -1100 + side * 0.45, 12, -924, 0.3, 3, 0.5);
   }
 
   // Docks: gantry cranes, stacked freight, a power station and industrial chimneys.
@@ -177,8 +163,7 @@ export function createDistricts(scene, collisions) {
   for (const z of [-780, 900]) {
     box("steel", 720, 24, z, 460, 9, 40);
     for (const x of [565, 875]) {
-      for (const side of [-1, 1])
-        box("stone", x, 62, z + side * 22, 13, 124, 13);
+      for (const side of [-1, 1]) box("stone", x, 62, z + side * 22, 13, 124, 13);
       box("stone", x, 117, z, 15, 14, 57);
       collider(x, z, 20, 65, 124);
     }
@@ -196,17 +181,9 @@ export function createDistricts(scene, collisions) {
       const cable = [];
       for (let i = 0; i <= 32; i++) {
         const x = 565 + (i * 310) / 32;
-        cable.push(
-          new T.Vector3(x, 52 + 65 * ((x - 720) / 155) ** 2, z + side * 22),
-        );
+        cable.push(new T.Vector3(x, 52 + 65 * ((x - 720) / 155) ** 2, z + side * 22));
       }
-      shape(
-        "roof",
-        new T.TubeGeometry(new T.CatmullRomCurve3(cable), 40, 1.1, 5, false),
-        0,
-        0,
-        0,
-      );
+      shape("roof", new T.TubeGeometry(new T.CatmullRomCurve3(cable), 40, 1.1, 5, false), 0, 0, 0);
     }
   }
   const water = new T.Mesh(
@@ -229,8 +206,7 @@ export function createDistricts(scene, collisions) {
   for (let i = 0; i < 5; i++) box("red", 735, 22, 1150 + i * 24, 38, 16, 20);
 
   for (const [key, parts] of Object.entries(batches)) {
-    if (parts.length)
-      scene.add(new T.Mesh(mergeGeometries(parts), palettes[key]));
+    if (parts.length) scene.add(new T.Mesh(mergeGeometries(parts), palettes[key]));
   }
   return {
     update(time) {
