@@ -1,5 +1,6 @@
 import * as T from "three";
 import { createModelLoader } from "./model-loader.js";
+import theatreUrl from "./models/theatre-kit.glb?url";
 
 // One curated block. Legacy frontages remain until every replacement is ready.
 export class TheatreBlock {
@@ -16,7 +17,7 @@ export class TheatreBlock {
     this.started = true;
     try {
       const gltf = await createModelLoader().loadAsync(
-        `${import.meta.env.BASE_URL}environment/theatre-kit.glb`,
+        theatreUrl,
       );
       gltf.scene.updateMatrixWorld(true);
       const prepared = new Set();

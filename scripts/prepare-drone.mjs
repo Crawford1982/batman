@@ -47,7 +47,7 @@ await doc.transform(
   simplify({ simplifier: MeshoptSimplifier, ratio: 0.18, error: 0.007 }),
   prune(),
 );
-await io.write("public/predator.glb", doc);
+await io.write("src/models/predator.glb", doc);
 console.log(
   "Optimized drone triangles",
   doc

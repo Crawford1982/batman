@@ -11,7 +11,7 @@ try {
     const errors = [];
     p.on("pageerror", (e) => errors.push(e.message));
     let held;
-    await p.route("**/batmobile.glb", (route) => {
+    await p.route("**/batmobile*.glb", (route) => {
       if (mobile) held = route;
       else return route.abort();
     });
@@ -31,7 +31,7 @@ try {
     } else {
       await p.waitForSelector("#handover-retry:visible");
       assert.match(await p.locator("#chapter-handover p").innerText(), /interrupted/);
-      await p.unroute("**/batmobile.glb");
+      await p.unroute("**/batmobile*.glb");
       await p.click("#handover-retry");
     }
     await p.waitForFunction(() => window.__batwing.ground.ready);

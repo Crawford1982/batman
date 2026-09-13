@@ -16,7 +16,7 @@ d.getRoot().setExtras({
   license: "CC-BY-NC-SA-3.0",
   modifications: "PBR materials, wheel pivots, mesh optimization; 7 September 2026",
 });
-await io.write("public/batmobile.glb", d);
+await io.write("src/models/batmobile.glb", d);
 let tris = 0;
 for (const m of d.getRoot().listMeshes())
   for (const p of m.listPrimitives())

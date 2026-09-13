@@ -3,6 +3,7 @@ import { JunctionGuide } from "./junction-guide.js";
 import { RouteScenes } from "./route-scenes.js";
 import * as T from "three";
 import { createModelLoader } from "./model-loader.js";
+import batmobileUrl from "./models/batmobile.glb?url";
 import { Driving, DRIVE_ROUTE, driveSteering, routeCue } from "./driving.js";
 import { createEnemy } from "./enemy.js";
 import { Minimap } from "./minimap.js";
@@ -358,7 +359,7 @@ export class GroundLevel {
         this.drones.forEach((d, i) => installPursuitDrone(d, template, i));
         return new Promise((resolve, reject) =>
           createModelLoader().load(
-            `${import.meta.env.BASE_URL}batmobile.glb`,
+            batmobileUrl,
             (g) => {
               const model = g.scene;
               model.updateMatrixWorld(true);

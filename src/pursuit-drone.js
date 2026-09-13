@@ -1,10 +1,11 @@
 import * as T from "three";
 import { createModelLoader } from "./model-loader.js";
+import predatorUrl from "./models/predator.glb?url";
 let cached;
 export function loadPursuitDrone() {
   if (cached) return cached;
   cached = createModelLoader()
-    .loadAsync(`${import.meta.env.BASE_URL}predator.glb`)
+    .loadAsync(predatorUrl)
     .then((g) => {
       const model = g.scene;
       model.updateMatrixWorld(true);

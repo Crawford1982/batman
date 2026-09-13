@@ -44,10 +44,10 @@ for (const s of scenes) {
 }
 combined.getRoot().setDefaultScene(scene);
 fs.mkdirSync("public/environment", { recursive: true });
-await io.write("public/environment/theatre-kit.glb", combined);
+await io.write("src/models/theatre-kit.glb", combined);
 const root = combined.getRoot();
 console.log({
-  bytes: fs.statSync("public/environment/theatre-kit.glb").size,
+  bytes: fs.statSync("src/models/theatre-kit.glb").size,
   materials: root.listMaterials().length,
   textures: root.listTextures().length,
   triangles: root

@@ -16,10 +16,10 @@ import { MeshoptEncoder } from "meshoptimizer";
 import sharp from "sharp";
 
 const MODELS = {
-  batwing: "public/batwing.glb",
-  batmobile: "public/batmobile.glb",
-  predator: "public/predator.glb",
-  theatre: "public/environment/theatre-kit.glb",
+  batwing: "src/models/batwing.glb",
+  batmobile: "src/models/batmobile.glb",
+  predator: "src/models/predator.glb",
+  theatre: "src/models/theatre-kit.glb",
 };
 const MAX_TEXTURE = 1024;
 
