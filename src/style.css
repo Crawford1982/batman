@@ -868,3 +868,28 @@ body:has(#chapter-card:not([hidden])) #hud #message {
   outline: 2px solid #dfc68c;
   outline-offset: 4px;
 }
+
+/* Phone landscape: the absolutely positioned menu column and footer met in
+   the middle, so links overlapped. Let the menu flow and scroll instead. */
+@media (max-height: 450px) {
+  #menu {
+    overflow-y: auto;
+    padding-top: 16px;
+  }
+  .menu-content {
+    position: static;
+    margin-top: 12px;
+  }
+  .menu-content #controls {
+    display: inline-block;
+    margin-right: 22px;
+  }
+  .trailer-link {
+    padding: 6px 0;
+  }
+  footer {
+    position: static;
+    margin-top: 16px;
+    padding-top: 10px;
+  }
+}
