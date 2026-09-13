@@ -45,7 +45,11 @@ for (const name of names) {
   const path = MODELS[name];
   if (!path) throw new Error(`Unknown model "${name}". Known: ${Object.keys(MODELS).join(", ")}`);
   const doc = await io.read(path);
-  const before = { bytes: statSync(path).size, tris: triangles(doc), extras: doc.getRoot().getAsset().extras };
+  const before = {
+    bytes: statSync(path).size,
+    tris: triangles(doc),
+    extras: doc.getRoot().getAsset().extras,
+  };
   await doc.transform(
     dedup(),
     prune(),

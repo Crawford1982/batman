@@ -23,11 +23,9 @@ export class Flight {
     dt = clamp(dt, 0, 0.05);
     const smooth = 1 - Math.exp(-dt * 3.5);
     this.pitch += ((input.y || 0) * 0.65 - this.pitch) * smooth;
-    this.roll +=
-      (-(input.x || 0) * 0.7 + (input.roll || 0) * 0.8 - this.roll) * smooth;
+    this.roll += (-(input.x || 0) * 0.7 + (input.roll || 0) * 0.8 - this.roll) * smooth;
     this.yawRate +=
-      (-(input.x || 0) * 0.62 - (input.yaw || 0) * 0.65 - this.yawRate) *
-      (1 - Math.exp(-dt * 5));
+      (-(input.x || 0) * 0.62 - (input.yaw || 0) * 0.65 - this.yawRate) * (1 - Math.exp(-dt * 5));
     this.yaw += this.yawRate * dt;
     if (this.recovery > 0) {
       const delta = Math.atan2(
@@ -41,9 +39,7 @@ export class Flight {
     this.speed +=
       ((input.boost ? 145 : this.cruise) - this.speed) *
       (1 - Math.exp(-dt * (input.boost ? 1.7 : 1.1)));
-    this.quaternion.setFromEuler(
-      new Euler(this.pitch, this.yaw, this.roll, "YXZ"),
-    );
+    this.quaternion.setFromEuler(new Euler(this.pitch, this.yaw, this.roll, "YXZ"));
     this.forward.set(0, 0, -1).applyQuaternion(this.quaternion);
     this.position.addScaledVector(this.forward, this.speed * dt);
     this.position.y = clamp(this.position.y, 16, 480);
@@ -89,10 +85,6 @@ export function insideBuilding(p, b, r = 5) {
 }
 export function segmentDistance(p, a, b) {
   const v = new Vector3().subVectors(b, a);
-  const t = clamp(
-    new Vector3().subVectors(p, a).dot(v) / Math.max(v.lengthSq(), 0.0001),
-    0,
-    1,
-  );
+  const t = clamp(new Vector3().subVectors(p, a).dot(v) / Math.max(v.lengthSq(), 0.0001), 0, 1);
   return p.distanceTo(v.multiplyScalar(t).add(a));
 }

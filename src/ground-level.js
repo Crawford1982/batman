@@ -47,7 +47,8 @@ export class GroundLevel {
     shadowCanvas.width = 64;
     shadowCanvas.height = 128;
     const sc = shadowCanvas.getContext("2d");
-    sc.translate(32,64); sc.scale(32,64);
+    sc.translate(32, 64);
+    sc.scale(32, 64);
     const sg = sc.createRadialGradient(0, 0, 0.1, 0, 0, 1);
     sg.addColorStop(0, "#000000cc");
     sg.addColorStop(1, "#00000000");
@@ -69,11 +70,27 @@ export class GroundLevel {
       "beforeend",
       `<section id="drive-load" hidden><div class="drive-film-top">WAYNE AEROSPACE <span>CHAPTER II / GROUND OPERATIONS</span></div><div class="drive-film-copy"><div class="edition">OPERATION SILENT BELL · THE FINAL MILE</div><h2>TAKE THE<br>STREETS BACK.</h2><p>The shelters have five minutes of reserve heat.<br>The rogue network is reconnecting. Take the encrypted override through the theatre district and beneath the elevated railway. Gordon is waiting at the cathedral.<br><br>Keep moving when the red strike marker appears. Use EMP to break the attack.</p><div class="drive-load-track"><i id="drive-load-bar"></i></div><p id="drive-load-status">Preparing the Batmobile…</p><button id="drive-launch" disabled>LOADING VEHICLE</button><button id="drive-back">BACK TO CHAPTERS</button><div class="drive-help">W / S · accelerator / brake & reverse<br>A / D · steer · hold right mouse + move · steer · Shift · jet boost<br>Space · handbrake · F / click · EMP<br>Controller: left stick · RT / LT · A boost · X EMP</div></div></section><section id="drive-hud" hidden><header><div>BATMOBILE<small>CHAPTER II / THE FINAL MILE</small></div><div class="drive-clock"><small>NETWORK RECONNECT</small><strong id="drive-time">05:00</strong></div><button id="drive-pause">Ⅱ</button></header><div class="drive-objective"><small>DELIVER THE OVERRIDE</small><h3 id="drive-goal"></h3><p id="drive-progress"></p><p id="drive-turn"></p></div><div id="drive-radio"></div><div id="drive-waypoint"><b>◇</b><span id="drive-waypoint-text"></span></div><div id="drive-map"><canvas aria-label="Batmobile route map" role="img"></canvas><div id="drive-map-target"></div></div><div class="drive-bottom"><div><small>ARMOR <b id="drive-health">100%</b></small><div class="drive-armor"><i id="drive-armor-bar"></i></div><span id="drive-emp">EMP READY</span></div><div class="drive-speed"><b id="drive-speed">0</b><span>KM/H</span></div></div><div id="drive-touch"><div id="drive-stick"><i></i></div><div class="drive-pedals"><button data-drive="brake">BRAKE</button><button data-drive="accel">GAS</button><button data-drive="boost">BOOST</button><button id="drive-touch-emp">EMP</button></div></div><button id="drive-reset">RESET TO ROAD · R</button></section>`,
     );
-    document.body.insertAdjacentHTML("beforeend", `<section id="arrival-film" hidden aria-label="Mission complete"><div class="arrival-top">OPERATION SILENT BELL / GOTHAM CATHEDRAL</div><div class="arrival-copy"><small>GCPD / SECURE CHANNEL</small><h2>The city has a tomorrow.</h2><p>Override accepted. Heat restored.<br>Gordon’s people are safe inside.</p><button id="arrival-skip">VIEW MISSION RESULTS →</button></div></section>`);
+    document.body.insertAdjacentHTML(
+      "beforeend",
+      `<section id="arrival-film" hidden aria-label="Mission complete"><div class="arrival-top">OPERATION SILENT BELL / GOTHAM CATHEDRAL</div><div class="arrival-copy"><small>GCPD / SECURE CHANNEL</small><h2>The city has a tomorrow.</h2><p>Override accepted. Heat restored.<br>Gordon’s people are safe inside.</p><button id="arrival-skip">VIEW MISSION RESULTS →</button></div></section>`,
+    );
     $("arrival-skip").onclick = () => this.endArrival();
-    document.querySelector('.drive-objective').insertAdjacentHTML('beforeend','<div id="drive-ambush" hidden><strong></strong><span></span></div>');
-    document.querySelector('.drive-objective').insertAdjacentHTML('beforeend', '<div id="drive-threat" hidden><strong></strong><span></span><i></i></div><div id="drive-reward" role="status"></div>');
-    $('drive-hud').insertAdjacentHTML('afterbegin', '<div class="boost-streaks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>');
+    document
+      .querySelector(".drive-objective")
+      .insertAdjacentHTML(
+        "beforeend",
+        '<div id="drive-ambush" hidden><strong></strong><span></span></div>',
+      );
+    document
+      .querySelector(".drive-objective")
+      .insertAdjacentHTML(
+        "beforeend",
+        '<div id="drive-threat" hidden><strong></strong><span></span><i></i></div><div id="drive-reward" role="status"></div>',
+      );
+    $("drive-hud").insertAdjacentHTML(
+      "afterbegin",
+      '<div class="boost-streaks" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>',
+    );
     $("drive-launch").onclick = () => this.start();
     $("drive-back").onclick = () => {
       this.hide();
@@ -94,11 +111,7 @@ export class GroundLevel {
     let active = null;
     const move = (e) => {
       const b = stick.getBoundingClientRect();
-      this.touch.steer = clamp(
-        (e.clientX - b.left - b.width / 2) / (b.width * 0.4),
-        -1,
-        1,
-      );
+      this.touch.steer = clamp((e.clientX - b.left - b.width / 2) / (b.width * 0.4), -1, 1);
       stick.firstElementChild.style.transform = `translateX(${this.touch.steer * 30}px)`;
     };
     stick.onpointerdown = (e) => {
@@ -110,12 +123,15 @@ export class GroundLevel {
     stick.onpointermove = (e) => {
       if (e.pointerId === active) move(e);
     };
-    stick.onpointerup = stick.onpointercancel = stick.onlostpointercapture = () => {
-      active = null;
-      this.touch.steering = false;
-      this.touch.steer = 0;
-      stick.firstElementChild.style.transform = "";
-    };
+    stick.onpointerup =
+      stick.onpointercancel =
+      stick.onlostpointercapture =
+        () => {
+          active = null;
+          this.touch.steering = false;
+          this.touch.steer = 0;
+          stick.firstElementChild.style.transform = "";
+        };
     this.map = new Minimap(
       $("drive-map").querySelector("canvas"),
       world.buildings,
@@ -150,17 +166,21 @@ export class GroundLevel {
       new T.ConeGeometry(0.28, 3, 12).translate(0, 1.5, 0),
       new T.ShaderMaterial({
         uniforms: { time: { value: 0 }, boost: { value: 0 } },
-        vertexShader: 'varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+        vertexShader:
+          "varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
         fragmentShader: `varying vec2 vUv;uniform float time;uniform float boost;
           void main(){float streak=.7+.3*sin(vUv.x*62.+vUv.y*25.-time*42.);
           float taper=pow(1.-vUv.y,1.6);float root=smoothstep(0.,.13,vUv.y);
           vec3 col=mix(vec3(1.,.28,.04),vec3(1.,.83,.48),taper);
           gl_FragColor=vec4(col,root*taper*streak*(.38+boost*.45));}`,
-        transparent:true,depthWrite:false,side:T.DoubleSide,blending:T.AdditiveBlending,
+        transparent: true,
+        depthWrite: false,
+        side: T.DoubleSide,
+        blending: T.AdditiveBlending,
       }),
     );
     this.exhaust.rotation.x = Math.PI / 2;
-    this.exhaust.position.set(0, .65, 4.3);
+    this.exhaust.position.set(0, 0.65, 4.3);
     this.art.add(this.exhaust);
     this.pulse = new T.Mesh(
       new T.TorusGeometry(1, 0.006, 6, 64),
@@ -174,7 +194,7 @@ export class GroundLevel {
     this.group.add(this.pulse);
     this.pulseLife = 0;
     this.strike = new T.Mesh(
-        new T.RingGeometry(7.3, 8, 48),
+      new T.RingGeometry(7.3, 8, 48),
       new T.MeshBasicMaterial({
         color: 0xff6045,
         transparent: true,
@@ -185,12 +205,15 @@ export class GroundLevel {
     this.strike.rotation.x = -Math.PI / 2;
     this.strike.visible = false;
     this.group.add(this.strike);
-    this.strikeMarkers = [this.strike, ...[-1, 1].map(() => {
-      const marker = this.strike.clone();
-      marker.material = this.strike.material.clone();
-      this.group.add(marker);
-      return marker;
-    })];
+    this.strikeMarkers = [
+      this.strike,
+      ...[-1, 1].map(() => {
+        const marker = this.strike.clone();
+        marker.material = this.strike.material.clone();
+        this.group.add(marker);
+        return marker;
+      }),
+    ];
     this.drones = [-1, 1].map((side) => {
       const d = createEnemy();
       d.scale.setScalar(0.55);
@@ -204,9 +227,13 @@ export class GroundLevel {
     this.effects = new GroundEffects(this.group);
     this.streets = new StreetDetail(this.group, this.world.theatreBlock);
     this.makeStreets();
-    this.ambushMines = [-10,0,10].map((offset,i) => {
-      const mine = createMine(); mine.position.set(-522.5+offset,.4,-520-i*32);
-      mine.userData.ambush = true; mine.visible = false; this.group.add(mine); this.mines.push(mine);
+    this.ambushMines = [-10, 0, 10].map((offset, i) => {
+      const mine = createMine();
+      mine.position.set(-522.5 + offset, 0.4, -520 - i * 32);
+      mine.userData.ambush = true;
+      mine.visible = false;
+      this.group.add(mine);
+      this.mines.push(mine);
       return mine;
     });
     this.routeScenes = new RouteScenes(this.group);
@@ -216,7 +243,7 @@ export class GroundLevel {
     this.cameraOffset = new T.Vector3();
     this.look = new T.Vector3();
     this.cameraRig = new GroundCamera();
-    this.reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    this.reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
   }
   makeStreets() {
     const points = [{ x: 0, z: 450 }, ...DRIVE_ROUTE],
@@ -235,10 +262,7 @@ export class GroundLevel {
         paint.push([x, z, angle]);
         if (Math.round(d / 25) % 3 === 1) {
           for (const side of [-1, 1])
-            poses.push([
-              x + Math.cos(angle) * side * 15,
-              z - Math.sin(angle) * side * 15,
-            ]);
+            poses.push([x + Math.cos(angle) * side * 15, z - Math.sin(angle) * side * 15]);
         }
         if (d > 100 && Math.round(d / 25) % 9 === 0) {
           const m = createMine();
@@ -292,7 +316,8 @@ export class GroundLevel {
         new T.MeshStandardMaterial({
           color: 0x788594,
           map: this.streets.roadMap,
-          bumpMap: this.streets.roadMap, bumpScale: 0.08,
+          bumpMap: this.streets.roadMap,
+          bumpScale: 0.08,
           roughness: 0.32,
           metalness: 0.35,
         }),
@@ -316,11 +341,7 @@ export class GroundLevel {
       dummy.updateMatrix();
       roads.setMatrixAt(i - 1, dummy.matrix);
       for (const side of [-1, 1]) {
-        dummy.position.set(
-          x + Math.cos(ang) * side * 19,
-          0.16,
-          z - Math.sin(ang) * side * 19,
-        );
+        dummy.position.set(x + Math.cos(ang) * side * 19, 0.16, z - Math.sin(ang) * side * 19);
         dummy.rotation.set(0, ang, 0);
         dummy.scale.set(2, 0.3, Math.max(1, len - 35));
         dummy.updateMatrix();
@@ -332,83 +353,95 @@ export class GroundLevel {
   async load() {
     if (this.ready) return;
     if (this.loading) return this.loading;
-    this.loading = loadPursuitDrone().then(template => {
-      this.drones.forEach((d,i)=>installPursuitDrone(d,template,i));
-      return new Promise((resolve, reject) =>
-      createModelLoader().load(
-        `${import.meta.env.BASE_URL}batmobile.glb`,
-        (g) => {
-          const model = g.scene;
-          model.updateMatrixWorld(true);
-          const bounds = new T.Box3().setFromObject(model),
-            size = bounds.getSize(new T.Vector3()),
-            center = bounds.getCenter(new T.Vector3());
-          const front = model.getObjectByName("Batmobile_FrontLight_0"),
-            rear = model.getObjectByName("Batmobile_RearLight_0");
-          let heading = model.getObjectByName("Batmobile_body") ? Math.PI : 0;
-          if (front && rear) {
-            const f = new T.Box3()
-                .setFromObject(front)
-                .getCenter(new T.Vector3()),
-              r = new T.Box3().setFromObject(rear).getCenter(new T.Vector3());
-            heading = Math.PI - Math.atan2(f.x - r.x, f.z - r.z);
-          }
-          model.position.sub(new T.Vector3(center.x, bounds.min.y, center.z));
-          const scale = new T.Group();
-          scale.add(model);
-          scale.scale.setScalar(9 / Math.max(size.x, size.z));
-          scale.rotation.y = heading;
-          this.art.add(scale);
-          model.traverse((o) => {
-            if (/^[FB][RL]_Wheel$/.test(o.name))
-              this.wheels.push({ mesh: o, rotation: o.rotation.x });
-            if (o.isMesh) {
-              const materials = Array.isArray(o.material)
-                ? o.material
-                : [o.material];
-              for (const mat of materials) {
-                if (mat.name === 'CarPaint') {
-                  mat.color.set('#111317'); mat.roughness=.44; mat.metalness=.05;
-                } else if (mat.name === 'CarPaintGloss') {
-                  mat.color.set('#080d13'); mat.roughness=.22; mat.metalness=.18;
-                } else if (mat.name === 'Metal') {
-                  mat.color.set('#555c60'); mat.roughness=.53; mat.metalness=.8;
-                } else if (mat.name === 'Rims') {
-                  mat.color.set('#363b40'); mat.roughness=.44; mat.metalness=.65;
-                } else if (mat.name === 'Tire') {
-                  mat.color.set('#101113'); mat.roughness=.95; mat.metalness=0;
-                } else if (mat.name === 'FrontLight') {
-                  mat.emissive.set('#ffd286'); mat.emissiveIntensity=1.3;
-                }
+    this.loading = loadPursuitDrone()
+      .then((template) => {
+        this.drones.forEach((d, i) => installPursuitDrone(d, template, i));
+        return new Promise((resolve, reject) =>
+          createModelLoader().load(
+            `${import.meta.env.BASE_URL}batmobile.glb`,
+            (g) => {
+              const model = g.scene;
+              model.updateMatrixWorld(true);
+              const bounds = new T.Box3().setFromObject(model),
+                size = bounds.getSize(new T.Vector3()),
+                center = bounds.getCenter(new T.Vector3());
+              const front = model.getObjectByName("Batmobile_FrontLight_0"),
+                rear = model.getObjectByName("Batmobile_RearLight_0");
+              let heading = model.getObjectByName("Batmobile_body") ? Math.PI : 0;
+              if (front && rear) {
+                const f = new T.Box3().setFromObject(front).getCenter(new T.Vector3()),
+                  r = new T.Box3().setFromObject(rear).getCenter(new T.Vector3());
+                heading = Math.PI - Math.atan2(f.x - r.x, f.z - r.z);
               }
-            }
-          });
-          this.ready = true;
-          $("drive-load-bar").style.width = "100%";
-          $("drive-load-status").textContent =
-            "JET TURBINE ONLINE / OVERRIDE SECURED";
-          $("drive-launch").disabled = false;
-          $("drive-launch").textContent = "ENTER GOTHAM →";
-          resolve();
-        },
-        (e) => {
-          $("drive-load-bar").style.width =
-            (e.total ? Math.round((e.loaded / e.total) * 100) : 45) + "%";
-        },
-        (e) => {
-          this.loading = null;
-          $("drive-load-status").textContent =
-            "Vehicle could not load. Return to chapters and retry.";
-          reject(e);
-        },
-      ),
-    );
-    }).catch(e => { this.loading = null; $("drive-load-status").textContent = "Assets could not load. Return to chapters and retry."; throw e; });
+              model.position.sub(new T.Vector3(center.x, bounds.min.y, center.z));
+              const scale = new T.Group();
+              scale.add(model);
+              scale.scale.setScalar(9 / Math.max(size.x, size.z));
+              scale.rotation.y = heading;
+              this.art.add(scale);
+              model.traverse((o) => {
+                if (/^[FB][RL]_Wheel$/.test(o.name))
+                  this.wheels.push({ mesh: o, rotation: o.rotation.x });
+                if (o.isMesh) {
+                  const materials = Array.isArray(o.material) ? o.material : [o.material];
+                  for (const mat of materials) {
+                    if (mat.name === "CarPaint") {
+                      mat.color.set("#111317");
+                      mat.roughness = 0.44;
+                      mat.metalness = 0.05;
+                    } else if (mat.name === "CarPaintGloss") {
+                      mat.color.set("#080d13");
+                      mat.roughness = 0.22;
+                      mat.metalness = 0.18;
+                    } else if (mat.name === "Metal") {
+                      mat.color.set("#555c60");
+                      mat.roughness = 0.53;
+                      mat.metalness = 0.8;
+                    } else if (mat.name === "Rims") {
+                      mat.color.set("#363b40");
+                      mat.roughness = 0.44;
+                      mat.metalness = 0.65;
+                    } else if (mat.name === "Tire") {
+                      mat.color.set("#101113");
+                      mat.roughness = 0.95;
+                      mat.metalness = 0;
+                    } else if (mat.name === "FrontLight") {
+                      mat.emissive.set("#ffd286");
+                      mat.emissiveIntensity = 1.3;
+                    }
+                  }
+                }
+              });
+              this.ready = true;
+              $("drive-load-bar").style.width = "100%";
+              $("drive-load-status").textContent = "JET TURBINE ONLINE / OVERRIDE SECURED";
+              $("drive-launch").disabled = false;
+              $("drive-launch").textContent = "ENTER GOTHAM →";
+              resolve();
+            },
+            (e) => {
+              $("drive-load-bar").style.width =
+                (e.total ? Math.round((e.loaded / e.total) * 100) : 45) + "%";
+            },
+            (e) => {
+              this.loading = null;
+              $("drive-load-status").textContent =
+                "Vehicle could not load. Return to chapters and retry.";
+              reject(e);
+            },
+          ),
+        );
+      })
+      .catch((e) => {
+        this.loading = null;
+        $("drive-load-status").textContent = "Assets could not load. Return to chapters and retry.";
+        throw e;
+      });
     return this.loading;
   }
   async begin() {
-    document.body.classList.add('ground-presentation');
-    document.body.classList.remove('ground-arrival');
+    document.body.classList.add("ground-presentation");
+    document.body.classList.remove("ground-arrival");
     this.routeScenes.restorePower(0);
     this.phase = "briefing";
     this.onMode("driveBriefing");
@@ -426,15 +459,17 @@ export class GroundLevel {
       console.error("Batmobile load failed", e);
     }
   }
-  start({handover = false} = {}) {
+  start({ handover = false } = {}) {
     this.feedback.reset();
-    document.body.classList.add('ground-presentation');
-    document.body.classList.remove('ground-arrival');
+    document.body.classList.add("ground-presentation");
+    document.body.classList.remove("ground-arrival");
     this.routeScenes.restorePower(0);
-    this.audio.stopVoice(); this.audio.radioTimes = {};
-    this.audio.radioSeen = new Set(); this.audio.lastRadioEnd = performance.now();
+    this.audio.stopVoice();
+    this.audio.radioTimes = {};
+    this.audio.radioSeen = new Set();
+    this.audio.lastRadioEnd = performance.now();
     if (!this.ready) return;
-    window.gothamAnalytics?.event("level_start",{level_name:"batmobile"});
+    window.gothamAnalytics?.event("level_start", { level_name: "batmobile" });
     $("arrival-film").hidden = true;
     clearPresentation();
     chapterCard("CHAPTER II / THE FINAL MILE", "Bring Gotham back online");
@@ -445,7 +480,8 @@ export class GroundLevel {
     this.shake = 0;
     this.time = 0;
     this.touch = {};
-    this.messageUntil = 0; $('drive-radio').textContent = '';
+    this.messageUntil = 0;
+    $("drive-radio").textContent = "";
     this.mouse.active = false;
     this.mouse.steering = false;
     this.mouse.x = 0;
@@ -455,15 +491,24 @@ export class GroundLevel {
     this.strike.visible = false;
     this.pulseLife = 0;
     this.cancelStrike();
-    this.strikeNumber = 0; this.evasions = 0; this.countered = 0;
+    this.strikeNumber = 0;
+    this.evasions = 0;
+    this.countered = 0;
     this.openingWarned = false;
-    this.cleanSections = 0; this.sectionDamaged = false;
+    this.cleanSections = 0;
+    this.sectionDamaged = false;
     this.sectionDamageStart = this.car.damageTaken;
-    this.rewardUntil = 0; $('drive-reward').textContent = '';
-    this.pursuitState = 'waiting'; this.pursuitTime = 0;
-    this.ambushState = 'waiting'; this.ambushEnd = -Infinity;
-    $('drive-ambush').hidden = true;
-    for (const m of this.mines) { m.visible = !m.userData.ambush; m.userData.clearedByEMP = false; }
+    this.rewardUntil = 0;
+    $("drive-reward").textContent = "";
+    this.pursuitState = "waiting";
+    this.pursuitTime = 0;
+    this.ambushState = "waiting";
+    this.ambushEnd = -Infinity;
+    $("drive-ambush").hidden = true;
+    for (const m of this.mines) {
+      m.visible = !m.userData.ambush;
+      m.userData.clearedByEMP = false;
+    }
     this.phase = "play";
     this.onMode("drive");
     this.group.visible = true;
@@ -474,14 +519,15 @@ export class GroundLevel {
     this.vehicle.rotation.set(0, 0, 0);
     this.cameraRig.reset(this.car.position, this.car.yaw);
     this.camera.position.copy(this.cameraRig.eye);
-    this.look.copy(this.cameraRig.look); this.camera.lookAt(this.look);
-    this.camera.fov = 54; this.camera.updateProjectionMatrix();
-    if (!handover) this.radio(
-      "ALFRED / Take the override to the cathedral. Follow the gold route.",
-    );
+    this.look.copy(this.cameraRig.look);
+    this.camera.lookAt(this.look);
+    this.camera.fov = 54;
+    this.camera.updateProjectionMatrix();
+    if (!handover)
+      this.radio("ALFRED / Take the override to the cathedral. Follow the gold route.");
   }
   hide() {
-    document.body.classList.remove('ground-presentation', 'ground-arrival');
+    document.body.classList.remove("ground-presentation", "ground-arrival");
     this.audio.stopVoice();
     this.cancelStrike();
     $("arrival-film").hidden = true;
@@ -492,7 +538,10 @@ export class GroundLevel {
     this.touch = {};
   }
   pause() {
-    if (this.phase === "arrival") { this.endArrival(); return; }
+    if (this.phase === "arrival") {
+      this.endArrival();
+      return;
+    }
     if (this.phase === "play") {
       this.audio.stopVoice();
       clearPresentation();
@@ -517,13 +566,23 @@ export class GroundLevel {
     this.audio.stopVoice();
     $("drive-hud").hidden = true;
     this.cancelStrike();
-    showResults("batmobile", win, this.car.elapsed, this.car.score, this.car.health, `${this.car.checkpoint} / ${DRIVE_ROUTE.length} checkpoints · ${this.cleanSections} clean sections · ${this.evasions} evasions · ${this.countered} EMP counters`);
-    window.gothamAnalytics?.event("level_end",{level_name:"batmobile",success:win,elapsed_seconds:this.car.elapsed,score:this.car.score});
+    showResults(
+      "batmobile",
+      win,
+      this.car.elapsed,
+      this.car.score,
+      this.car.health,
+      `${this.car.checkpoint} / ${DRIVE_ROUTE.length} checkpoints · ${this.cleanSections} clean sections · ${this.evasions} evasions · ${this.countered} EMP counters`,
+    );
+    window.gothamAnalytics?.event("level_end", {
+      level_name: "batmobile",
+      success: win,
+      elapsed_seconds: this.car.elapsed,
+      score: this.car.score,
+    });
     this.phase = "ended";
     this.onMode("driveEnded");
-    $("pause-title").textContent = win
-      ? "Gotham is back online."
-      : "The override is lost.";
+    $("pause-title").textContent = win ? "Gotham is back online." : "The override is lost.";
     $("pause-copy").textContent = win
       ? `Gordon has the core. The drones are grounded. ${this.car.score} points · ${Math.floor(this.car.elapsed / 60)}m ${Math.floor(this.car.elapsed % 60)}s. The cathedral is safe. Operation Silent Bell complete.`
       : this.car.health <= 0
@@ -534,18 +593,23 @@ export class GroundLevel {
     $("pause-menu").hidden = false;
     if (win) {
       this.car.speed = 0;
-      this.touch = {}; this.mouse.steering = false;
+      this.touch = {};
+      this.mouse.steering = false;
       this.vehicle.position.copy(this.car.position);
-      this.exhaust.visible = false; this.strike.visible = false;
-      this.drones.forEach(d => d.visible = false);
-      this.checkpoints.forEach(p => p.mesh.visible = false);
-      this.junctionGuide.markers.forEach(m => m.visible = false);
-      this.phase = "arrival"; this.onMode("driveArrival"); this.arrivalTime = 0;
+      this.exhaust.visible = false;
+      this.strike.visible = false;
+      this.drones.forEach((d) => (d.visible = false));
+      this.checkpoints.forEach((p) => (p.mesh.visible = false));
+      this.junctionGuide.markers.forEach((m) => (m.visible = false));
+      this.phase = "arrival";
+      this.onMode("driveArrival");
+      this.arrivalTime = 0;
       this.arrivalEye = this.camera.position.clone();
       this.arrivalLook = this.look.clone();
       this.arrivalFov = this.camera.fov;
-      document.body.classList.add('ground-arrival');
-      $("pause-menu").hidden = true; $("arrival-film").hidden = false;
+      document.body.classList.add("ground-arrival");
+      $("pause-menu").hidden = true;
+      $("arrival-film").hidden = false;
       this.audio.shot(true);
       this.audio.speak("gordon-safe");
       try {
@@ -556,9 +620,11 @@ export class GroundLevel {
   endArrival() {
     this.audio.stopVoice();
     if (this.phase !== "arrival") return;
-    document.body.classList.remove('ground-arrival');
-    this.phase = "ended"; this.onMode("driveEnded");
-    $("arrival-film").hidden = true; $("pause-menu").hidden = false;
+    document.body.classList.remove("ground-arrival");
+    this.phase = "ended";
+    this.onMode("driveEnded");
+    $("arrival-film").hidden = true;
+    $("pause-menu").hidden = false;
   }
   radio(text) {
     this.audio.radioMessage(text);
@@ -581,138 +647,205 @@ export class GroundLevel {
   }
   emp() {
     if (this.phase !== "play" || this.car.emp > 0) return;
-    const disrupted = this.strikeTime > 0 || this.mines.some(m => m.visible && m.position.distanceTo(this.car.position) < 90);
-    if (this.pursuitState === 'warning') {
-      this.pursuitState = 'complete'; this.reward(250, 'PURSUIT BROKEN'); this.attackTimer = 9;
+    const disrupted =
+      this.strikeTime > 0 ||
+      this.mines.some((m) => m.visible && m.position.distanceTo(this.car.position) < 90);
+    if (this.pursuitState === "warning") {
+      this.pursuitState = "complete";
+      this.reward(250, "PURSUIT BROKEN");
+      this.attackTimer = 9;
     }
     this.car.emp = 6;
     this.disabled = 5;
     if (disrupted) this.audio.ambientRadio("alfred-emp");
     if (this.strikeTime > 0) {
       this.countered++;
-      this.reward(150, 'STRIKE INTERRUPTED');
+      this.reward(150, "STRIKE INTERRUPTED");
     }
     this.cancelStrike();
     this.pulseLife = 1;
     this.pulse.position.copy(this.car.position);
     this.pulse.position.y = 0.3;
-    const targets = this.drones.map(d=>d.position);
+    const targets = this.drones.map((d) => d.position);
     for (const m of this.mines)
-      if (m.visible && m.position.distanceTo(this.car.position) < 90) { this.effects.emit(m.position,35,true); m.visible = false; m.userData.clearedByEMP = true; }
-    this.effects.discharge(this.car.position,targets);
+      if (m.visible && m.position.distanceTo(this.car.position) < 90) {
+        this.effects.emit(m.position, 35, true);
+        m.visible = false;
+        m.userData.clearedByEMP = true;
+      }
+    this.effects.discharge(this.car.position, targets);
     this.audio.shot(true);
-    this.radio(
-      "COUNTERMEASURES / EMP discharged. Drones disrupted for five seconds.",
-    );
+    this.radio("COUNTERMEASURES / EMP discharged. Drones disrupted for five seconds.");
   }
   updatePursuit(dt) {
     const c = this.car;
-    if (this.pursuitState === 'waiting' && c.checkpoint === 1 && c.position.x < -120 && c.position.x > -300) {
-      this.cancelStrike(); this.pursuitState = 'warning'; this.pursuitTime = 3;
+    if (
+      this.pursuitState === "waiting" &&
+      c.checkpoint === 1 &&
+      c.position.x < -120 &&
+      c.position.x > -300
+    ) {
+      this.cancelStrike();
+      this.pursuitState = "warning";
+      this.pursuitTime = 3;
       this.pursuitDamage = c.damageTaken;
-      this.radio('GORDON / Interceptor closing over the theatre. Keep moving. EMP can break its attack.');
+      this.radio(
+        "GORDON / Interceptor closing over the theatre. Keep moving. EMP can break its attack.",
+      );
     }
-    if (this.pursuitState === 'warning') {
+    if (this.pursuitState === "warning") {
       this.attackTimer = 8;
       this.pursuitTime -= dt;
-      const panel = $('drive-threat'); panel.hidden = false; panel.classList.remove('safe');
-      panel.querySelector('strong').textContent = `INTERCEPTOR CLOSING · ${Math.max(0,this.pursuitTime).toFixed(1)}s`;
-      panel.querySelector('span').textContent = 'KEEP MOVING · SAVE EMP FOR THE STRIKE';
-      panel.querySelector('i').style.transform = `scaleX(${Math.max(0,this.pursuitTime)/3})`;
+      const panel = $("drive-threat");
+      panel.hidden = false;
+      panel.classList.remove("safe");
+      panel.querySelector("strong").textContent =
+        `INTERCEPTOR CLOSING · ${Math.max(0, this.pursuitTime).toFixed(1)}s`;
+      panel.querySelector("span").textContent = "KEEP MOVING · SAVE EMP FOR THE STRIKE";
+      panel.querySelector("i").style.transform = `scaleX(${Math.max(0, this.pursuitTime) / 3})`;
       if (c.checkpoint !== 1 || c.position.x < -380) {
-        this.pursuitState = 'complete'; this.cancelStrike();
-        this.reward(250, 'INTERCEPTOR OUTRUN');
+        this.pursuitState = "complete";
+        this.cancelStrike();
+        this.reward(250, "INTERCEPTOR OUTRUN");
       } else if (this.pursuitTime <= 0 && this.disabled <= 0) {
         this.beginStrike();
-        if (this.strikeTime > 0) this.pursuitState = 'attack';
-        else { this.pursuitState = 'complete'; this.cancelStrike(); }
+        if (this.strikeTime > 0) this.pursuitState = "attack";
+        else {
+          this.pursuitState = "complete";
+          this.cancelStrike();
+        }
       }
-    } else if (this.pursuitState === 'attack' && this.strikeTime <= 0) {
-      this.pursuitState = 'complete'; this.disabled = Math.max(this.disabled, 6); this.attackTimer = 9;
-      if (c.damageTaken === this.pursuitDamage) this.reward(250, 'PURSUIT BROKEN');
-      this.radio('GORDON / Interceptor falling back. Take the northbound turn.');
+    } else if (this.pursuitState === "attack" && this.strikeTime <= 0) {
+      this.pursuitState = "complete";
+      this.disabled = Math.max(this.disabled, 6);
+      this.attackTimer = 9;
+      if (c.damageTaken === this.pursuitDamage) this.reward(250, "PURSUIT BROKEN");
+      this.radio("GORDON / Interceptor falling back. Take the northbound turn.");
     }
   }
   updateAmbush() {
-    const {z} = this.car.position;
-    if (this.ambushState === 'waiting' && this.car.checkpoint === 2 && z < -130 && z > -630) {
-      this.ambushState = 'active'; this.ambushHealth = this.car.health;
-      this.ambushMines.forEach(m => m.visible = true);
+    const { z } = this.car.position;
+    if (this.ambushState === "waiting" && this.car.checkpoint === 2 && z < -130 && z > -630) {
+      this.ambushState = "active";
+      this.ambushHealth = this.car.health;
+      this.ambushMines.forEach((m) => (m.visible = true));
       this.cancelStrike();
-      this.radio('AMBUSH / Mines under the railway. EMP within 90 metres, or weave through the gaps.');
+      this.radio(
+        "AMBUSH / Mines under the railway. EMP within 90 metres, or weave through the gaps.",
+      );
     }
-    const panel = $('drive-ambush');
-    if (this.ambushState === 'active') {
+    const panel = $("drive-ambush");
+    if (this.ambushState === "active") {
       this.attackTimer = Math.max(this.attackTimer, 3); // Give this encounter its own readable beat.
-      const remaining = this.ambushMines.filter(m => m.visible);
+      const remaining = this.ambushMines.filter((m) => m.visible);
       if (!remaining.length || z < -630 || this.car.checkpoint > 2) {
-        const cleared = this.ambushMines.every(m => m.userData.clearedByEMP);
+        const cleared = this.ambushMines.every((m) => m.userData.clearedByEMP);
         const bonus = cleared ? 500 : this.car.health >= this.ambushHealth ? 200 : 0;
-        this.car.score += bonus; this.ambushState = 'complete'; this.ambushEnd = this.car.elapsed;
-        this.ambushMines.forEach(m => m.visible = false); this.disabled = Math.max(this.disabled, 6);
-        panel.querySelector('strong').textContent = cleared ? 'AMBUSH DISARMED · +500' : bonus ? 'CLEAN ESCAPE · +200' : 'AMBUSH SURVIVED';
-        panel.querySelector('span').textContent = 'Corridor clear. Continue to the cathedral.';
-        this.radio(cleared ? 'COUNTERMEASURES / Minefield disabled. Corridor clear. +500' : 'ROUTE CLEAR / Continue to the cathedral.');
+        this.car.score += bonus;
+        this.ambushState = "complete";
+        this.ambushEnd = this.car.elapsed;
+        this.ambushMines.forEach((m) => (m.visible = false));
+        this.disabled = Math.max(this.disabled, 6);
+        panel.querySelector("strong").textContent = cleared
+          ? "AMBUSH DISARMED · +500"
+          : bonus
+            ? "CLEAN ESCAPE · +200"
+            : "AMBUSH SURVIVED";
+        panel.querySelector("span").textContent = "Corridor clear. Continue to the cathedral.";
+        this.radio(
+          cleared
+            ? "COUNTERMEASURES / Minefield disabled. Corridor clear. +500"
+            : "ROUTE CLEAR / Continue to the cathedral.",
+        );
       } else {
-        const distance = Math.round(Math.min(...remaining.map(m => m.position.distanceTo(this.car.position))));
-        panel.querySelector('strong').textContent = 'RAILWAY AMBUSH · ' + remaining.length + ' MINES';
-        panel.querySelector('span').textContent = distance <= 90 ? 'IN EMP RANGE · F / CLICK / TOUCH EMP' : `MINEFIELD ${distance} M · EMP RANGE 90 M`;
+        const distance = Math.round(
+          Math.min(...remaining.map((m) => m.position.distanceTo(this.car.position))),
+        );
+        panel.querySelector("strong").textContent =
+          "RAILWAY AMBUSH · " + remaining.length + " MINES";
+        panel.querySelector("span").textContent =
+          distance <= 90
+            ? "IN EMP RANGE · F / CLICK / TOUCH EMP"
+            : `MINEFIELD ${distance} M · EMP RANGE 90 M`;
       }
     }
-    panel.hidden = this.ambushState === 'waiting' || (this.ambushState === 'complete' && this.car.elapsed-this.ambushEnd > 6);
-    panel.classList.toggle('cleared', this.ambushState === 'complete');
+    panel.hidden =
+      this.ambushState === "waiting" ||
+      (this.ambushState === "complete" && this.car.elapsed - this.ambushEnd > 6);
+    panel.classList.toggle("cleared", this.ambushState === "complete");
   }
   reward(points, label) {
     this.feedback.reward(`${label} · +${points}`, this.car.position);
     this.car.score += points;
-    $('drive-reward').textContent = `${label} · +${points}`;
+    $("drive-reward").textContent = `${label} · +${points}`;
     this.rewardUntil = this.time + 3;
   }
   cancelStrike() {
     this.strikeTime = 0;
-    this.strikeMarkers.forEach(m => m.visible = false);
+    this.strikeMarkers.forEach((m) => (m.visible = false));
     this.effects?.target(this.car.position, this.car.position, false);
-    $('drive-threat').hidden = true;
+    $("drive-threat").hidden = true;
   }
   beginStrike() {
     const goal = DRIVE_ROUTE[this.car.checkpoint];
-    const distance = Math.hypot(goal.x-this.car.position.x, goal.z-this.car.position.z);
-    const previous = DRIVE_ROUTE[this.car.checkpoint-1];
-    const leavingCorner = previous && Math.hypot(previous.x-this.car.position.x, previous.z-this.car.position.z) < 90;
+    const distance = Math.hypot(goal.x - this.car.position.x, goal.z - this.car.position.z);
+    const previous = DRIVE_ROUTE[this.car.checkpoint - 1];
+    const leavingCorner =
+      previous &&
+      Math.hypot(previous.x - this.car.position.x, previous.z - this.car.position.z) < 90;
     // Keep intersections readable. Barrages belong on long, open stretches.
-    if (distance < 160 || leavingCorner || this.car.checkpoint >= 4 || this.ambushState === 'active') return;
+    if (
+      distance < 160 ||
+      leavingCorner ||
+      this.car.checkpoint >= 4 ||
+      this.ambushState === "active"
+    )
+      return;
     this.strikeNumber++;
     this.barrage = this.car.checkpoint >= 2 && this.strikeNumber % 2 === 0;
     this.strikeDuration = this.barrage ? 3.2 : 2.6;
     this.strikeTime = this.strikeDuration;
     this.attackTimer = this.car.checkpoint < 2 ? 11 : 8;
     const forward = new T.Vector3(-Math.sin(this.car.yaw), 0, -Math.cos(this.car.yaw));
-    this.strike.position.copy(this.car.position).addScaledVector(forward, this.car.speed * .6);
-    this.strike.position.y = .12;
+    this.strike.position.copy(this.car.position).addScaledVector(forward, this.car.speed * 0.6);
+    this.strike.position.y = 0.12;
     const side = new T.Vector3(Math.cos(this.car.yaw), 0, -Math.sin(this.car.yaw));
-    this.strikeMarkers.forEach((m,i) => {
+    this.strikeMarkers.forEach((m, i) => {
       if (i) m.position.copy(this.strike.position).addScaledVector(side, i === 1 ? -10 : 10);
       m.visible = i === 0 || this.barrage;
       m.material.color.setHex(this.barrage ? 0xffaa55 : 0xff6045);
     });
-    this.radio(this.barrage ? 'THREAT / Three-point barrage. Clear the marked road or use EMP.' : 'THREAT / Drone strike marked. Keep moving or use EMP.');
+    this.radio(
+      this.barrage
+        ? "THREAT / Three-point barrage. Clear the marked road or use EMP."
+        : "THREAT / Drone strike marked. Keep moving or use EMP.",
+    );
   }
   updateStrike(wallDt) {
-    const panel = $('drive-threat');
+    const panel = $("drive-threat");
     panel.hidden = this.strikeTime <= 0;
     if (this.strikeTime <= 0) return;
     this.strikeTime = Math.max(0, this.strikeTime - wallDt);
-    const markers = this.strikeMarkers.filter(m => m.visible);
-    const danger = markers.some(m => this.car.position.distanceTo(m.position) < 8);
-    panel.classList.toggle('safe', !danger);
-    panel.querySelector('strong').textContent = `${this.pursuitState === "attack" ? "INTERCEPTOR STRIKE" : this.barrage ? 'THREE-POINT BARRAGE' : 'DRONE STRIKE'} · ${this.strikeTime.toFixed(1)}s`;
-    panel.querySelector('span').textContent = danger ? (this.car.emp <= 0 ? 'IN BLAST ZONE · MOVE OR EMP' : 'IN BLAST ZONE · KEEP MOVING') : 'CLEAR OF BLAST · KEEP CLEAR';
-    panel.querySelector('i').style.transform = `scaleX(${this.strikeTime / this.strikeDuration})`;
-    markers.forEach(m => m.material.opacity = .65 + Math.sin(this.time * 20) * .2);
+    const markers = this.strikeMarkers.filter((m) => m.visible);
+    const danger = markers.some((m) => this.car.position.distanceTo(m.position) < 8);
+    panel.classList.toggle("safe", !danger);
+    panel.querySelector("strong").textContent =
+      `${this.pursuitState === "attack" ? "INTERCEPTOR STRIKE" : this.barrage ? "THREE-POINT BARRAGE" : "DRONE STRIKE"} · ${this.strikeTime.toFixed(1)}s`;
+    panel.querySelector("span").textContent = danger
+      ? this.car.emp <= 0
+        ? "IN BLAST ZONE · MOVE OR EMP"
+        : "IN BLAST ZONE · KEEP MOVING"
+      : "CLEAR OF BLAST · KEEP CLEAR";
+    panel.querySelector("i").style.transform = `scaleX(${this.strikeTime / this.strikeDuration})`;
+    markers.forEach((m) => (m.material.opacity = 0.65 + Math.sin(this.time * 20) * 0.2));
     if (this.strikeTime === 0) {
-      if (danger) this.car.damage(14); // Overlapping rings still cause just one hit.
-      else { this.evasions++; this.reward(this.barrage ? 200 : 100, 'CLEAN EVASION'); }
-      markers.forEach(m => this.effects.emit(m.position, this.barrage ? 24 : 70));
+      if (danger)
+        this.car.damage(14); // Overlapping rings still cause just one hit.
+      else {
+        this.evasions++;
+        this.reward(this.barrage ? 200 : 100, "CLEAN EVASION");
+      }
+      markers.forEach((m) => this.effects.emit(m.position, this.barrage ? 24 : 70));
       this.audio.explosion();
       this.cancelStrike();
     }
@@ -757,7 +890,7 @@ export class GroundLevel {
         const look = this.car.position.clone().add(new T.Vector3(0, 4, -8));
         this.camera.position.lerpVectors(this.arrivalEye, eye, ease);
         this.camera.lookAt(this.arrivalLook.clone().lerp(look, ease));
-        this.camera.fov = this.arrivalFov + (46-this.arrivalFov)*ease;
+        this.camera.fov = this.arrivalFov + (46 - this.arrivalFov) * ease;
         this.camera.updateProjectionMatrix();
       }
       this.world.update(dt, this.car.position, this.time);
@@ -770,7 +903,7 @@ export class GroundLevel {
     if (this.phase === "paused" || this.phase === "ended") return;
     this.time += dt;
     this.effects.update(dt);
-    this.drones.forEach(d=>d.visible=this.phase === "play");
+    this.drones.forEach((d) => (d.visible = this.phase === "play"));
     if (this.phase === "briefing") {
       const angle = 0.65 + Math.sin(this.time * 0.12) * 0.3;
       this.camera.position
@@ -782,15 +915,17 @@ export class GroundLevel {
     }
     if (this.phase === "play") {
       const oldHealth = this.car.health,
-        passed = this.car.update(Math.min(wallDt,.25), input, this.obstacles, true, wallDt);
+        passed = this.car.update(Math.min(wallDt, 0.25), input, this.obstacles, true, wallDt);
       if (passed) {
         this.feedback.reward("CHECKPOINT · +500", this.car.position);
         if (!this.sectionDamaged && this.car.damageTaken === this.sectionDamageStart) {
-          this.cleanSections++; this.reward(200, 'CLEAN SECTION');
+          this.cleanSections++;
+          this.reward(200, "CLEAN SECTION");
         }
         this.sectionDamaged = false;
         this.sectionDamageStart = this.car.damageTaken;
-        this.cancelStrike(); this.attackTimer = Math.max(this.attackTimer, 5);
+        this.cancelStrike();
+        this.attackTimer = Math.max(this.attackTimer, 5);
         this.audio.shot(true);
         this.radio(passed.line);
         if (this.car.done) {
@@ -801,7 +936,7 @@ export class GroundLevel {
       for (const m of this.mines) {
         if (m.visible && m.position.distanceTo(this.car.position) < 4) {
           if (this.car.damage(12)) {
-            this.effects.emit(m.position,50);
+            this.effects.emit(m.position, 50);
             m.visible = false;
             this.audio.explosion();
           }
@@ -811,45 +946,84 @@ export class GroundLevel {
       this.disabled = Math.max(0, this.disabled - wallDt);
       this.attackTimer -= wallDt;
       this.drones.forEach((d, i) => {
-        const a=this.time*.38+i*Math.PI;
-        const pursuing = i === 0 && ['warning','attack'].includes(this.pursuitState);
-        const entry=Math.max(0,1-this.time/5)*100;
-        d.position.copy(this.car.position).add(new T.Vector3(Math.sin(a)*11,27+i*5,Math.cos(a)*48-entry).applyAxisAngle(new T.Vector3(0,1,0),this.car.yaw));
-        d.userData.pursuitBlend = (d.userData.pursuitBlend || 0) + ((pursuing ? 1 : 0) - (d.userData.pursuitBlend || 0)) * (1-Math.exp(-dt*2));
+        const a = this.time * 0.38 + i * Math.PI;
+        const pursuing = i === 0 && ["warning", "attack"].includes(this.pursuitState);
+        const entry = Math.max(0, 1 - this.time / 5) * 100;
+        d.position
+          .copy(this.car.position)
+          .add(
+            new T.Vector3(Math.sin(a) * 11, 27 + i * 5, Math.cos(a) * 48 - entry).applyAxisAngle(
+              new T.Vector3(0, 1, 0),
+              this.car.yaw,
+            ),
+          );
+        d.userData.pursuitBlend =
+          (d.userData.pursuitBlend || 0) +
+          ((pursuing ? 1 : 0) - (d.userData.pursuitBlend || 0)) * (1 - Math.exp(-dt * 2));
         const blend = d.userData.pursuitBlend;
-        if (blend > .001) {
-          const close = new T.Vector3(7,12,-38).applyAxisAngle(new T.Vector3(0,1,0),this.car.yaw).add(this.car.position);
+        if (blend > 0.001) {
+          const close = new T.Vector3(7, 12, -38)
+            .applyAxisAngle(new T.Vector3(0, 1, 0), this.car.yaw)
+            .add(this.car.position);
           d.position.lerp(close, blend);
         }
         // Fixed-wing aircraft bank through a level orbit, never point nose-down at the car.
-        d.rotation.set(0,this.car.yaw+Math.atan2(-11*Math.cos(a),48*Math.sin(a)),Math.sin(a)*.16);
-        d.rotation.y += Math.atan2(Math.sin(this.car.yaw-d.rotation.y),Math.cos(this.car.yaw-d.rotation.y))*blend;
-        d.rotation.z += (.12-d.rotation.z)*blend;
-        if(this.disabled>0){d.rotation.z+=Math.sin(this.time*19+i)*.16;d.position.y+=Math.sin(this.time*6)*.7;}
-        if(d.userData.lights)d.userData.lights.visible=this.disabled<=0 || Math.sin(this.time*35)>0.6;
+        d.rotation.set(
+          0,
+          this.car.yaw + Math.atan2(-11 * Math.cos(a), 48 * Math.sin(a)),
+          Math.sin(a) * 0.16,
+        );
+        d.rotation.y +=
+          Math.atan2(Math.sin(this.car.yaw - d.rotation.y), Math.cos(this.car.yaw - d.rotation.y)) *
+          blend;
+        d.rotation.z += (0.12 - d.rotation.z) * blend;
+        if (this.disabled > 0) {
+          d.rotation.z += Math.sin(this.time * 19 + i) * 0.16;
+          d.position.y += Math.sin(this.time * 6) * 0.7;
+        }
+        if (d.userData.lights)
+          d.userData.lights.visible = this.disabled <= 0 || Math.sin(this.time * 35) > 0.6;
       });
-      this.effectTimer=(this.effectTimer||0)+dt;
-      if(this.effectTimer>.11){
-        this.effectTimer=0;
-        if(this.disabled>0)this.drones.forEach(d=>this.effects.puff(d.position));
-        for(const v of this.streets.vents)if(v.distanceTo(this.car.position)<85)this.effects.puff(v);
-        if(Math.abs(this.car.speed)>15){for(const side of [-1,1]){const p=new T.Vector3(side*1.5,.3,3.5).applyAxisAngle(new T.Vector3(0,1,0),this.car.yaw).add(this.car.position);this.effects.puff(p);}}
+      this.effectTimer = (this.effectTimer || 0) + dt;
+      if (this.effectTimer > 0.11) {
+        this.effectTimer = 0;
+        if (this.disabled > 0) this.drones.forEach((d) => this.effects.puff(d.position));
+        for (const v of this.streets.vents)
+          if (v.distanceTo(this.car.position) < 85) this.effects.puff(v);
+        if (Math.abs(this.car.speed) > 15) {
+          for (const side of [-1, 1]) {
+            const p = new T.Vector3(side * 1.5, 0.3, 3.5)
+              .applyAxisAngle(new T.Vector3(0, 1, 0), this.car.yaw)
+              .add(this.car.position);
+            this.effects.puff(p);
+          }
+        }
       }
-      this.mines.forEach(m=>{if(m.userData.light)m.userData.light.visible=Math.sin(this.time*5+m.position.z)>.1;});
-      this.effects.target(this.drones[0].position,this.strike.position,this.strikeTime>0);
+      this.mines.forEach((m) => {
+        if (m.userData.light)
+          m.userData.light.visible = Math.sin(this.time * 5 + m.position.z) > 0.1;
+      });
+      this.effects.target(this.drones[0].position, this.strike.position, this.strikeTime > 0);
       const openingReady = this.car.checkpoint >= 1 || this.car.elapsed >= 25;
-      if (this.attackTimer <= 0 && this.disabled <= 0 && this.pursuitState !== "warning" && openingReady && this.strikeTime <= 0) {
+      if (
+        this.attackTimer <= 0 &&
+        this.disabled <= 0 &&
+        this.pursuitState !== "warning" &&
+        openingReady &&
+        this.strikeTime <= 0
+      ) {
         if (!this.openingWarned && this.strikeNumber === 0) {
-          this.openingWarned = true; this.attackTimer = 3;
+          this.openingWarned = true;
+          this.attackTimer = 3;
           this.radio(GROUND_CONTACT);
         } else this.beginStrike();
       }
       this.updateStrike(wallDt);
       this.updatePursuit(wallDt);
-      $('drive-reward').style.opacity = this.time < this.rewardUntil ? 1 : 0;
+      $("drive-reward").style.opacity = this.time < this.rewardUntil ? 1 : 0;
       if (this.car.health < oldHealth) {
         this.sectionDamaged = true;
-        this.effects.emit(this.car.position,35);
+        this.effects.emit(this.car.position, 35);
         this.feedback.hit(oldHealth - this.car.health, "batmobile");
       }
       if (this.car.health <= 0 || this.car.elapsed >= 300) {
@@ -858,21 +1032,18 @@ export class GroundLevel {
       }
       this.vehicle.position.copy(this.car.position);
       this.vehicle.rotation.y = this.car.yaw;
-      this.art.rotation.z =
-        this.car.steer * Math.min(Math.abs(this.car.speed) / 45, 1) * 0.035;
+      this.art.rotation.z = this.car.steer * Math.min(Math.abs(this.car.speed) / 45, 1) * 0.035;
       this.art.position.y =
-        -0.58 +
-        Math.sin(this.time * 30) *
-          Math.min(Math.abs(this.car.speed) / 2000, 0.025);
+        -0.58 + Math.sin(this.time * 30) * Math.min(Math.abs(this.car.speed) / 2000, 0.025);
       this.wheelSpin = (this.wheelSpin || 0) + (this.car.speed * dt) / 0.6;
-      for (const w of this.wheels)
-        w.mesh.rotation.x = w.rotation + this.wheelSpin;
+      for (const w of this.wheels) w.mesh.rotation.x = w.rotation + this.wheelSpin;
       this.cameraRig.update(dt, this.car, input.boost, this.reducedMotion.matches);
       this.camera.position.copy(this.cameraRig.eye);
       this.look.copy(this.cameraRig.look);
       this.camera.up.set(0, 1, 0);
       this.camera.lookAt(this.look);
-      this.camera.fov += ((54+this.cameraRig.boost*5) - this.camera.fov) * (1-Math.exp(-dt*3));
+      this.camera.fov +=
+        (54 + this.cameraRig.boost * 5 - this.camera.fov) * (1 - Math.exp(-dt * 3));
       this.camera.fov = clamp(this.camera.fov, 48, 70);
       this.camera.updateProjectionMatrix();
       const left = Math.max(0, Math.ceil(300 - this.car.elapsed));
@@ -887,35 +1058,32 @@ export class GroundLevel {
           : "EMP READY / F OR CLICK";
       // Location-specific chatter expires when its stretch is passed; no stale queue.
       if (this.ambushState !== "active" && this.strikeTime <= 0 && this.attackTimer > 5) {
-        const {x,z} = this.car.position;
-        if (this.car.checkpoint === 1 && x < -100 && x > -420) this.audio.ambientRadio('alfred-theatre');
-        else if (this.car.checkpoint === 2 && z < -180 && z > -600) this.audio.ambientRadio('alfred-railway');
-        else if (this.car.elapsed > 50 && this.car.checkpoint < 4) this.audio.ambientRadio('gordon-hold');
+        const { x, z } = this.car.position;
+        if (this.car.checkpoint === 1 && x < -100 && x > -420)
+          this.audio.ambientRadio("alfred-theatre");
+        else if (this.car.checkpoint === 2 && z < -180 && z > -600)
+          this.audio.ambientRadio("alfred-railway");
+        else if (this.car.elapsed > 50 && this.car.checkpoint < 4)
+          this.audio.ambientRadio("gordon-hold");
       }
       const goal = DRIVE_ROUTE[this.car.checkpoint];
-      const marker =
-        this.checkpoints[this.car.checkpoint].mesh.position.clone();
+      const marker = this.checkpoints[this.car.checkpoint].mesh.position.clone();
       marker.y = 5;
       marker.project(this.camera);
       $("drive-waypoint").style.left =
         clamp((marker.x * 0.5 + 0.5) * innerWidth, 80, innerWidth - 80) + "px";
       $("drive-waypoint").style.top =
-        clamp((0.5 - marker.y * 0.5) * innerHeight, 110, innerHeight - 140) +
-        "px";
+        clamp((0.5 - marker.y * 0.5) * innerHeight, 110, innerHeight - 140) + "px";
       $("drive-waypoint-text").textContent =
-        Math.round(
-          Math.hypot(
-            goal.x - this.car.position.x,
-            goal.z - this.car.position.z,
-          ),
-        ) + " M";
+        Math.round(Math.hypot(goal.x - this.car.position.x, goal.z - this.car.position.z)) + " M";
       $("drive-goal").textContent = goal.name;
       $("drive-progress").textContent =
         `ROUTE ${this.car.checkpoint + 1} / ${DRIVE_ROUTE.length} · ${this.car.score.toLocaleString()} PTS`;
-      const turnDistance = Math.hypot(goal.x-this.car.position.x, goal.z-this.car.position.z);
+      const turnDistance = Math.hypot(goal.x - this.car.position.x, goal.z - this.car.position.z);
       $("drive-turn").classList.toggle("turn-urgent", turnDistance < 130 || this.car.roadContact);
-      $("drive-turn").textContent = this.car.roadContact ? "CURB CONTACT · steer back into the lane" :
-        routeCue(this.car.position, this.car.yaw, this.car.checkpoint);
+      $("drive-turn").textContent = this.car.roadContact
+        ? "CURB CONTACT · steer back into the lane"
+        : routeCue(this.car.position, this.car.yaw, this.car.checkpoint);
       this.map.update(this.car, this.mapMission, [], [], this.time);
     }
     this.checkpoints.forEach((p, i) => {
@@ -924,27 +1092,28 @@ export class GroundLevel {
     });
     this.exhaust.visible =
       this.phase === "play" && Math.abs(this.car.speed) > 8 && (input.accel > 0 || input.boost);
-    this.exhaust.scale.y = input.boost ? 2 : .65;
+    this.exhaust.scale.y = input.boost ? 2 : 0.65;
     this.exhaust.material.uniforms.time.value = this.time;
     this.exhaust.material.uniforms.boost.value = input.boost ? 1 : 0;
     this.pulseLife = Math.max(0, this.pulseLife - dt);
     this.pulse.visible = this.pulseLife > 0;
     this.pulse.scale.setScalar((1 - this.pulseLife) * 90 + 2);
     this.pulse.material.opacity = this.pulseLife;
-    const caption = $('radio-caption');
-    const dedicatedThreat = /^THREAT|^AMBUSH|^COUNTERMEASURES|^ROUTE CLEAR/.test($('drive-radio').textContent);
-    const showRadio = this.time < this.messageUntil && !(caption && !caption.hidden) &&
-      !(dedicatedThreat && (!$('drive-threat').hidden || !$('drive-ambush').hidden));
+    const caption = $("radio-caption");
+    const dedicatedThreat = /^THREAT|^AMBUSH|^COUNTERMEASURES|^ROUTE CLEAR/.test(
+      $("drive-radio").textContent,
+    );
+    const showRadio =
+      this.time < this.messageUntil &&
+      !(caption && !caption.hidden) &&
+      !(dedicatedThreat && (!$("drive-threat").hidden || !$("drive-ambush").hidden));
     $("drive-radio").style.opacity = showRadio ? 1 : 0;
     this.streets.update(this.time, this.car.position);
     this.routeScenes.update(this.car.position);
     this.junctionGuide.update(this.car.checkpoint, this.car.position);
     this.world.update(dt, this.car.position, this.time);
-    this.world.moon.position
-      .copy(this.camera.position)
-      .add(new T.Vector3(500, 900, -2100));
+    this.world.moon.position.copy(this.camera.position).add(new T.Vector3(500, 900, -2100));
     this.world.moon.scale.set(460, 460, 1);
     this.audio.update(Math.abs(this.car.speed) * 2, this.phase === "play");
   }
 }
-
