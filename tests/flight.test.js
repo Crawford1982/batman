@@ -19,9 +19,7 @@ test("all input axes and speed bounds", () => {
   assert.ok(f.yaw < 0);
 });
 test("collision and damage immunity", () => {
-  assert.ok(
-    insideBuilding(new Vector3(0, 10, 0), { x: 0, z: 0, w: 20, d: 20, h: 50 }),
-  );
+  assert.ok(insideBuilding(new Vector3(0, 10, 0), { x: 0, z: 0, w: 20, d: 20, h: 50 }));
   assert.ok(
     !insideBuilding(new Vector3(0, 100, 0), {
       x: 0,
@@ -37,12 +35,5 @@ test("collision and damage immunity", () => {
   assert.equal(f.health, 88);
 });
 test("swept projectile hit detection", () => {
-  assert.equal(
-    segmentDistance(
-      new Vector3(0, 0, -5),
-      new Vector3(),
-      new Vector3(0, 0, -10),
-    ),
-    0,
-  );
+  assert.equal(segmentDistance(new Vector3(0, 0, -5), new Vector3(), new Vector3(0, 0, -10)), 0);
 });

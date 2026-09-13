@@ -1,0 +1,7 @@
+dist
+node_modules
+public
+verification
+trailer
+*.md
+package-lock.json

@@ -17,16 +17,13 @@ await page.waitForTimeout(1500);
 await page.screenshot({ path: "verification/menu.png" });
 await page.click("#start");
 await page.waitForTimeout(800);
-assert.equal(
-  (await page.evaluate(() => window.__batwing.state)).mode,
-  "briefing",
-);
+assert.equal((await page.evaluate(() => window.__batwing.state)).mode, "briefing");
 await page.screenshot({ path: "verification/briefing-docks.png" });
 await page.evaluate(() => window.__batwing.step(9));
 await page.waitForTimeout(850);
 await page.screenshot({ path: "verification/briefing-cathedral.png" });
 await page.click("#skip-briefing");
-await page.waitForFunction(()=>window.__batwing.state.elapsed>1.1);
+await page.waitForFunction(() => window.__batwing.state.elapsed > 1.1);
 let s = await page.evaluate(() => window.__batwing.state);
 assert.equal(s.mode, "play");
 assert.ok(s.elapsed > 1);
@@ -38,10 +35,7 @@ s = await page.evaluate(() => window.__batwing.state);
 assert.equal(s.mode, "paused");
 const before = s.elapsed;
 await page.waitForTimeout(400);
-assert.equal(
-  (await page.evaluate(() => window.__batwing.state)).elapsed,
-  before,
-);
+assert.equal((await page.evaluate(() => window.__batwing.state)).elapsed, before);
 await page.click("#resume");
 await page.evaluate(() => {
   const g = window.__batwing,
@@ -56,9 +50,7 @@ await page.evaluate(() => {
   const g = window.__batwing;
   g.flight.reset();
   g.spawn();
-  g.enemies[0].mesh.position
-    .copy(g.flight.position)
-    .addScaledVector(g.flight.forward, 90);
+  g.enemies[0].mesh.position.copy(g.flight.position).addScaledVector(g.flight.forward, 90);
   g.step(0.016);
   g.shoot(true);
   for (let i = 0; i < 70; i++) g.step(0.016);
@@ -84,25 +76,25 @@ await page.evaluate(() => {
   window.__testPad.buttons[7].pressed = true;
 });
 await page.waitForTimeout(350);
-assert.ok(
-  (await page.evaluate(() => window.__batwing.state)).shots > 0,
-  "controller fires",
-);
+assert.ok((await page.evaluate(() => window.__batwing.state)).shots > 0, "controller fires");
 await page.evaluate(() => {
   window.__testPad.buttons[7].pressed = false;
   for (const r of window.__batwing.mission.relays) {
     r.hp = 0;
     r.mesh.visible = false;
   }
-  const g=window.__batwing;
-  g.step(.01,60);g.step(.01,14);g.step(.01,14);
-  for(let i=g.enemies.length-1;i>=0;i--) {const e=g.enemies[i];e.mesh.removeFromParent();g.enemies.splice(i,1);}
-  g.step(.01,91);
+  const g = window.__batwing;
+  g.step(0.01, 60);
+  g.step(0.01, 14);
+  g.step(0.01, 14);
+  for (let i = g.enemies.length - 1; i >= 0; i--) {
+    const e = g.enemies[i];
+    e.mesh.removeFromParent();
+    g.enemies.splice(i, 1);
+  }
+  g.step(0.01, 91);
 });
-assert.equal(
-  await page.locator("#pause-title").textContent(),
-  "The night is yours.",
-);
+assert.equal(await page.locator("#pause-title").textContent(), "The night is yours.");
 await page.click("#handover-exit");
 await page.click("#start");
 await page.click("#skip-briefing");
@@ -113,9 +105,7 @@ await page.evaluate(() => {
   const r = g.mission.relays[0];
   for (let n = 0; n < 3; n++) {
     g.flight.reset();
-    r.mesh.position
-      .copy(g.flight.position)
-      .addScaledVector(g.flight.forward, 90);
+    r.mesh.position.copy(g.flight.position).addScaledVector(g.flight.forward, 90);
     g.step(0.016);
     g.shoot(true);
     for (let i = 0; i < 220; i++) g.step(0.016);
@@ -151,10 +141,7 @@ assert.equal(
 );
 await page.click("#restart");
 await page.waitForTimeout(5000);
-console.log(
-  "DESKTOP",
-  JSON.stringify(await page.evaluate(() => window.__batwing.state)),
-);
+console.log("DESKTOP", JSON.stringify(await page.evaluate(() => window.__batwing.state)));
 const mobile = await browser.newPage({
   viewport: { width: 844, height: 390 },
   isMobile: true,
@@ -171,10 +158,7 @@ await mobile.locator("#skip-briefing").tap();
 await mobile.waitForTimeout(1200);
 assert.ok(await mobile.locator("#stick").isVisible());
 const stickBox = await mobile.locator("#stick").boundingBox();
-await mobile.mouse.move(
-  stickBox.x + stickBox.width * 0.8,
-  stickBox.y + stickBox.height * 0.4,
-);
+await mobile.mouse.move(stickBox.x + stickBox.width * 0.8, stickBox.y + stickBox.height * 0.4);
 await mobile.mouse.down();
 await mobile.waitForTimeout(300);
 await mobile.mouse.up();
@@ -184,10 +168,7 @@ await mobile.mouse.down();
 await mobile.waitForTimeout(200);
 await mobile.mouse.up();
 await mobile.screenshot({ path: "verification/mobile.png" });
-console.log(
-  "MOBILE",
-  JSON.stringify(await mobile.evaluate(() => window.__batwing.state)),
-);
+console.log("MOBILE", JSON.stringify(await mobile.evaluate(() => window.__batwing.state)));
 assert.deepEqual(errors, []);
 await browser.close();
 console.log(

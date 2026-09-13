@@ -13,43 +13,34 @@ p.on("console", (m) => {
 await p.goto((process.env.GAME_URL || "http://localhost:4173") + "/?test=1");
 await p.waitForFunction(() => window.__batwing?.ready);
 await p.click("#start-ground");
-await p.waitForFunction(
-  () => window.__batwing.groundReady || window.__batwing.state.groundReady,
-);
+await p.waitForFunction(() => window.__batwing.groundReady || window.__batwing.state.groundReady);
 await p.waitForTimeout(700);
 await p.screenshot({ path: "verification/ground-briefing.png" });
 await p.click("#drive-launch");
-assert.ok(await p.evaluate(() => {
-  const g = window.__batwing.ground;
-  const original = g.mines[0].position.clone();
-  g.mines[0].position.copy(g.car.position); g.mines[0].visible = true;
-  g.update(.016); g.mines[0].visible = false; g.mines[0].position.copy(original);
-  return document.getElementById('damage-feedback').classList.contains('active');
-}));
+assert.ok(
+  await p.evaluate(() => {
+    const g = window.__batwing.ground;
+    const original = g.mines[0].position.clone();
+    g.mines[0].position.copy(g.car.position);
+    g.mines[0].visible = true;
+    g.update(0.016);
+    g.mines[0].visible = false;
+    g.mines[0].position.copy(original);
+    return document.getElementById("damage-feedback").classList.contains("active");
+  }),
+);
 await p.keyboard.down("w");
 await p.waitForFunction(() => window.__batwing.state.groundPosition[2] < 430);
 await p.keyboard.up("w");
-console.log(
-  "FIRST DRIVE",
-  await p.evaluate(() => window.__batwing.state),
-  errors,
-);
+console.log("FIRST DRIVE", await p.evaluate(() => window.__batwing.state), errors);
 await p.screenshot({ path: "verification/ground-driving.png" });
-assert.ok(
-  (await p.evaluate(() => window.__batwing.state)).groundPosition[2] < 440,
-);
+assert.ok((await p.evaluate(() => window.__batwing.state)).groundPosition[2] < 440);
 await p.screenshot({ path: "verification/ground-driving.png" });
 await p.keyboard.press("Escape");
-assert.equal(
-  (await p.evaluate(() => window.__batwing.state)).mode,
-  "drivePaused",
-);
+assert.equal((await p.evaluate(() => window.__batwing.state)).mode, "drivePaused");
 const elapsed = await p.evaluate(() => window.__batwing.ground.car.elapsed);
 await p.waitForTimeout(300);
-assert.equal(
-  await p.evaluate(() => window.__batwing.ground.car.elapsed),
-  elapsed,
-);
+assert.equal(await p.evaluate(() => window.__batwing.ground.car.elapsed), elapsed);
 await p.click("#resume");
 await p.keyboard.press("f");
 assert.ok(await p.evaluate(() => window.__batwing.ground.car.emp > 0));
@@ -58,15 +49,9 @@ await p.evaluate(() => {
   g.car.health = 0;
   g.update(0.016);
 });
-assert.equal(
-  (await p.evaluate(() => window.__batwing.state)).mode,
-  "driveEnded",
-);
+assert.equal((await p.evaluate(() => window.__batwing.state)).mode, "driveEnded");
 await p.click("#restart");
-assert.equal(
-  (await p.evaluate(() => window.__batwing.state)).groundHealth,
-  100,
-);
+assert.equal((await p.evaluate(() => window.__batwing.state)).groundHealth, 100);
 await p.evaluate(() => {
   const g = window.__batwing.ground;
   for (const goal of g.checkpoints) {
@@ -75,10 +60,7 @@ await p.evaluate(() => {
     g.update(0.016);
   }
 });
-assert.equal(
-  await p.locator("#pause-title").textContent(),
-  "Gotham is back online.",
-);
+assert.equal(await p.locator("#pause-title").textContent(), "Gotham is back online.");
 await p.click("#arrival-skip");
 await p.click("#exit");
 assert.ok(await p.locator("#menu").isVisible());
@@ -87,37 +69,40 @@ await p.click("#skip-briefing");
 assert.equal((await p.evaluate(() => window.__batwing.state)).mode, "play");
 await p.evaluate(() => window.__batwing.finish(true));
 await p.click("#handover-skip");
-await p.waitForFunction(()=>window.__batwing.state.mode==='drive');
+await p.waitForFunction(() => window.__batwing.state.mode === "drive");
 assert.equal((await p.evaluate(() => window.__batwing.state)).mode, "drive");
-console.log(
-  "DESKTOP",
-  JSON.stringify(await p.evaluate(() => window.__batwing.state)),
-);
+console.log("DESKTOP", JSON.stringify(await p.evaluate(() => window.__batwing.state)));
+// Free the desktop page first; on software GL both rendering at once stalls navigation.
+await p.close();
 const m = await b.newPage({
   viewport: { width: 844, height: 390 },
   isMobile: true,
   hasTouch: true,
 });
 m.on("pageerror", (e) => errors.push(e.message));
-await m.goto((process.env.GAME_URL || "http://localhost:4173") + "/?test=1");
+await m.goto((process.env.GAME_URL || "http://localhost:4173") + "/?test=1", { timeout: 90000 });
 await m.waitForFunction(() => window.__batwing?.ready);
 await m.locator("#start-ground").tap();
 await m.waitForFunction(() => window.__batwing.state.groundReady);
 await m.screenshot({ path: "verification/ground-mobile-briefing.png" });
 await m.locator("#drive-launch").tap();
 const box = await m.locator('[data-drive="accel"]').boundingBox();
-const stick = await m.locator('#drive-stick').boundingBox();
+const stick = await m.locator("#drive-stick").boundingBox();
 const cdp = await m.context().newCDPSession(m);
-const gas={id:1,x:box.x+box.width/2,y:box.y+box.height/2};
-const steering={id:2,x:stick.x+stick.width*.75,y:stick.y+stick.height/2};
-await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[gas,steering]});
+const gas = { id: 1, x: box.x + box.width / 2, y: box.y + box.height / 2 };
+const steering = { id: 2, x: stick.x + stick.width * 0.75, y: stick.y + stick.height / 2 };
+await cdp.send("Input.dispatchTouchEvent", { type: "touchStart", touchPoints: [gas, steering] });
 await m.waitForTimeout(500);
 assert.ok(await m.evaluate(() => window.__batwing.ground.car.speed > 1));
-assert.ok(await m.evaluate(() => window.__batwing.ground.car.steer > .1));
-await cdp.send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[]});
-assert.ok(await m.evaluate(() => !window.__batwing.ground.touch.accel && !window.__batwing.ground.touch.steering));
-assert.ok(await m.locator('#drive-map').isVisible());
-assert.ok(await m.locator('#drive-turn').isVisible());
+assert.ok(await m.evaluate(() => window.__batwing.ground.car.steer > 0.1));
+await cdp.send("Input.dispatchTouchEvent", { type: "touchCancel", touchPoints: [] });
+assert.ok(
+  await m.evaluate(
+    () => !window.__batwing.ground.touch.accel && !window.__batwing.ground.touch.steering,
+  ),
+);
+assert.ok(await m.locator("#drive-map").isVisible());
+assert.ok(await m.locator("#drive-turn").isVisible());
 await m.screenshot({ path: "verification/ground-mobile.png" });
 assert.deepEqual(errors, []);
 await b.close();
