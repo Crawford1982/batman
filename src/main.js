@@ -12,7 +12,7 @@ import { districtAt } from "./districts.js";
 import "./mission.css";
 import { createEnemy, createBomber } from "./enemy.js";
 import * as T from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { createModelLoader } from "./model-loader.js";
 import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
 import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js";
@@ -111,7 +111,7 @@ function quality() {
 $("quality").onchange = quality;
 quality();
 $("loading").textContent = modelProgress(0, 0);
-new GLTFLoader().load(
+createModelLoader().load(
   `${import.meta.env.BASE_URL}batwing.glb`,
   (g) => {
     aircraft = g.scene;

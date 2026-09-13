@@ -1,4 +1,4 @@
-# BATWING — Gotham After Dark
+# BATWING â€” Gotham After Dark
 
 A local browser flight-combat game using your 1989 Batwing model. A snowy city with Midtown, Old Gotham, the Narrows and Tricorner Docks; cathedral, cargo port, river and suspension bridges; chase camera, cannons, homing missiles, repair rings, synthesized music and sound effects.
 
@@ -18,9 +18,11 @@ Mouse moves steer. W/S change speed. A/D turn; arrow keys also steer. Q/E roll, 
 
 Standard mapped Xbox/PlayStation controllers: left stick steers, right stick X yaws, bumpers roll, right trigger fires, A/cross launches missiles, left trigger boosts, D-pad up/down changes speed, Start pauses. Press a controller button after connecting so the browser detects it. Controller mapping was simulated in automated tests; physical controller hardware was not available for verification.
 
-Touch: left virtual stick steers, +/− adjust speed, right controls fire, launch missiles and boost. Mobile layout is browser-emulation tested, not tested on a physical phone.
+Touch: left virtual stick steers, +/âˆ' adjust speed, right controls fire, launch missiles and boost. Mobile layout is browser-emulation tested, not tested on a physical phone.
 
 ## Website build
+
+Models in `public/` are compressed for delivery by `npm run compress` (EXT_meshopt_compression geometry, WebP textures at up to 1024px; triangle counts and embedded licence metadata are preserved). Run it after any `prepare-*.mjs` script regenerates a model. Combined model payload is about 2.9 MB, down from 16.4 MB uncompressed. `src/model-loader.js` registers the meshopt decoder for every GLTFLoader.
 
 `npm run build` produces `dist`. Upload its contents to a static web host, including `batwing.glb` and `assets`. Relative paths support subfolder hosting. No backend, CDN JavaScript, account, or API key is needed. Optional Google Fonts fall back to installed fonts if offline. The game is not published by this build.
 
@@ -36,7 +38,7 @@ Source modules: `src/flight.js`, `src/world.js`, `src/districts.js`, `src/missio
 
 Latest verification: 9 unit tests plus browser scenarios for briefing/skip, relay destruction, bomber damage, city-collapse loss, evacuation success, flight, controls and mobile layout. Edge headless selected Intel HD Graphics 4600 (ANGLE D3D11), not the GTX 1650; measured approximately 27 FPS at 1440x900 in that test. Dedicated-GPU performance remains unverified.
 
-## Chapter II — The Final Mile
+## Chapter II â€” The Final Mile
 
 Choose CHAPTER II / BATMOBILE from the menu, or continue after winning the flight chapter. A dedicated loading screen introduces the mission and loads the supplied 1989 Batmobile only when needed. Deliver the physical network override to Gordon at the cathedral through six ordered route checkpoints before the five-minute reconnect timer expires. Gold markers and the minimap show the route. Checkpoints repair light damage. Road mines and telegraphed drone strikes threaten the car; EMP clears nearby mines and suppresses drones for five seconds, with a six-second cooldown.
 
@@ -47,7 +49,7 @@ The new source model ../batmobile_jet_car_1989.glb is preserved. public/batmobil
 Verification: npm test includes 12 physics/mission tests. node tests/ground.mjs checks the car model, keyboard driving, touch acceleration, EMP, pause, loss/restart, victory, chapter transition and return to flight. npm run verify checks the original flight chapter. Physical controller and phone testing remain outstanding. See verification/RESULTS.md for current scene cost and corrected wall-clock performance measurements. A locked 60 FPS is not verified.
 
 
-## Chapter II visual pass — 7 September 2026
+## Chapter II visual pass â€” 7 September 2026
 
 Street frontages now use layered masonry, recessed windows/doors, cornices, snow caps, bollards, grates, shop signs and fire escapes. Twenty-two merged scenery cells are culled at 330 metres. Warm light pools and textured wet asphalt establish the commercial corridor; the northern route passes under steel infrastructure into arched Old Gotham architecture and cathedral searchlights. New scenery has ground collision bounds; the driving corridor remains clear.
 
@@ -64,7 +66,7 @@ The whole Batmobile footprint is constrained to the road network, with sliding/d
 
 ## Replacement Batmobile
 
-The current car is visnik�s 89 Batmobile, downloaded from https://blendswap.com/blend/10625 under CC BY-NC-SA 3.0. The adapted GLB keeps that licence. Original licence and attribution are included in public. To regenerate, extract the original blend to ../assets-source/visnik, run scripts/convert-visnik-car.py with Blender (background, disable-autoexec), then node scripts/prepare-visnik-car.mjs. No Blender installation is required to play or build.
+The current car is visnik's 89 Batmobile, downloaded from https://blendswap.com/blend/10625 under CC BY-NC-SA 3.0. The adapted GLB keeps that licence. Original licence and attribution are included in public. To regenerate, extract the original blend to ../assets-source/visnik, run scripts/convert-visnik-car.py with Blender (background, disable-autoexec), then node scripts/prepare-visnik-car.mjs. No Blender installation is required to play or build.
 
 ## Focused polish pass
 

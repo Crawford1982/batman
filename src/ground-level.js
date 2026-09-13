@@ -2,7 +2,7 @@ import { chapterCard, clearPresentation, showResults } from "./presentation.js";
 import { JunctionGuide } from "./junction-guide.js";
 import { RouteScenes } from "./route-scenes.js";
 import * as T from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { createModelLoader } from "./model-loader.js";
 import { Driving, DRIVE_ROUTE, driveSteering, routeCue } from "./driving.js";
 import { createEnemy } from "./enemy.js";
 import { Minimap } from "./minimap.js";
@@ -335,7 +335,7 @@ export class GroundLevel {
     this.loading = loadPursuitDrone().then(template => {
       this.drones.forEach((d,i)=>installPursuitDrone(d,template,i));
       return new Promise((resolve, reject) =>
-      new GLTFLoader().load(
+      createModelLoader().load(
         `${import.meta.env.BASE_URL}batmobile.glb`,
         (g) => {
           const model = g.scene;
