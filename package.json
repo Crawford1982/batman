@@ -14,10 +14,11 @@
     "three": "^0.185.1"
   },
   "devDependencies": {
-    "@playwright/test": "^1.63.0",
-    "vite": "^8.2.2",
     "@gltf-transform/core": "^4.5.0",
     "@gltf-transform/functions": "^4.5.0",
-    "meshoptimizer": "^1.2.0"
+    "@playwright/test": "^1.63.0",
+    "meshoptimizer": "^1.2.0",
+    "vite": "^8.2.2",
+    "wait-on": "9.1.0"
   }
 }
