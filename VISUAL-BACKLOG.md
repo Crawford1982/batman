@@ -25,3 +25,14 @@ Updated 13 September 2026. Free assets only. Keep gameplay, instant browser acce
 ## Release gates
 Payload: run `npm run compress` on every new model before commit and judge size from `dist/assets/*.glb`, not the source file. The first theatre block was 4.8 MB uncompressed and loaded at the start of Chapter II; compressed it is 0.79 MB. Do not extend the masonry until that is the habit.
 Before/after pictures at identical positions; safe collision envelopes; fallback when assets fail; source/licence record; compressed bytes and texture sizes; relevant tests and production build. Never fill remaining usage merely because it is available.
+
+
+## Refinement pass — 13 September 2026
+- [x] Correct projector cone direction; soften and break up the cloud projection.
+- [x] Reduce window glare with per-room brightness, softened edges and interior shading.
+- [x] Preserve black hull highlights with a minimum roughness after texture sampling.
+- [x] Reserve pointed crowns for rare tall towers; vary their proportions.
+- [x] Reduce street glow, grain and edge colour fringing.
+- [ ] Author more varied street facades and road materials; this pass only moderates their lighting.
+- [ ] Remove duplicated flight radio text and review message hierarchy.
+- [ ] Physical-phone visual/performance check remains a user-device task.

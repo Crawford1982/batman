@@ -31,7 +31,7 @@ export function createWorld(scene) {
   // Less flat sky fill, a low cold moon so tops and leading edges catch a
   // rim, and a warm bounce from the streets below.
   scene.add(new T.HemisphereLight(0x8fb0d8, 0x0d1420, 1.1));
-  const moonlight = new T.DirectionalLight(0xbcd6ff, 2.6);
+  const moonlight = new T.DirectionalLight(0xbcd6ff, 1.9);
   moonlight.position.set(-520, 360, -700);
   scene.add(moonlight);
   const fill = new T.DirectionalLight(0xe0955a, 0.55);
@@ -116,7 +116,7 @@ export function createWorld(scene) {
     // rooftop plant room at one corner, Deco towers get a tapered cap, low
     // commercial blocks stay flat with a parapet.
     const family =
-      b.h > 150 && b.seed > 0.55 ? "deco" : b.h > 110 ? "setback" : b.h > 40 ? "slab" : "low";
+      b.h > 185 && b.seed > 0.84 ? "deco" : b.h > 110 ? "setback" : b.h > 40 ? "slab" : "low";
     b.family = family;
     if (family === "setback") {
       dummy.position.set(b.x, b.h + 7, b.z);
@@ -140,7 +140,7 @@ export function createWorld(scene) {
     upper = new T.InstancedMesh(geo, mat, setbacks.length),
     caps = new T.InstancedMesh(
       new T.ConeGeometry(0.5, 1, 4, 1).rotateY(Math.PI / 4),
-      new T.MeshStandardMaterial({ color: 0x6d7d93, roughness: 0.6, metalness: 0.4 }),
+      new T.MeshStandardMaterial({ color: 0x6d7d93, roughness: 0.82, metalness: 0.2 }),
       decos.length,
     );
   setbacks.forEach((b, i) => {
@@ -150,8 +150,9 @@ export function createWorld(scene) {
     upper.setMatrixAt(i, dummy.matrix);
   });
   decos.forEach((b, i) => {
-    dummy.position.set(b.x, b.h + 14, b.z);
-    dummy.scale.set(Math.min(b.w, b.d) * 0.9, 28, Math.min(b.w, b.d) * 0.9);
+    const height = 12 + b.seed2 * 16;
+    dummy.position.set(b.x, b.h + height / 2, b.z);
+    dummy.scale.set(b.w * 0.82, height, b.d * 0.82);
     dummy.updateMatrix();
     caps.setMatrixAt(i, dummy.matrix);
   });

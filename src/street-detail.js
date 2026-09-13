@@ -117,6 +117,7 @@ export class StreetDetail {
     });
     const poolMat = new T.MeshBasicMaterial({
       map: glow,
+      opacity: 0.6,
       transparent: true,
       depthWrite: false,
       blending: T.AdditiveBlending,

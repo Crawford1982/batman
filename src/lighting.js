@@ -87,7 +87,10 @@ export function installWindowShader(material) {
     vec2 pitch = vec2( 4.4, 3.6 );
     vec2 id = floor( fp / pitch );
     vec2 f = fract( fp / pitch );
-    float win = step( 0.24, f.x ) * step( f.x, 0.76 ) * step( 0.26, f.y ) * step( f.y, 0.80 );
+    vec2 aa = max(fwidth(fp / pitch), vec2(0.012));
+    vec2 glass = smoothstep(vec2(0.24, 0.26) - aa, vec2(0.24, 0.26) + aa, f)
+      * (1.0 - smoothstep(vec2(0.76, 0.80) - aa, vec2(0.76, 0.80) + aa, f));
+    float win = glass.x * glass.y;
     float darkFloor = step( 0.64, winHash( vec2( id.y, vWinSeed * 17.0 ) ) );
     float stair = step( 0.93, winHash( vec2( id.x, vWinSeed * 31.0 ) ) );
     float occupied = step( 0.63, winHash( id + vWinSeed * 53.0 ) );
@@ -97,10 +100,13 @@ export function installWindowShader(material) {
     float temp = winHash( id * 0.37 + vWinSeed );
     colour = temp < 0.62 ? vec3( 1.0, 0.74, 0.42 ) : temp < 0.88 ? vec3( 0.70, 0.82, 1.0 ) : vec3( 1.0, 0.56, 0.24 );
     colour = mix( colour, vec3( 1.0, 0.64, 0.30 ), ground );
+    // Vary interior intensity and suggest blinds rather than identical white slots.
+    lit *= mix(0.38, 0.85, winHash(id + vWinSeed * 91.0));
+    lit *= mix(0.65, 1.0, smoothstep(0.38, 0.62, f.y));
     float dist = length( vWinPos - cameraPosition );
     float far = smoothstep( 500.0, 1700.0, dist );
     win = mix( win, 0.30, far );
-    lit = mix( lit, 0.45, far );
+    lit = mix( lit, 0.23, far );
     return vec2( win, lit );
   }`,
       )
@@ -109,11 +115,11 @@ export function installWindowShader(material) {
         /* glsl */ `vec3 winColour;
   vec2 winInfo = windowAt( winColour );
   // Window glass is darker than masonry in the diffuse.
-  diffuseColor.rgb *= mix( 1.0, 0.42, winInfo.x );`,
+  diffuseColor.rgb *= mix( 1.0, 0.64, winInfo.x );`,
       )
       .replace(
         "#include <emissivemap_fragment>",
-        /* glsl */ `totalEmissiveRadiance = winColour * winInfo.x * winInfo.y * emissive.r * 1.7;`,
+        /* glsl */ `totalEmissiveRadiance = winColour * winInfo.x * winInfo.y * emissive.r * 1.0;`,
       );
   };
 }
@@ -130,7 +136,7 @@ float grain( vec2 p ) { return fract( sin( dot( p, vec2( 12.9898, 78.233 ) ) + t
 void main() {
   vec2 d = vUv - 0.5;
   float r2 = dot( d, d );
-  vec2 ca = d * r2 * 0.028 * strength;
+  vec2 ca = d * r2 * 0.002 * strength;
   vec3 c;
   c.r = texture2D( tDiffuse, vUv + ca ).r;
   c.g = texture2D( tDiffuse, vUv ).g;
@@ -140,7 +146,7 @@ void main() {
   vec3 shadows = vec3( 0.86, 0.94, 1.14 ), highs = vec3( 1.08, 1.0, 0.88 );
   c *= mix( shadows, highs, smoothstep( 0.0, 0.6, lum ) );
   c *= 1.0 - smoothstep( 0.18, 0.75, r2 ) * 0.55 * strength;
-  c += ( grain( vUv * 1400.0 ) - 0.5 ) * 0.035 * strength;
+  c += ( grain( vUv * 1400.0 ) - 0.5 ) * 0.003 * strength;
   gl_FragColor = vec4( max( c, 0.0 ), 1.0 );
 }`,
   });

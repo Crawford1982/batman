@@ -17,8 +17,8 @@ const beamMaterial = (color, strength) =>
       uniform vec3 color; uniform float strength; varying float vAlong; varying vec2 vUv;
       void main() {
         float edge = 1.0 - abs( fract( vUv.x * 2.0 ) * 2.0 - 1.0 );
-        float a = pow( vAlong, 1.6 ) * ( 0.35 + 0.65 * edge ) * strength;
-        gl_FragColor = vec4( color * a, a );
+        float a = (0.18 + 0.32 * vAlong) * (1.0 - smoothstep(0.78, 1.0, vAlong)) * (0.35 + 0.65 * edge) * strength;
+        gl_FragColor = vec4( color, a );
       }`,
   });
 
@@ -26,15 +26,18 @@ function drawEmblem() {
   const c = document.createElement("canvas");
   c.width = c.height = 256;
   const g = c.getContext("2d");
-  const disc = g.createRadialGradient(128, 128, 60, 128, 128, 128);
+  const disc = g.createRadialGradient(128, 128, 0, 128, 128, 128);
   disc.addColorStop(0, "#fff4d6");
-  disc.addColorStop(0.8, "#f0dca8");
+  disc.addColorStop(0.35, "#f0dca8a0");
+  disc.addColorStop(0.7, "#f0dca840");
   disc.addColorStop(1, "#f0dca800");
   g.fillStyle = disc;
   g.fillRect(0, 0, 256, 256);
   // 1989 emblem, approximated: pointed wings, three scallops on the
   // trailing edge, short ears.
-  g.fillStyle = "#0a0a0a";
+  g.filter = "blur(2px)";
+  g.globalCompositeOperation = "destination-out";
+  g.fillStyle = "#000";
   g.beginPath();
   g.moveTo(128, 78);
   g.lineTo(137, 92);
@@ -54,6 +57,17 @@ function drawEmblem() {
   g.lineTo(119, 92);
   g.closePath();
   g.fill();
+  g.filter = "none";
+  // A deterministic cloud veil breaks up the projection without animated noise.
+  g.globalCompositeOperation = "destination-out";
+  for (let i = 0; i < 7; i++) {
+    const y = 24 + i * 35;
+    const veil = g.createRadialGradient(100 + (i % 3) * 30, y, 5, 128, y, 100);
+    veil.addColorStop(0, "#00000055");
+    veil.addColorStop(1, "#00000000");
+    g.fillStyle = veil;
+    g.fillRect(0, 0, 256, 256);
+  }
   const tex = new T.CanvasTexture(c);
   tex.colorSpace = T.SRGBColorSpace;
   return tex;
@@ -62,7 +76,7 @@ function drawEmblem() {
 export function createSkyline(scene) {
   const group = new T.Group();
   scene.add(group);
-  const cone = new T.CylinderGeometry(0.5, 4, 1, 24, 1, true).translate(0, 0.5, 0);
+  const cone = new T.CylinderGeometry(4, 0.08, 1, 24, 1, true).translate(0, 0.5, 0);
   const lights = [];
   const addBeam = (x, y, z, color, strength, length, spread, phase, speed) => {
     const pivot = new T.Group();
@@ -75,10 +89,10 @@ export function createSkyline(scene) {
     return pivot;
   };
   // Two roaming civil-defence searchlights on the Midtown and Old Gotham rooftops.
-  addBeam(420, 70, 260, 0xbfd6ff, 0.9, 900, 8, 0, 0.11);
-  addBeam(-620, 58, 540, 0xbfd6ff, 0.8, 800, 7, 2.1, -0.09);
+  addBeam(420, 70, 260, 0xbfd6ff, 0.18, 900, 8, 0, 0.11);
+  addBeam(-620, 58, 540, 0xbfd6ff, 0.16, 800, 7, 2.1, -0.09);
   // GCPD: the Bat-signal, steady, aimed high over the city.
-  const signal = addBeam(300, 62, -170, 0xf3e3b8, 1.2, 600, 9, 0, 0);
+  const signal = addBeam(300, 62, -170, 0xf3e3b8, 0.1, 640, 23, 0, 0);
   signal.rotation.set(-0.72, 0.35, 0);
   const emblem = new T.Mesh(
     new T.PlaneGeometry(210, 210),
@@ -87,7 +101,7 @@ export function createSkyline(scene) {
       transparent: true,
       depthWrite: false,
       blending: T.AdditiveBlending,
-      opacity: 0.85,
+      opacity: 0.48,
     }),
   );
   // Place the emblem where the beam meets the cloud base, facing back down it.
@@ -106,7 +120,7 @@ export function createSkyline(scene) {
           0,
         );
       }
-      emblem.material.opacity = 0.8 + Math.sin(t * 1.7) * 0.05;
+      emblem.material.opacity = 0.48 + Math.sin(t * 0.25) * 0.02;
     },
   };
 }

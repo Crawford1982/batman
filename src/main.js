@@ -141,8 +141,20 @@ createModelLoader().load(
       if (o.isMesh) {
         o.frustumCulled = false;
         if (o.material) {
-          o.material.envMapIntensity = 0.8;
-          if (o.material.metalness > 0.8) o.material.metalness = 0.65;
+          for (const material of Array.isArray(o.material) ? o.material : [o.material]) {
+            material.envMapIntensity = 0.65;
+            if (material.metalness > 0.8) material.metalness = 0.65;
+            // Broaden hull highlights while keeping canopy glass glossy.
+            if (material.metalness > 0.35 && !material.transparent) {
+              material.roughness = Math.max(material.roughness, 0.34);
+              material.onBeforeCompile = (shader) => {
+                shader.fragmentShader = shader.fragmentShader.replace(
+                  "#include <roughnessmap_fragment>",
+                  "#include <roughnessmap_fragment>\nroughnessFactor = max(roughnessFactor, 0.34);",
+                );
+              };
+            }
+          }
         }
       }
     });
