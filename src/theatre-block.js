@@ -1,5 +1,5 @@
 import * as T from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { createModelLoader } from './model-loader.js';
 
 // One curated block. Legacy frontages remain until every replacement is ready.
 export class TheatreBlock {
@@ -12,7 +12,7 @@ export class TheatreBlock {
   async load() {
     this.started = true;
     try {
-      const gltf = await new GLTFLoader().loadAsync(`${import.meta.env.BASE_URL}environment/theatre-kit.glb`);
+      const gltf = await createModelLoader().loadAsync(`${import.meta.env.BASE_URL}environment/theatre-kit.glb`);
       gltf.scene.updateMatrixWorld(true);
       const prepared = new Set();
       gltf.scene.traverse(o => { if (!o.isMesh) return;
