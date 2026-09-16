@@ -105,7 +105,7 @@ export class AudioSystem {
     this.voiceId = null;
     this.mix();
   }
-  async speak(id, onDone = null) {
+  async speak(id, onDone = null, caption = true) {
     this.stopVoice();
     const token = this.voiceToken;
     if (!this.enabled) return;
@@ -142,7 +142,7 @@ export class AudioSystem {
         if (token === this.voiceToken) onDone?.();
       }
     };
-    if (RADIO_LINES[id]) {
+    if (caption && RADIO_LINES[id]) {
       let caption = document.getElementById("radio-caption");
       if (!caption) {
         caption = document.createElement("div");
@@ -156,7 +156,7 @@ export class AudioSystem {
     this.mix();
     source.start();
   }
-  radioMessage(text) {
+  radioMessage(text, caption = true) {
     let id, reply;
     if (text.includes("The city is quiet")) id = "alfred-patrol";
     else if (text.includes("Attack source identified")) {
@@ -181,7 +181,9 @@ export class AudioSystem {
     // Repeated raids wait for the current transmission rather than cutting it off.
     if (id === "gordon-inbound" && this.voiceId) return;
     this.radioTimes[id] = now;
-    this.speak(id, reply ? () => this.speak(reply) : null);
+    // Captions are on by default; a caller that already shows the full text
+    // (see notice() in src/main.js) opts out, and its reply inherits that.
+    this.speak(id, reply ? () => this.speak(reply, null, caption) : null, caption);
   }
   ambientRadio(id) {
     const now = performance.now();

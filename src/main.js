@@ -22,6 +22,7 @@ import { Flight, clamp, insideBuilding, segmentDistance } from "./flight.js";
 import { createWorld } from "./world.js";
 import { AudioSystem, clockState } from "./audio.js";
 import { frameStep, FpsSampler, nextPixelRatio } from "./frame-clock.js";
+import { revealCancelled } from "./launch-reveal.js";
 import { createGradePass } from "./lighting.js";
 import "./style.css";
 const $ = (id) => document.getElementById(id);
@@ -114,7 +115,9 @@ const keys = {},
 let aircraft = null,
   removedNodes = [];
 function notice(text, duration = 4) {
-  audio.radioMessage(text);
+  // The full text is always this notice's presentation; the recorded clip is
+  // heard but must not paint a second, differently-worded #radio-caption.
+  audio.radioMessage(text, false);
   $("message").textContent = text;
   noticeTimer = duration;
   $("message").style.opacity = 1;
@@ -744,8 +747,8 @@ function update(dt, wallDt = dt) {
       .add(flight.position);
     if (launchTime < LAUNCH_REVEAL) {
       launchTime += dt;
-      if (Object.values(keys).some(Boolean) || mouse.active || touch.fire || touch.boost)
-        launchTime = LAUNCH_REVEAL;
+      // Any real input skips the reveal; see revealCancelled for the sources.
+      if (revealCancelled(keys, mouse.active, controls)) launchTime = LAUNCH_REVEAL;
       const p = Math.min(1, launchTime / LAUNCH_REVEAL);
       const ease = p * p * (3 - 2 * p);
       launchEye.copy(launchOffset).applyQuaternion(flight.quaternion).add(flight.position);
