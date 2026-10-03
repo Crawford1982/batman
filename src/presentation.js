@@ -17,6 +17,7 @@ export function clearPresentation() {
   $("chapter-card").hidden = true;
   $("chapter-results").hidden = true;
 }
+const TIME_LIMITS = { batwing: 600, batmobile: 300 };
 const clock = (seconds) =>
   `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
 export function showResults(chapter, win, seconds, score, health, detail) {
@@ -31,11 +32,10 @@ export function showResults(chapter, win, seconds, score, health, detail) {
   const bestText = best
     ? `BEST ${clock(best.time)} / ${best.score.toLocaleString()} PTS${improvement !== null ? ` · NEW BEST · −${delta}` : first ? " · FIRST COMPLETION" : ""}`
     : "Complete this chapter";
+  const limit = TIME_LIMITS[chapter];
   const timeText =
     clock(seconds) +
-    (win
-      ? ` · finished with ${clock(Math.max(0, (chapter === "batmobile" ? 300 : 600) - seconds))} remaining`
-      : "");
+    (win && limit ? ` · finished with ${clock(Math.max(0, limit - seconds))} remaining` : "");
   const panel = $("chapter-results");
   panel.replaceChildren();
   panel.hidden = false;
@@ -43,10 +43,10 @@ export function showResults(chapter, win, seconds, score, health, detail) {
     ["OPERATION", win ? "COMPLETE" : "INTERRUPTED"],
     ["TIME", timeText],
     ["SCORE", score.toLocaleString()],
-    ["ARMOR", Math.max(0, Math.round(health)) + "%"],
+    health === null ? null : ["ARMOR", Math.max(0, Math.round(health)) + "%"],
     ["FIELD REPORT", detail],
     ["PERSONAL BEST", bestText],
-  ]) {
+  ].filter(Boolean)) {
     const item = document.createElement("div"),
       l = document.createElement("small"),
       v = document.createElement("strong");
