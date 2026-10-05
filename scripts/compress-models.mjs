@@ -20,6 +20,7 @@ const MODELS = {
   batmobile: "src/models/batmobile.glb",
   predator: "src/models/predator.glb",
   theatre: "src/models/theatre-kit.glb",
+  operative: "src/models/operative.glb",
 };
 const MAX_TEXTURE = 1024;
 

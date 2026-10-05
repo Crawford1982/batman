@@ -28,3 +28,34 @@ export const RADIO_LINES = {
   "batman-air": ["BATMAN", "I'm on it, keep those people moving."],
   "batman-drive": ["BATMAN", "Hold on, Gordon, I'm bringing the override."],
 };
+
+// Chapter III, part two (Kessler rooftops). Text-only captions; no recordings
+// exist or are claimed for these lines, so they stay out of RADIO_LINES.
+export const ROOFTOP_LINES = {
+  briefing: [
+    "ALFRED",
+    "Kessler Cold Storage, sir. Three uplink dishes on these roofs still re-key the hijack carrier.",
+  ],
+  plan: ["BATMAN", "Dishes first. Then the flight log tells us who flew those aircraft."],
+  start: [
+    "ALFRED",
+    "Grapple across the gaps. Stay out of their sight lines; vents and plant rooms give cover.",
+  ],
+  uplink: ["ALFRED", "That dish has gone dark."],
+  uplinksDone: [
+    "ALFRED",
+    "The carrier is silent. The control hut's flight log should open for you now.",
+  ],
+  locked: ["ALFRED", "Still encrypted, sir. The dishes re-key it every few seconds."],
+  suspicious: ["ALFRED", "One of them is looking your way."],
+  alarm1: ["ALFRED", "They've seen you. Break line of sight and let them settle."],
+  alarm2: ["ALFRED", "One more alarm and they will purge everything, sir."],
+  takedown: ["ALFRED", "Stunned and restrained. He'll wake with a headache."],
+  logDone: [
+    "ALFRED",
+    "Log copied. The override signature belongs to Ines Varga, codename TOLLER. The Batwing is at the water tower.",
+  ],
+  won: ["BATMAN", "Varga built the override Wayne shelved. Now we know who rang the bell."],
+  lostAlarms: ["ALFRED", "They've wiped the servers. We've lost her trail, sir."],
+  lostTime: ["ALFRED", "The purge has finished, sir. The log is gone."],
+};

@@ -75,3 +75,11 @@ Mission countdowns use active wall-clock time; pause and hidden tabs pause the m
 City instances are spatially batched and distance-culled; Adaptive can reduce render resolution further on slow devices. This reduces submitted geometry but does not guarantee 60 FPS. Briefings retain captioned mission text and the original synthesized score.
 
 Car navigation warns before each junction, including on touch screens. Reset to road preserves distance along the current leg, health, score and the running clock.
+
+## Chapter III — The Signal / Kessler rooftops (prototype)
+
+The Batcave trace (CHAPTER III / BATCAVE) names Kessler Cold Storage; CONTINUE, or CHAPTER III · II / ROOFTOPS from the menu, starts the rooftop infiltration. Disable three uplink dishes, copy the flight log and reach the water tower before the six-minute purge, without raising three alarms. Guards are avoided or stunned from behind with the gauntlet EMP; there is no shooting.
+
+Controls: WASD move, Shift run, Space grapple to the highlighted roof, E (hold) to disable or copy, E behind a guard to stun, arrow keys or drag to turn the camera, Esc/P pause. Touch: left stick plus RUN / ACT / GRAPPLE. Controller: left stick, right stick X camera, A grapple, X act, RB/RT run, Start pause (simulated mapping, not hardware-tested).
+
+Character model: Quaternius "Animated Human", CC0; see public/characters/ASSET-NOTES.md. Tests: tests/rooftop.test.js (unit) and tests/rooftop.mjs (browser, needs the dev server).

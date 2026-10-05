@@ -17,7 +17,7 @@ export function clearPresentation() {
   $("chapter-card").hidden = true;
   $("chapter-results").hidden = true;
 }
-const TIME_LIMITS = { batwing: 600, batmobile: 300 };
+const TIME_LIMITS = { batwing: 600, batmobile: 300, rooftops: 360 };
 const clock = (seconds) =>
   `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
 export function showResults(chapter, win, seconds, score, health, detail) {

@@ -1,0 +1,288 @@
+#start-roof {
+  display: block;
+  margin-top: 10px;
+  width: 270px;
+  white-space: nowrap;
+  background: #0b1824b0;
+  border-color: #5a86b066;
+  color: #b9cad6;
+  text-align: left;
+  font-size: 11px;
+  padding: 13px 25px;
+}
+#start-roof small {
+  color: #7fb6e8;
+  font-size: 7px;
+  letter-spacing: 1px;
+  margin-left: 2px;
+}
+#roof-hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  padding: 25px 32px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#roof-hud header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+}
+#roof-pause,
+#roof-skip,
+#roof-touch > * {
+  pointer-events: auto;
+}
+#roof-pause {
+  padding: 8px 14px;
+  background: #10203080;
+  color: #c7d6df;
+  border-color: #677f9050;
+}
+#roof-hud.cinematic #roof-status,
+#roof-hud.cinematic .timer,
+#roof-hud.cinematic #roof-touch,
+#roof-hud.cinematic .roof-help,
+#roof-hud.cinematic #roof-prompt {
+  opacity: 0;
+  pointer-events: none;
+}
+#roof-hud .timer strong[data-clock-state="danger"] {
+  color: #ff624b;
+}
+#roof-status {
+  position: absolute;
+  left: 32px;
+  top: 92px;
+  width: 250px;
+  padding: 14px 16px;
+  background: linear-gradient(180deg, #04101cd0, #030a14e0);
+  border-left: 2px solid #5aa8ff;
+  font:
+    600 13px "Barlow Condensed",
+    sans-serif;
+  letter-spacing: 2px;
+  transition: opacity 0.5s;
+}
+#roof-objectives {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  color: #5d7487;
+}
+#roof-objectives li {
+  padding: 3px 0;
+}
+#roof-objectives li.active {
+  color: #9fd2ff;
+}
+#roof-objectives li.done {
+  color: #ddbc7b;
+  text-decoration: line-through;
+}
+#roof-objectives b {
+  float: right;
+}
+.roof-alarm-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #8ea3b5;
+}
+#roof-alarms i {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-left: 6px;
+  border: 1px solid #ff624b88;
+  transform: rotate(45deg);
+}
+#roof-alarms i.on {
+  background: #ff624b;
+}
+.roof-detect {
+  margin-top: 10px;
+  height: 4px;
+  background: #ffffff14;
+}
+.roof-detect i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: #d9e4ee;
+  transition: width 0.15s;
+}
+.roof-detect[data-state="suspicious"] i {
+  background: #ffc35a;
+}
+.roof-detect[data-state="alert"] i {
+  background: #ff4b3a;
+}
+#roof-prompt {
+  position: absolute;
+  left: 50%;
+  bottom: 110px;
+  transform: translateX(-50%);
+  min-width: 240px;
+  padding: 9px 18px 11px;
+  text-align: center;
+  background: #030a14d9;
+  border: 1px solid #edcf8755;
+  color: #edcf87;
+  font:
+    600 14px "Barlow Condensed",
+    sans-serif;
+  letter-spacing: 2px;
+}
+#roof-prompt i {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 0;
+  background: #edcf87;
+}
+#roof-radio {
+  position: absolute;
+  left: 32px;
+  bottom: 30px;
+  max-width: min(560px, calc(100vw - 64px));
+  font-size: 14px;
+  line-height: 1.6;
+  color: #e6edf2;
+  text-shadow: 0 2px 10px #000;
+}
+#roof-radio:not(:empty) {
+  padding: 12px 16px;
+  background: #030a14d9;
+  border-left: 2px solid #ddbc7b;
+}
+.roof-help {
+  position: absolute;
+  right: 32px;
+  bottom: 30px;
+  color: #8ea3b5aa;
+  font-size: 11px;
+  letter-spacing: 1px;
+}
+#roof-skip {
+  position: absolute;
+  right: 32px;
+  bottom: 28px;
+  padding: 11px 22px;
+  background: #0b1a2acc;
+  border-color: #ddbc7b88;
+  color: #edcf87;
+}
+#roof-touch {
+  display: none;
+}
+@media (pointer: coarse) {
+  .roof-help {
+    display: none;
+  }
+  #roof-touch {
+    display: block;
+  }
+  #roof-stick {
+    position: absolute;
+    left: 28px;
+    bottom: 96px;
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    border: 1px solid #9fd2ff55;
+    background: #04101c66;
+    touch-action: none;
+  }
+  #roof-stick i {
+    position: absolute;
+    left: 35px;
+    top: 35px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #9fd2ff55;
+  }
+  .roof-buttons {
+    position: absolute;
+    right: 24px;
+    bottom: 96px;
+    display: flex;
+    gap: 10px;
+  }
+  .roof-buttons button {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    padding: 0;
+    font-size: 10px;
+    touch-action: none;
+    background: #0b1a2acc;
+    border-color: #9fd2ff66;
+    color: #c7d6df;
+  }
+  #roof-grapple {
+    border-color: #edcf87aa;
+    color: #edcf87;
+  }
+}
+
+@media (max-width: 760px), (max-height: 500px) {
+  #roof-hud {
+    padding: 12px 14px;
+  }
+  #roof-hud .brand {
+    font-size: 16px;
+  }
+  #roof-hud .brand small {
+    display: none;
+  }
+  #roof-hud .timer {
+    left: auto;
+    right: 72px;
+    transform: none;
+    text-align: right;
+  }
+  #roof-hud .timer strong {
+    font-size: 24px;
+  }
+  #roof-status {
+    left: 14px;
+    top: 56px;
+    width: 200px;
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+  #roof-prompt {
+    bottom: 70px;
+    font-size: 12px;
+  }
+  #roof-radio {
+    left: 14px;
+    right: 14px;
+    bottom: 10px;
+    max-width: none;
+    font-size: 12px;
+  }
+  #roof-radio:not(:empty) {
+    padding: 8px 12px;
+  }
+  #roof-skip {
+    right: 14px;
+    bottom: auto;
+    top: 58px;
+  }
+  #roof-stick,
+  .roof-buttons {
+    bottom: 60px;
+  }
+  #start-roof {
+    width: auto;
+    min-width: 270px;
+    padding: 10px 20px;
+    font-size: 9px;
+    margin-top: 7px;
+  }
+}

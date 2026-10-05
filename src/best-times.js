@@ -12,7 +12,7 @@ export function recordBest(storage, chapter, seconds, score, win) {
     const saved = JSON.parse(storage?.getItem(KEY));
     if (saved && typeof saved === "object" && !Array.isArray(saved)) records = saved;
   } catch {}
-  if (!["batwing", "batmobile", "batcave"].includes(chapter))
+  if (!["batwing", "batmobile", "batcave", "rooftops"].includes(chapter))
     return { best: null, improvement: null };
   let previous = valid(records[chapter]) ? records[chapter] : null;
   if (!previous) {

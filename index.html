@@ -74,6 +74,7 @@
         <button id="start" disabled>INITIALIZING AIRCRAFT…</button
         ><button id="start-ground">CHAPTER II / BATMOBILE →</button
         ><button id="start-cave">CHAPTER III / BATCAVE <small>PROTOTYPE</small> →</button
+        ><button id="start-roof">CHAPTER III · II / ROOFTOPS <small>PROTOTYPE</small> →</button
         ><button id="controls">FLIGHT MANUAL <span>↗</span></button>
         <a class="trailer-link" href="./trailer/">WATCH THE TRAILER · 22 SECONDS ↗</a>
         <div class="settings">
@@ -275,6 +276,41 @@
       </div>
       <div id="cave-radio" aria-live="polite"></div>
       <button id="cave-skip" type="button" hidden>SKIP &rarr;</button>
+    </section>
+    <section id="roof-hud" hidden aria-label="Kessler rooftops">
+      <header class="roof-top">
+        <div class="brand">KESSLER ROOFTOPS <small>CHAPTER III / PART TWO</small></div>
+        <div class="timer">
+          <small>PURGE IN</small><strong id="roof-time" data-clock-state="normal">6:00</strong>
+        </div>
+        <button id="roof-pause" aria-label="Pause game">Ⅱ</button>
+      </header>
+      <aside id="roof-status">
+        <ol id="roof-objectives">
+          <li class="active">DISABLE UPLINKS <b>0/3</b></li>
+          <li>COPY THE FLIGHT LOG</li>
+          <li>EXTRACT AT THE WATER TOWER</li>
+        </ol>
+        <div class="roof-alarm-row">
+          <small>ALARMS</small>
+          <span id="roof-alarms"><i></i><i></i><i></i></span>
+        </div>
+        <div class="roof-detect" data-state="hidden"><i id="roof-detect"></i></div>
+      </aside>
+      <div id="roof-prompt" hidden><span></span><i></i></div>
+      <div id="roof-radio" aria-live="polite"></div>
+      <small class="roof-help"
+        >WASD move · Shift run · Space grapple · E act · ← → or drag to look</small
+      >
+      <div id="roof-touch">
+        <div id="roof-stick"><i></i></div>
+        <div class="roof-buttons">
+          <button id="roof-run" type="button">RUN</button
+          ><button id="roof-act" type="button">ACT</button
+          ><button id="roof-grapple" type="button">GRAPPLE</button>
+        </div>
+      </div>
+      <button id="roof-skip" type="button" hidden>SKIP &rarr;</button>
     </section>
     <div id="chapter-card" hidden aria-live="polite"><small></small><strong></strong></div>
     <div id="error" hidden></div>
