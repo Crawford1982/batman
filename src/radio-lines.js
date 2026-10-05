@@ -48,8 +48,16 @@ export const ROOFTOP_LINES = {
   ],
   locked: ["ALFRED", "Still encrypted, sir. The dishes re-key it every few seconds."],
   suspicious: ["ALFRED", "One of them is looking your way."],
-  alarm1: ["ALFRED", "They've seen you. Break line of sight and let them settle."],
-  alarm2: ["ALFRED", "One more alarm and they will purge everything, sir."],
+  alarm1: [
+    "ALFRED",
+    "They've seen you, and TOLLER has sped up the purge. Break line of sight and let them settle.",
+  ],
+  alarm2: [
+    "ALFRED",
+    "The purge is accelerating. One more alarm and they will wipe everything, sir.",
+  ],
+  heard: ["ALFRED", "He heard your footsteps, sir. Walk when they're close."],
+  jammed: ["ALFRED", "Not with a guard on alert up there. He'd see it go dark. Lose him first."],
   takedown: ["ALFRED", "Stunned and restrained. He'll wake with a headache."],
   logDone: [
     "ALFRED",

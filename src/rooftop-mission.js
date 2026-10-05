@@ -11,20 +11,30 @@ export const VISION_HALF_ANGLE = (45 * Math.PI) / 180;
 export const VISION_MAX_DY = 4;
 export const GRAPPLE_RANGE = 34;
 export const GRAPPLE_HALF_ANGLE = (55 * Math.PI) / 180;
-export const TAKEDOWN_RANGE = 1.9;
+export const TAKEDOWN_RANGE = 2.6;
 export const INTERACT_RANGE = 2.4;
 export const PLAYER_RADIUS = 0.4;
 export const WALK_SPEED = 3.2;
 export const RUN_SPEED = 6.2;
 export const GUARD_SPEED = 1.5;
-export const GUARD_ALERT_SPEED = 3.4;
+// Below WALK_SPEED, so walking out of sight always shakes an alerted guard.
+export const GUARD_ALERT_SPEED = 2.8;
 export const GUARD_TURN_RATE = 3;
 export const SUSPICION_DECAY = 0.35;
 export const ALERT_HOLD = 5;
 export const SEARCH_TIME = 6;
 export const RADIO_RADIUS = 30;
 export const MAX_ALARMS = 3;
-export const TIME_LIMIT = 360;
+export const TIME_LIMIT = 240;
+// Each alarm makes TOLLER speed up the server purge.
+export const ALARM_TIME_PENALTY = 30;
+// A running player is heard within this radius; the guard turns to look.
+export const NOISE_RADIUS = 8;
+// Sightings this soon after an alarm belong to the same blunder: guards go
+// alert but the alarm count and the purge clock are left alone.
+export const ALARM_COOLDOWN = 6;
+// Being seen while running fills the suspicion meter faster.
+export const RUN_VISIBILITY = 1.5;
 export const HACK_SECONDS = 1.6;
 export const LOG_SECONDS = 3;
 // After a grapple landing, suspicion builds at a quarter rate for this long,
@@ -226,6 +236,8 @@ export class RooftopMission {
     this.outcome = null;
     this.reason = "";
     this.alarms = 0;
+    this.penalty = 0;
+    this.lastAlarm = -Infinity;
     this.takedowns = 0;
     this.events = [];
     this.actWas = false;
@@ -236,6 +248,7 @@ export class RooftopMission {
       facing: s.facing,
       zip: null,
       moving: 0,
+      noisy: false,
       grace: 0,
     };
     this.uplinks = L.uplinks.map((u) => ({ ...u, done: false, progress: 0 }));
@@ -276,6 +289,25 @@ export class RooftopMission {
     this.events = [];
     return e;
   }
+  timeLeft() {
+    return TIME_LIMIT - this.time - this.penalty;
+  }
+  // An alerted guard on the player's roof jams uplink and terminal work.
+  jammer() {
+    const p = this.player;
+    return p.zip ? null : this.guards.find((g) => g.state === "alert" && g.roof === p.roof) || null;
+  }
+  // Would an awake guard see the player land at this grapple target?
+  landingWatched(target) {
+    if (!target) return false;
+    const h = this.roof(target.roof).h;
+    return this.guards.some(
+      (g) =>
+        g.state !== "down" &&
+        g.roof === target.roof &&
+        canSee(g, h, target, h, this.layout.occluders),
+    );
+  }
   get uplinksDown() {
     return this.uplinks.filter((u) => u.done).length;
   }
@@ -285,11 +317,17 @@ export class RooftopMission {
     if (p.zip || this.phase !== "play") return null;
     const guard = this.guards.find((g) => canTakedown(p, g));
     if (guard) return { kind: "takedown", guard };
-    const near = (o) => o.roof === p.roof && Math.hypot(o.x - p.x, o.z - p.z) <= INTERACT_RANGE;
+    const near = (o) => o.roof === p.roof && Math.hypot(o.x - p.x, o.z - p.z) <= INTERACT_RANGE,
+      jammed = !!this.jammer();
     const uplink = this.uplinks.find((u) => !u.done && near(u));
-    if (uplink) return { kind: "uplink", target: uplink };
+    if (uplink) return { kind: "uplink", target: uplink, jammed };
     if (!this.terminal.done && near(this.terminal))
-      return { kind: "terminal", target: this.terminal, locked: this.stage === "uplinks" };
+      return {
+        kind: "terminal",
+        target: this.terminal,
+        locked: this.stage === "uplinks",
+        jammed,
+      };
     return null;
   }
 
@@ -305,6 +343,7 @@ export class RooftopMission {
   updatePlayer(dt, input) {
     const p = this.player;
     p.grace = Math.max(0, p.grace - dt);
+    p.noisy = false;
     if (p.zip) {
       p.zip.t += dt;
       const k = p.zip.t / p.zip.duration,
@@ -344,6 +383,7 @@ export class RooftopMission {
     const move = input.move || { x: 0, z: 0 },
       mag = Math.min(1, Math.hypot(move.x, move.z));
     p.moving = mag;
+    p.noisy = !!input.run && mag > 0.05;
     if (mag > 0.05) {
       const speed = (input.run ? RUN_SPEED : WALK_SPEED) * mag;
       p.facing = Math.atan2(move.z, move.x);
@@ -353,11 +393,10 @@ export class RooftopMission {
       pressed = act && !this.actWas;
     this.actWas = act;
     const action = this.actionAt();
-    if (!action || !act || mag > 0.05) {
+    // Takedowns land on the move (you chase a guard from behind); hacking
+    // needs the player to stand still.
+    if (action?.kind === "takedown") {
       this.resetProgress();
-      return;
-    }
-    if (action.kind === "takedown") {
       if (!pressed) return;
       action.guard.state = "down";
       action.guard.suspicion = 0;
@@ -365,8 +404,17 @@ export class RooftopMission {
       this.emit("takedown", { guard: action.guard.id });
       return;
     }
+    if (!action || !act || mag > 0.05) {
+      this.resetProgress();
+      return;
+    }
     if (action.kind === "terminal" && action.locked) {
       if (pressed) this.emit("terminal-locked");
+      return;
+    }
+    if (action.jammed) {
+      if (pressed) this.emit("jammed");
+      this.resetProgress();
       return;
     }
     const t = action.target,
@@ -447,8 +495,12 @@ export class RooftopMission {
   raiseAlarm(g) {
     g.state = "alert";
     g.timer = 0;
-    this.alarms++;
-    this.emit("alarm", { guard: g.id, alarms: this.alarms });
+    if (this.time - this.lastAlarm >= ALARM_COOLDOWN) {
+      this.alarms++;
+      this.penalty += ALARM_TIME_PENALTY;
+      this.lastAlarm = this.time;
+      this.emit("alarm", { guard: g.id, alarms: this.alarms, penalty: ALARM_TIME_PENALTY });
+    }
     // Crew on the same roof, or within radio range, come looking.
     for (const other of this.guards) {
       if (other === g || other.state === "down" || other.state === "alert") continue;
@@ -469,11 +521,22 @@ export class RooftopMission {
       // Guards watch their own roof; a zip counts once it is about to land there.
       onRoof = p.zip ? p.zip.roof === g.roof && p.zip.t / p.zip.duration > 0.7 : p.roof === g.roof,
       seen = onRoof && canSee(g, this.roof(g.roof).h, p, this.playerY(), this.layout.occluders),
-      dist = Math.hypot(p.x - g.x, p.z - g.z);
+      dist = Math.hypot(p.x - g.x, p.z - g.z),
+      heard = !seen && onRoof && p.noisy && dist <= NOISE_RADIUS;
     if (seen) {
       g.lastSeen = { x: p.x, z: p.z };
-      g.suspicion = Math.min(1, g.suspicion + suspicionRate(dist) * (p.grace > 0 ? 0.25 : 1) * dt);
+      const rate = suspicionRate(dist) * (p.grace > 0 ? 0.25 : 1) * (p.noisy ? RUN_VISIBILITY : 1);
+      g.suspicion = Math.min(1, g.suspicion + rate * dt);
     } else if (g.state !== "alert") g.suspicion = Math.max(0, g.suspicion - SUSPICION_DECAY * dt);
+    // Footsteps: the guard turns toward the sound but noise alone never fills the meter.
+    if (heard && g.state !== "alert") {
+      g.lastSeen = { x: p.x, z: p.z };
+      if (g.state !== "search") g.suspicion = Math.max(g.suspicion, 0.35);
+      if (g.state === "patrol") {
+        g.state = "suspicious";
+        this.emit("heard", { guard: g.id });
+      }
+    }
 
     switch (g.state) {
       case "patrol": {
@@ -549,7 +612,7 @@ export class RooftopMission {
   checkOutcome() {
     if (this.alarms >= MAX_ALARMS)
       return this.end("lost", "TOLLER heard the alarms and purged the servers.");
-    if (this.time >= TIME_LIMIT)
+    if (this.timeLeft() <= 0)
       return this.end("lost", "The purge finished before you reached the log.");
     const p = this.player,
       x = this.layout.extraction;

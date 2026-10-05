@@ -10,6 +10,10 @@ import {
   VISION_RANGE,
   ALERT_HOLD,
   SEARCH_TIME,
+  ALARM_TIME_PENALTY,
+  NOISE_RADIUS,
+  HACK_SECONDS,
+  ALARM_COOLDOWN,
   canSee,
   canTakedown,
   grappleTarget,
@@ -237,6 +241,7 @@ test("three alarms or the clock running out lose the mission", () => {
   const m = withGuards("g1");
   const g = m.guards[0];
   for (let i = 0; i < MAX_ALARMS; i++) {
+    m.lastAlarm = -Infinity; // separate blunders, not one encounter
     g.state = "patrol";
     g.suspicion = 0;
     g.facing = 0;
@@ -305,4 +310,96 @@ test("a grapple landing gets a short grace before suspicion builds at full rate"
   run(m, LANDING_GRACE * 0.8);
   assert.ok(g.state !== "alert", "no instant alarm on landing");
   assert.ok(g.suspicion - graced < 0.5);
+});
+
+test("each alarm takes time off the purge clock", () => {
+  const m = withGuards("g1");
+  const g = m.guards[0];
+  place(m, "laundry", g.x + 5, g.z);
+  g.facing = 0;
+  run(m, 2.5);
+  assert.equal(m.alarms, 1);
+  assert.ok(Math.abs(m.timeLeft() - (TIME_LIMIT - m.time - ALARM_TIME_PENALTY)) < 1e-9);
+  const late = withGuards();
+  late.penalty = TIME_LIMIT - 1;
+  run(late, 1.1);
+  assert.equal(late.outcome, "lost", "penalties bring the purge forward");
+});
+
+test("an alerted guard on the player's roof jams uplink work until it stands down", () => {
+  const m = withGuards("g1");
+  const g = m.guards[0];
+  const u = m.uplinks.find((x) => x.roof === "laundry");
+  place(m, "laundry", u.x, u.z + 1);
+  Object.assign(g, { state: "alert", x: u.x - 6, z: u.z + 1, facing: Math.PI, wait: 99 });
+  assert.ok(m.actionAt().jammed);
+  m.update(DT, { act: true });
+  assert.ok(m.drainEvents().some((e) => e.type === "jammed"));
+  run(m, HACK_SECONDS + 0.5, { act: true });
+  assert.equal(u.done, false, "no hacking under an alerted guard");
+  g.state = "down";
+  assert.ok(!m.actionAt().jammed);
+  run(m, HACK_SECONDS + 0.2, { act: true });
+  assert.equal(u.done, true);
+});
+
+test("running near a guard is heard and turns it; walking past is not", () => {
+  const setup = () => {
+    const m = withGuards("g1");
+    const g = m.guards[0];
+    Object.assign(g, { x: 30, z: -6, facing: Math.PI, wait: 99 });
+    // Behind the guard, inside earshot, moving sideways.
+    place(m, "laundry", 30 + NOISE_RADIUS - 2, -6);
+    return [m, g];
+  };
+  const [walker, wg] = setup();
+  run(walker, 0.5, { move: { x: 0, z: 1 } });
+  assert.equal(wg.state, "patrol", "walking is quiet");
+  const [runner, rg] = setup();
+  runner.update(DT, { move: { x: 0, z: 1 }, run: true });
+  assert.equal(rg.state, "suspicious");
+  assert.ok(runner.drainEvents().some((e) => e.type === "heard"));
+  const before = Math.abs(rg.facing);
+  run(runner, 0.4);
+  assert.ok(Math.abs(rg.facing) < before, "turns toward the footsteps");
+  assert.equal(runner.alarms, 0, "noise alone never raises the alarm");
+});
+
+test("a takedown lands while the player is still moving in behind the guard", () => {
+  const m = withGuards("g1");
+  const g = m.guards[0];
+  Object.assign(g, { facing: 0, wait: 99 });
+  place(m, "laundry", g.x - 2, g.z);
+  m.update(DT, { move: { x: 1, z: 0 }, act: true });
+  assert.equal(g.state, "down");
+  assert.equal(m.takedowns, 1);
+});
+
+test("a grapple landing inside an awake guard's view is flagged as watched", () => {
+  const m = withGuards("g1");
+  const g = m.guards[0];
+  const target = { roof: "laundry", x: 30, z: -6 };
+  Object.assign(g, { x: 36, z: -6, facing: Math.PI });
+  assert.ok(m.landingWatched(target));
+  g.facing = 0;
+  assert.ok(!m.landingWatched(target), "looking away");
+  g.facing = Math.PI;
+  g.state = "down";
+  assert.ok(!m.landingWatched(target), "stunned guards see nothing");
+  assert.ok(!m.landingWatched(null));
+});
+
+test("a second guard spotting you right after an alarm does not count as another alarm", () => {
+  const m = withGuards("g3", "g4");
+  const [g3, g4] = m.guards;
+  place(m, "kessler", g3.x + 5, g3.z);
+  g3.facing = 0;
+  run(m, 2.5);
+  assert.equal(m.alarms, 1);
+  // g4 comes round and sees the player inside the cooldown.
+  Object.assign(g4, { x: m.player.x + 5, z: m.player.z, facing: Math.PI, state: "search" });
+  run(m, 2);
+  assert.equal(g4.state, "alert");
+  assert.equal(m.alarms, 1);
+  assert.ok(m.time < ALARM_COOLDOWN);
 });

@@ -12,7 +12,7 @@ import {
   RooftopMission,
   ANTAGONIST,
   MAX_ALARMS,
-  TIME_LIMIT,
+  ALARM_TIME_PENALTY,
   VISION_RANGE,
   VISION_HALF_ANGLE,
   INTERACT_RANGE,
@@ -46,6 +46,8 @@ const CONE_COLORS = {
   alert: new T.Color(0xff2a1a),
 };
 // Moonlight direction shared with the city (world.js moonlight).
+const MARKER_CLEAR = new T.Color(1.4, 1.9, 2.4);
+const MARKER_WATCHED = new T.Color(2.6, 0.5, 0.35);
 const MOON_DIR = new T.Vector3(-520, 360, -700).normalize();
 
 function seeded(seed) {
@@ -299,6 +301,7 @@ export class RooftopLevel {
     this.glow = glowTexture("rgba(255,255,255,1)", "rgba(255,255,255,0.25)");
     this.buildMaterials();
     this.buildBlock();
+    this.buildStreets();
     this.buildProps();
     this.buildLights();
     this.buildCones();
@@ -327,6 +330,8 @@ export class RooftopLevel {
       paint: std({ color: 0xd9dde0, roughness: 0.35, metalness: 0.3, side: T.DoubleSide }),
       snow: std({ color: 0xc4ccd4, roughness: 0.95 }),
       duct: std({ color: 0xaeb5bc, roughness: 0.38, metalness: 0.75 }),
+      asphalt: std({ color: 0x23282e, roughness: 0.75, metalness: 0.05 }),
+      pavement: std({ color: 0x5d636a, roughness: 0.9 }),
     };
     installWindowShader(this.mats.kessler, { keepMap: true });
     installWindowShader(this.mats.brick, { keepMap: true });
@@ -353,7 +358,108 @@ export class RooftopLevel {
       ["duct", "corrugated_iron_02", 6],
       ["door", "rusty_metal_shutter", 1.2],
       ["wood", "roof_planks", 2],
+      ["asphalt", "bitumen", 3],
+      ["pavement", "rough_concrete", 1.5],
     ];
+  }
+
+  // Street level around the block: wet asphalt, kerbed pavements, low-rise
+  // infill filling the plots the generated towers left empty, and street lamps
+  // with painted light pools. All static, so bake() folds it into a few draws.
+  buildStreets() {
+    const b = this.block,
+      M = this.mats,
+      o = this.origin,
+      rand = seeded(1939),
+      area = { minX: -70, maxX: 200, minZ: -85, maxZ: 125 },
+      lots = [],
+      // Existing city towers and the mission block, in local metres.
+      taken = this.world.buildings.map((t) => ({
+        x: t.x - o.x,
+        z: t.z - o.z,
+        w: t.w,
+        d: t.d,
+      })),
+      clear = (x, z, w, d, gap) =>
+        !taken.some(
+          (t) => Math.abs(x - t.x) < (w + t.w) / 2 + gap && Math.abs(z - t.z) < (d + t.d) / 2 + gap,
+        );
+    const road = new T.Mesh(
+      worldBox(area.maxX - area.minX, 0.1, area.maxZ - area.minZ, 1),
+      M.asphalt,
+    );
+    road.position.set((area.minX + area.maxX) / 2, -0.05, (area.minZ + area.maxZ) / 2);
+    road.receiveShadow = true;
+    b.add(road);
+    // Plots on a 27 m grid; 19-22 m buildings leave 5-8 m streets between them.
+    for (let x = area.minX + 14; x < area.maxX - 10; x += 27)
+      for (let z = area.minZ + 14; z < area.maxZ - 10; z += 27) {
+        const w = 19 + rand() * 3,
+          d = 19 + rand() * 3;
+        if (!clear(x, z, w, d, 7)) continue;
+        // Low-rise next to the mission so Kessler's roofs stay the high ground.
+        const near = LAYOUT.roofs.some(
+            (r) => Math.abs(x - r.x) < r.w / 2 + 30 && Math.abs(z - r.z) < r.d / 2 + 30,
+          ),
+          h = near ? 7 + rand() * 6 : 12 + rand() * 22;
+        lots.push({ x, z, w, d, h });
+        taken.push({ x, z, w, d });
+      }
+    for (const l of lots) {
+      const body = new T.Mesh(worldBox(l.w, l.h, l.d, 1), [
+        M.brick,
+        M.brick,
+        M.snow,
+        M.brick,
+        M.brick,
+        M.brick,
+      ]);
+      body.position.set(l.x, l.h / 2, l.z);
+      body.receiveShadow = true;
+      const cornice = new T.Mesh(worldBox(l.w + 0.4, 0.45, l.d + 0.4, 1), M.concrete);
+      cornice.position.set(l.x, l.h - 0.3, l.z);
+      b.add(body, cornice);
+      this.world.buildings.push({ x: o.x + l.x, z: o.z + l.z, w: l.w, d: l.d, h: l.h + 2 });
+    }
+    // Kerbed pavement around every building on the block, with lamps at the corners.
+    const pole = new T.CylinderGeometry(0.08, 0.11, 6.4, 8),
+      arm = new T.BoxGeometry(1.3, 0.08, 0.08),
+      bulb = new T.MeshBasicMaterial({ color: new T.Color(3, 2.3, 1.5) }),
+      poolMat = new T.MeshBasicMaterial({
+        map: glowTexture("rgba(255,196,128,0.32)", "rgba(255,170,90,0.1)"),
+        transparent: true,
+        blending: T.AdditiveBlending,
+        depthWrite: false,
+      });
+    [...LAYOUT.roofs, ...lots].forEach((f, i) => {
+      // Staggered a few millimetres so overlapping kerbs never z-fight.
+      const top = 0.18 + i * 0.004,
+        walk = new T.Mesh(worldBox(f.w + 5, top, f.d + 5, 1), M.pavement);
+      walk.position.set(f.x, top / 2, f.z);
+      walk.receiveShadow = true;
+      b.add(walk);
+      for (const [sx, sz] of [
+        [-1, -1],
+        [1, -1],
+        [1, 1],
+        [-1, 1],
+      ]) {
+        if (rand() < 0.35) continue;
+        const x = f.x + sx * (f.w / 2 + 1.9),
+          z = f.z + sz * (f.d / 2 + 1.9),
+          post = new T.Mesh(pole, M.steel),
+          bar = new T.Mesh(arm, M.steel),
+          lamp = new T.Mesh(new T.SphereGeometry(0.14, 10, 8), bulb),
+          pool = new T.Mesh(new T.PlaneGeometry(11, 11), poolMat);
+        post.position.set(x, 3.2, z);
+        bar.position.set(x + sx * 0.6, 6.35, z);
+        lamp.position.set(x + sx * 1.15, 6.25, z);
+        pool.rotation.x = -Math.PI / 2;
+        pool.position.set(x + sx * 1.6, 0.06, z + sz * 0.8);
+        pool.renderOrder = 1;
+        b.add(post, bar, lamp, pool);
+      }
+    });
   }
 
   buildBlock() {
@@ -885,7 +991,11 @@ void main() {
               ? 0xb8c0c8
               : key === "bitumen"
                 ? 0xc4ccd6
-                : 0xffffff,
+                : key === "asphalt"
+                  ? 0x3c4249
+                  : key === "pavement"
+                    ? 0x9aa1a8
+                    : 0xffffff,
         );
         m.needsUpdate = true;
       }),
@@ -1154,7 +1264,10 @@ void main() {
     this.yaw = this.mission.player.facing;
     this.grapplePressed = this.actPressed = false;
     this.lastAlarmLine = 0;
+    this.lastHeardLine = 0;
+    this.penaltyFlash = 0;
     this.padStart = false;
+    for (const el of $("roof-threats").children) el.hidden = true;
     this.landTime = 0;
     this.sneakTime = 0;
     this.takedownAnim = 0;
@@ -1264,7 +1377,16 @@ void main() {
       } else if (e.type === "stage")
         this.radio(e.stage === "log" ? ROOFTOP_LINES.uplinksDone : ROOFTOP_LINES.logDone);
       else if (e.type === "terminal-locked") this.radio(ROOFTOP_LINES.locked);
-      else if (e.type === "takedown") {
+      else if (e.type === "jammed") {
+        this.chime([180, 150], "square");
+        this.radio(ROOFTOP_LINES.jammed);
+      } else if (e.type === "heard") {
+        this.chime([392], "sine");
+        if (performance.now() - this.lastHeardLine > 15000) {
+          this.lastHeardLine = performance.now();
+          this.radio(ROOFTOP_LINES.heard);
+        }
+      } else if (e.type === "takedown") {
         this.chime([220, 880], "square");
         this.radio(ROOFTOP_LINES.takedown);
         const i = m.guards.findIndex((g) => g.id === e.guard);
@@ -1279,6 +1401,7 @@ void main() {
         this.chime([440], "sine");
       } else if (e.type === "alarm") {
         this.lastAlarmLine = performance.now();
+        this.penaltyFlash = 2.5;
         this.audio.hit?.();
         this.chime([880, 660, 880, 660], "square");
         if (e.alarms < MAX_ALARMS)
@@ -1430,6 +1553,7 @@ void main() {
     if (target) {
       this.marker.position.set(target.x, roofH(target.roof) + 0.08, target.z);
       this.marker.scale.setScalar(1 + Math.sin(this.time * 5) * 0.08);
+      this.marker.material.color.copy(m.landingWatched(target) ? MARKER_WATCHED : MARKER_CLEAR);
     }
     this.target = target;
     this.line.visible = !!p.zip;
@@ -1490,8 +1614,10 @@ void main() {
 
   updateHud() {
     const m = this.mission;
-    $("roof-time").textContent = clock(Math.max(0, TIME_LIMIT - m.time));
-    $("roof-time").dataset.clockState = TIME_LIMIT - m.time < 60 ? "danger" : "normal";
+    $("roof-time").textContent = clock(Math.max(0, m.timeLeft()));
+    $("roof-time").dataset.clockState = m.timeLeft() < 60 ? "danger" : "normal";
+    $("roof-penalty").textContent = `−${clock(ALARM_TIME_PENALTY)}`;
+    $("roof-penalty").hidden = !(this.penaltyFlash > 0);
     const items = $("roof-objectives").children;
     items[0].querySelector("b").textContent = `${m.uplinksDown}/3`;
     items[0].classList.toggle("done", m.stage !== "uplinks");
@@ -1518,6 +1644,7 @@ void main() {
     let text = "",
       progress = 0;
     if (action?.kind === "takedown") text = `${act} · EMP TAKEDOWN`;
+    else if (action?.jammed && !action.locked) text = "GUARD ON ALERT · LOSE HIM FIRST";
     else if (action?.kind === "uplink") {
       text = `HOLD ${act} · DISABLE UPLINK`;
       progress = action.target.progress;
@@ -1526,10 +1653,44 @@ void main() {
         ? "LOG ENCRYPTED · DISABLE THE UPLINKS"
         : `HOLD ${act} · COPY FLIGHT LOG`;
       progress = action.target.progress;
-    } else if (this.target) text = `${jump} → ${m.roof(this.target.roof).name}`;
+    } else if (this.target)
+      text = `${jump} → ${m.roof(this.target.roof).name}${m.landingWatched(this.target) ? " · WATCHED" : ""}`;
     prompt.querySelector("span").textContent = text;
     prompt.querySelector("i").style.width = Math.round(progress * 100) + "%";
     prompt.hidden = !text;
+    prompt.dataset.state =
+      (action?.jammed && !action.locked) || (!action && m.landingWatched(this.target))
+        ? "blocked"
+        : "normal";
+  }
+
+  // Edge arrows toward guards who are watching the player but are off screen.
+  updateThreats() {
+    const m = this.mission,
+      box = $("roof-threats");
+    while (box.children.length < m.guards.length) box.appendChild(document.createElement("i"));
+    this.camera.updateMatrixWorld();
+    const v = new T.Vector3();
+    m.guards.forEach((g, i) => {
+      const el = box.children[i],
+        watching = g.state === "alert" || (g.state === "suspicious" && g.suspicion > 0);
+      if (!watching || this.phase !== "play") return (el.hidden = true);
+      v.set(this.origin.x + g.x, m.roof(g.roof).h + 1.6, this.origin.z + g.z).project(this.camera);
+      const behind = v.z > 1;
+      if (!behind && Math.abs(v.x) < 0.92 && Math.abs(v.y) < 0.88) return (el.hidden = true);
+      let x = behind ? -v.x : v.x,
+        y = behind ? -v.y : v.y;
+      if (behind && Math.hypot(x, y) < 1e-3) y = -1;
+      // Push the direction out to an inset rectangle around the screen edge.
+      const k = 0.9 / Math.max(Math.abs(x), Math.abs(y) / 0.85);
+      x *= k;
+      y *= k;
+      el.hidden = false;
+      el.dataset.state = g.state === "alert" ? "alert" : "suspicious";
+      el.style.left = `${(x * 0.5 + 0.5) * 100}%`;
+      el.style.top = `${(0.5 - y * 0.5) * 100}%`;
+      el.style.transform = `translate(-50%, -50%) rotate(${Math.atan2(-y, x)}rad)`;
+    });
   }
 
   // Third-person boom behind the player, eased; k = 1 snaps.
@@ -1578,6 +1739,7 @@ void main() {
       this.yaw += input.turn * 2.2 * step;
       m.update(step, input);
       this.handleEvents();
+      this.penaltyFlash = Math.max(0, this.penaltyFlash - step);
       this.updateHud();
       if (m.phase === "ended") this.phase = "ending";
     } else if (this.phase === "ending") {
@@ -1588,5 +1750,6 @@ void main() {
       this.sync(this.phase === "ended" ? 0 : step);
       this.placeCamera(1 - Math.exp(-step * (p.zip ? 5 : 8)));
     }
+    this.updateThreats();
   }
 }
