@@ -1,6 +1,8 @@
 import { chapterCard, clearPresentation, showResults } from "./presentation.js";
 import { updateEnemy } from "./enemy-ai.js";
 import { GroundLevel } from "./ground-level.js";
+import { CaveLevel } from "./cave-level.js";
+import { RooftopLevel } from "./rooftop-level.js";
 import { ChapterHandover } from "./handover.js";
 import { PlayerFeedback } from "./feedback.js";
 import { modelProgress } from "./loading-progress.js";
@@ -52,7 +54,7 @@ let contextLost = false;
 $("game").addEventListener("webglcontextlost", (e) => {
   e.preventDefault();
   contextLost = true;
-  if (mode === "play" || mode === "drive") pause();
+  if (["play", "drive", "roof"].includes(mode)) pause();
   $("error").hidden = false;
   $("error").textContent =
     "Graphics paused. The browser reset WebGL; the game will resume when it is restored.";
@@ -72,7 +74,8 @@ const scene = new T.Scene(),
   flight = new Flight(),
   audio = new AudioSystem();
 const composer = new EffectComposer(renderer);
-composer.addPass(new RenderPass(scene, camera));
+const renderPass = new RenderPass(scene, camera);
+composer.addPass(renderPass);
 const bloom = new UnrealBloomPass(new T.Vector2(innerWidth, innerHeight), 0.4, 0.55, 0.75);
 composer.addPass(bloom);
 const grade = createGradePass();
@@ -281,6 +284,8 @@ function start() {
   audio.stopVoice();
   hitUntil = 0;
   ground.hide();
+  cave.hide();
+  roof.hide();
   $("next-level").hidden = true;
   if (!ready) return;
   for (const arr of [enemies, shots, particles]) while (arr.length) remove(arr, 0);
@@ -318,6 +323,14 @@ function start() {
   notice("ALFRED / The city is quiet. Get your bearings. Follow the gold heading marker.", 7);
 }
 function pause() {
+  if (mode.startsWith("roof")) {
+    roof.pause();
+    return;
+  }
+  if (mode.startsWith("cave")) {
+    cave.pause();
+    return;
+  }
   if (mode.startsWith("drive")) {
     ground.pause();
     return;
@@ -353,6 +366,7 @@ function finish(win, reason = "") {
     elapsed_seconds: elapsed,
     score,
   });
+  $("next-level").textContent = "CONTINUE / THE FINAL MILE →";
   $("next-level").hidden = !win;
   mode = "ended";
   $("pause-title").textContent = win ? "The night is yours." : "Signal lost.";
@@ -373,12 +387,21 @@ $("start").onclick = beginBriefing;
 $("skip-briefing").onclick = start;
 $("pause").onclick = pause;
 $("resume").onclick = pause;
-$("restart").onclick = () => (mode.startsWith("drive") ? ground.start() : start());
+$("restart").onclick = () =>
+  mode.startsWith("drive")
+    ? ground.start()
+    : mode.startsWith("cave")
+      ? cave.start()
+      : mode.startsWith("roof")
+        ? roof.start()
+        : start();
 $("exit").onclick = () => {
   handover.cancel();
   clearPresentation();
   audio.stopVoice();
   ground.hide();
+  cave.hide();
+  roof.hide();
   $("next-level").hidden = true;
   mode = "menu";
   player.visible = true;
@@ -423,11 +446,11 @@ addEventListener("blur", () => {
   mouse.fire = false;
   mouse.steering = false;
   for (const k in touch) touch[k] = typeof touch[k] === "boolean" ? false : 0;
-  if (mode === "play" || mode === "drive") pause();
+  if (mode === "play" || mode === "drive" || mode === "cave" || mode === "roof") pause();
 });
 document.addEventListener("visibilitychange", () => {
   if (audio.ctx) (document.hidden ? audio.ctx.suspend() : audio.ctx.resume()).catch(() => {});
-  if (document.hidden && (mode === "play" || mode === "drive")) pause();
+  if (document.hidden && ["play", "drive", "cave", "roof"].includes(mode)) pause();
 });
 $("game").addEventListener("pointermove", (e) => {
   if (e.pointerType === "mouse" && (mode === "play" || mode === "drive")) {
@@ -558,6 +581,8 @@ const ground = new GroundLevel({
   onExit: () => $("exit").click(),
 });
 function beginGround() {
+  cave.hide();
+  roof.hide();
   player.visible = false;
   for (const a of [enemies, shots, particles]) while (a.length) remove(a, 0);
   for (const r of mission.relays) r.mesh.visible = false;
@@ -569,7 +594,47 @@ function beginGround() {
   ground.begin();
 }
 $("start-ground").onclick = beginGround;
-$("next-level").onclick = beginGround;
+const cave = new CaveLevel({ camera, audio, keys, onMode: (value) => (mode = value) });
+function beginCave() {
+  handover.cancel();
+  ground.hide();
+  roof.hide();
+  player.visible = false;
+  for (const a of [enemies, shots, particles]) while (a.length) remove(a, 0);
+  $("menu").hidden = true;
+  $("hud").hidden = true;
+  $("briefing").hidden = true;
+  $("next-level").hidden = true;
+  cave.begin();
+}
+$("start-cave").onclick = beginCave;
+const roof = new RooftopLevel({
+  camera,
+  audio,
+  keys,
+  scene,
+  world,
+  renderer,
+  onMode: (value) => (mode = value),
+});
+function beginRoof() {
+  handover.cancel();
+  ground.hide();
+  cave.hide();
+  player.visible = false;
+  for (const a of [enemies, shots, particles]) while (a.length) remove(a, 0);
+  for (const r of mission.relays) r.mesh.visible = false;
+  for (const r of world.rings) r.visible = false;
+  $("menu").hidden = true;
+  $("hud").hidden = true;
+  $("briefing").hidden = true;
+  $("next-level").hidden = true;
+  roof.begin();
+}
+$("start-roof").onclick = beginRoof;
+// After the Batcave trace the same button continues to the Kessler rooftops.
+$("next-level").onclick = () =>
+  mode.startsWith("drive") ? beginCave() : mode.startsWith("cave") ? beginRoof() : beginGround();
 const handover = new ChapterHandover({
   ground,
   camera,
@@ -606,11 +671,25 @@ function update(dt, wallDt = dt) {
     const pressed = !!pad?.buttons[9]?.pressed;
     if (pressed && !handover.padPressed) handover.skip();
     handover.padPressed = pressed;
-    handover.update(Math.min(wallDt, 0.1));
+    // A timed cinematic: run on real time so slow devices are not held in it
+    // for minutes. Hidden tabs already pause it inside update().
+    handover.update(Math.min(wallDt, 0.5));
     return;
   }
   if (mode.startsWith("drive")) {
     ground.update(dt, wallDt);
+    return;
+  }
+  if (mode.startsWith("cave")) {
+    cave.update(dt, wallDt);
+    return;
+  }
+  if (mode.startsWith("roof")) {
+    roof.update(dt, wallDt);
+    // The rooftops are part of the city: keep its sky, snow, moon and grade alive.
+    world.update(dt, camera.position, t);
+    world.moon.position.copy(camera.position).add(new T.Vector3(500, 900, -2100));
+    grade.uniforms.time.value = t;
     return;
   }
   const controls = input();
@@ -869,12 +948,14 @@ function frame(now) {
   // render targets empty; drawing into them only spams GL errors.
   if (!innerWidth || !innerHeight || document.hidden || contextLost) return;
   renderer.info.reset();
-  if (low) renderer.render(scene, camera);
+  const activeScene = mode.startsWith("cave") ? cave.scene : scene;
+  renderPass.scene = activeScene;
+  if (low) renderer.render(activeScene, camera);
   else composer.render();
   const sample = sampler.push(wallDt, stalled);
   if (sample === null) return;
   fps = sample;
-  if ($("quality").value !== "auto" || !(mode === "play" || mode === "drive")) return;
+  if ($("quality").value !== "auto" || !["play", "drive", "cave", "roof"].includes(mode)) return;
   if (low) {
     const ratio = nextPixelRatio(renderer.getPixelRatio(), fps, {
       floor: 0.6,
@@ -925,6 +1006,11 @@ window.__batwing = {
       groundCheckpoint: ground.car.checkpoint,
       groundTime: ground.car.elapsed,
       groundPosition: ground.car.position.toArray(),
+      cavePhase: cave.phase,
+      caveStage: cave.stage,
+      roofPhase: roof.phase,
+      roofStage: roof.mission.stage,
+      roofModel: roof.modelState,
       contextLost,
     };
   },
@@ -947,12 +1033,18 @@ if (testMode)
     beginGround,
     handover,
     camera,
+    cave,
+    beginCave,
+    roof,
+    beginRoof,
   });
 
 function beginBriefing() {
   clearPresentation();
   audio.stopVoice();
   ground.hide();
+  cave.hide();
+  roof.hide();
   $("next-level").hidden = true;
   if (!ready) return;
   mode = "briefing";

@@ -18,6 +18,21 @@ export const RELAY_SITES = [
     z: 1050,
   },
 ];
+// Kessler Cold Storage (Chapter III rooftops) is a built block in The Narrows.
+// KESSLER_ORIGIN maps the rooftop mission's local metres into the city; its
+// Kessler roof centre lands on the Batcave trace's transmitter (cave-puzzles
+// ORIGIN). Random towers overlapping the block are dropped after generation.
+export const KESSLER_ORIGIN = { x: -1252, z: 806 };
+export const KESSLER_BOUNDS = { minX: -1270, maxX: -1098, minZ: 778, maxZ: 868 };
+export function overlapsKessler(b) {
+  const k = KESSLER_BOUNDS;
+  return (
+    b.x + b.w / 2 > k.minX - 6 &&
+    b.x - b.w / 2 < k.maxX + 6 &&
+    b.z + b.d / 2 > k.minZ - 6 &&
+    b.z - b.d / 2 < k.maxZ + 6
+  );
+}
 export function districtAt(x, z) {
   if (x > 850 && z > 300) return "TRICORNER DOCKS";
   if (x < -650 && z < -350) return "OLD GOTHAM";

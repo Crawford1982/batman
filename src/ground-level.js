@@ -73,7 +73,7 @@ export class GroundLevel {
     );
     document.body.insertAdjacentHTML(
       "beforeend",
-      `<section id="arrival-film" hidden aria-label="Mission complete"><div class="arrival-top">OPERATION SILENT BELL / GOTHAM CATHEDRAL</div><div class="arrival-copy"><small>GCPD / SECURE CHANNEL</small><h2>The city has a tomorrow.</h2><p>Override accepted. Heat restored.<br>Gordon’s people are safe inside.</p><button id="arrival-skip">VIEW MISSION RESULTS →</button></div></section>`,
+      `<section id="arrival-film" hidden aria-label="Grid threat cleared"><div class="arrival-top">OPERATION SILENT BELL / GOTHAM CATHEDRAL</div><div class="arrival-copy"><small>GCPD / SECURE CHANNEL</small><h2>The city has a tomorrow.</h2><p>Override accepted. Heat restored.<br>Gordon’s people are safe inside. One rogue carrier is still re-keying the hijack from the Narrows.</p><button id="arrival-skip">VIEW MISSION RESULTS →</button></div></section>`,
     );
     $("arrival-skip").onclick = () => this.endArrival();
     document
@@ -183,6 +183,7 @@ export class GroundLevel {
     this.exhaust.rotation.x = Math.PI / 2;
     this.exhaust.position.set(0, 0.65, 4.3);
     this.art.add(this.exhaust);
+    this.buildTailLights();
     this.pulse = new T.Mesh(
       new T.TorusGeometry(1, 0.006, 6, 64),
       new T.MeshBasicMaterial({
@@ -383,6 +384,13 @@ export class GroundLevel {
               scale.scale.setScalar(9 / Math.max(size.x, size.z));
               scale.rotation.y = heading;
               this.art.add(scale);
+              scale.updateMatrix();
+              this.fitTailLights(
+                new T.Box3(
+                  new T.Vector3(-size.x / 2, 0, -size.z / 2),
+                  new T.Vector3(size.x / 2, size.y, size.z / 2),
+                ).applyMatrix4(scale.matrix),
+              );
               model.traverse((o) => {
                 if (/^[FB][RL]_Wheel$/.test(o.name))
                   this.wheels.push({ mesh: o, rotation: o.rotation.x });
@@ -577,6 +585,7 @@ export class GroundLevel {
       this.car.score,
       this.car.health,
       `${this.car.checkpoint} / ${DRIVE_ROUTE.length} checkpoints · ${this.cleanSections} clean sections · ${this.evasions} evasions · ${this.countered} EMP counters`,
+      win ? "GRID RESTORED · SIGNAL ACTIVE" : undefined,
     );
     window.gothamAnalytics?.event("level_end", {
       level_name: "batmobile",
@@ -588,7 +597,7 @@ export class GroundLevel {
     this.onMode("driveEnded");
     $("pause-title").textContent = win ? "Gotham is back online." : "The override is lost.";
     $("pause-copy").textContent = win
-      ? `Gordon has the core. The drones are grounded. ${this.car.score} points · ${Math.floor(this.car.elapsed / 60)}m ${Math.floor(this.car.elapsed % 60)}s. The cathedral is safe. Operation Silent Bell complete.`
+      ? `Gordon has the override and the shelters are warm. ${this.car.score} points · ${Math.floor(this.car.elapsed / 60)}m ${Math.floor(this.car.elapsed % 60)}s. Alfred still hears a rogue carrier in the Narrows. Return to the Batcave and trace its source.`
       : this.car.health <= 0
         ? "The Batmobile is disabled. Use EMP against mines and marked drone strikes."
         : "The rogue network reconnected. Follow the route and use jet boost on the straights.";
@@ -629,6 +638,8 @@ export class GroundLevel {
     this.onMode("driveEnded");
     $("arrival-film").hidden = true;
     $("pause-menu").hidden = false;
+    $("next-level").textContent = "CONTINUE / THE SIGNAL →";
+    $("next-level").hidden = false;
   }
   radio(text) {
     this.audio.radioMessage(text);
@@ -878,6 +889,83 @@ export class GroundLevel {
     if (k.KeyF || this.mouse.fire) this.emp();
     return { steer, accel, brake, boost, drift };
   }
+  // Red running lights that flare under braking, white reversing lamps, and a
+  // red spill on the road behind. Placed on the model's rear once it loads.
+  buildTailLights() {
+    const lamp = (color) =>
+      new T.MeshBasicMaterial({ color, toneMapped: false, transparent: true, depthWrite: false });
+    this.tail = new T.Group();
+    this.tailLamps = [];
+    this.reverseLamps = [];
+    const glow = new T.CanvasTexture(
+      (() => {
+        const c = document.createElement("canvas");
+        c.width = c.height = 64;
+        const g = c.getContext("2d"),
+          r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+        r.addColorStop(0, "rgba(255,255,255,1)");
+        r.addColorStop(0.25, "rgba(255,255,255,0.45)");
+        r.addColorStop(1, "rgba(255,255,255,0)");
+        g.fillStyle = r;
+        g.fillRect(0, 0, 64, 64);
+        return c;
+      })(),
+    );
+    for (const side of [-1, 1]) {
+      const bar = new T.Mesh(new T.BoxGeometry(1, 1, 1), lamp(new T.Color(3.2, 0.12, 0.08)));
+      const halo = new T.Sprite(
+        new T.SpriteMaterial({
+          map: glow,
+          color: 0xff2a1a,
+          blending: T.AdditiveBlending,
+          depthWrite: false,
+          transparent: true,
+        }),
+      );
+      const reverse = new T.Mesh(new T.BoxGeometry(1, 1, 1), lamp(new T.Color(2.4, 2.4, 2.6)));
+      bar.userData.side = halo.userData.side = reverse.userData.side = side;
+      this.tailLamps.push({ bar, halo });
+      this.reverseLamps.push(reverse);
+      this.tail.add(bar, halo, reverse);
+    }
+    this.tailSpill = new T.PointLight(0xff2010, 0, 9, 2);
+    this.tail.add(this.tailSpill);
+    this.tail.visible = false;
+    this.art.add(this.tail);
+    this.brakeGlow = 0;
+  }
+  fitTailLights(box) {
+    const w = box.max.x - box.min.x,
+      h = box.max.y - box.min.y,
+      z = box.max.z - 0.02,
+      y = box.min.y + h * 0.42;
+    for (const { bar, halo } of this.tailLamps) {
+      const x = bar.userData.side * w * 0.22;
+      bar.scale.set(w * 0.13, h * 0.06, 0.06);
+      bar.position.set(x, y, z);
+      halo.position.set(x, y, z + 0.12);
+    }
+    for (const r of this.reverseLamps) {
+      r.scale.set(w * 0.04, h * 0.045, 0.06);
+      r.position.set(r.userData.side * w * 0.11, y, z);
+    }
+    this.tailSpill.position.set(0, y, z + 1.2);
+    this.tail.visible = true;
+  }
+  updateTailLights(dt, input) {
+    if (!this.tail?.visible) return;
+    const braking = input.brake > 0 && this.car.speed > 0.5,
+      reversing = this.car.speed < -0.5;
+    this.brakeGlow += ((braking ? 1 : 0) - this.brakeGlow) * Math.min(1, dt * (braking ? 30 : 8));
+    const k = 0.35 + 0.65 * this.brakeGlow;
+    for (const { bar, halo } of this.tailLamps) {
+      bar.material.opacity = 0.55 + 0.45 * k;
+      halo.material.opacity = 0.35 + 0.65 * k;
+      halo.scale.setScalar(1.1 + 1.6 * k);
+    }
+    for (const r of this.reverseLamps) r.visible = reversing;
+    this.tailSpill.intensity = 2 + 14 * this.brakeGlow;
+  }
   update(dt, wallDt = dt) {
     if (this.phase === "arrival") {
       this.controls(); // Controller menu button can skip, just like Escape.
@@ -1094,6 +1182,7 @@ export class GroundLevel {
       p.mesh.visible = i === this.car.checkpoint;
       p.mesh.material.opacity = 0.5 + Math.sin(this.time * 3) * 0.25;
     });
+    this.updateTailLights(dt, input);
     this.exhaust.visible =
       this.phase === "play" && Math.abs(this.car.speed) > 8 && (input.accel > 0 || input.boost);
     this.exhaust.scale.y = input.boost ? 2 : 0.65;

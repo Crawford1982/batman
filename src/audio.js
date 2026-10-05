@@ -331,6 +331,91 @@ export class AudioSystem {
     o.start(t);
     o.stop(t + 0.07);
   }
+  // Filtered noise whose band sweeps from `from` to `to` Hz over `len` seconds.
+  sweep(len, from, to, gain, type = "bandpass", q = 1.2, at = this.ctx.currentTime) {
+    const s = this.ctx.createBufferSource(),
+      f = this.ctx.createBiquadFilter(),
+      g = this.ctx.createGain();
+    if (!this.noiseBuffer) {
+      this.noiseBuffer = this.ctx.createBuffer(1, this.ctx.sampleRate, this.ctx.sampleRate);
+      const d = this.noiseBuffer.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    }
+    s.buffer = this.noiseBuffer;
+    s.loop = true;
+    f.type = type;
+    f.Q.value = q;
+    f.frequency.setValueAtTime(from, at);
+    f.frequency.exponentialRampToValueAtTime(to, at + len);
+    g.gain.setValueAtTime(0.0001, at);
+    g.gain.exponentialRampToValueAtTime(gain, at + Math.min(0.06, len * 0.3));
+    g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+    s.connect(f);
+    f.connect(g);
+    g.connect(this.master);
+    s.onended = () => {
+      s.disconnect();
+      f.disconnect();
+      g.disconnect();
+    };
+    s.start(at);
+    s.stop(at + len + 0.05);
+  }
+  // Pitched blip with a frequency glide; the building block for the stingers.
+  glide(from, to, len, gain, type = "sine", at = this.ctx.currentTime) {
+    const o = this.ctx.createOscillator(),
+      g = this.ctx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(from, at);
+    o.frequency.exponentialRampToValueAtTime(to, at + len);
+    g.gain.setValueAtTime(gain, at);
+    g.gain.exponentialRampToValueAtTime(0.0001, at + len);
+    o.connect(g);
+    g.connect(this.master);
+    o.onended = () => {
+      o.disconnect();
+      g.disconnect();
+    };
+    o.start(at);
+    o.stop(at + len + 0.02);
+  }
+  // EMP takedown: electrical crack, a falling buzz and a body-weight thump.
+  zap() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.sweep(0.18, 6000, 1800, 0.22, "highpass", 0.7, t);
+    this.glide(1400, 90, 0.32, 0.06, "sawtooth", t);
+    this.glide(2600, 300, 0.12, 0.03, "square", t + 0.02);
+    this.glide(110, 42, 0.3, 0.16, "sine", t + 0.05);
+  }
+  // Grapple line and the air past the cowl.
+  whoosh(len = 0.8) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.glide(2400, 900, 0.14, 0.025, "triangle", t);
+    this.sweep(len, 300, 1600, 0.12, "bandpass", 0.9, t + 0.05);
+  }
+  thud(weight = 1) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.glide(95, 38, 0.22, 0.14 * weight, "sine", t);
+    this.sweep(0.12, 900, 200, 0.07 * weight, "lowpass", 0.7, t);
+  }
+  // Spotted: a hard low hit with a dissonant cluster on top.
+  alarm() {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.glide(70, 48, 0.9, 0.2, "sine", t);
+    for (const f of [311, 330, 466]) this.glide(f, f * 0.94, 0.7, 0.035, "sawtooth", t);
+    this.sweep(0.5, 3000, 400, 0.08, "lowpass", 0.7, t);
+  }
+  // A guard's attention snaps toward you.
+  notice(urgent = false) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.glide(urgent ? 520 : 440, urgent ? 700 : 560, 0.18, 0.05, "triangle", t);
+    this.glide(urgent ? 780 : 660, urgent ? 1040 : 830, 0.22, 0.03, "sine", t + 0.07);
+  }
   explosion() {
     if (!this.ctx) return;
     const t = this.ctx.currentTime,

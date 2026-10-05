@@ -73,6 +73,8 @@
         </p>
         <button id="start" disabled>INITIALIZING AIRCRAFT…</button
         ><button id="start-ground">CHAPTER II / BATMOBILE →</button
+        ><button id="start-cave">CHAPTER III / BATCAVE <small>PROTOTYPE</small> →</button
+        ><button id="start-roof">CHAPTER III · II / ROOFTOPS <small>PROTOTYPE</small> →</button
         ><button id="controls">FLIGHT MANUAL <span>↗</span></button>
         <a class="trailer-link" href="./trailer/">WATCH THE TRAILER · 22 SECONDS ↗</a>
         <div class="settings">
@@ -206,6 +208,116 @@
         ><button id="resume">RESUME FLIGHT</button><button id="restart">REPLAY CHAPTER</button
         ><button id="exit">RETURN TO HANGAR</button>
       </div>
+    </section>
+    <section id="cave-hud" hidden aria-label="Batcomputer">
+      <header class="cave-top">
+        <div class="brand">BATCOMPUTER <small>CHAPTER III / THE SIGNAL</small></div>
+        <div class="timer"><small>TRACE TIME</small><strong id="cave-time">0:00</strong></div>
+        <button id="cave-pause" aria-label="Pause game">Ⅱ</button>
+      </header>
+      <div id="cave-panel">
+        <ol class="cave-steps">
+          <li>01 TRACE</li>
+          <li>02 DECRYPT</li>
+          <li>03 IDENTIFY</li>
+        </ol>
+        <div class="cave-stage" data-stage="trace">
+          <h2>Triangulate the transmitter</h2>
+          <p>
+            Each relay from tonight still hears the rogue carrier. Turn every receiver until its
+            signal peaks and hold it there. The bearings cross at the source.
+          </p>
+          <canvas
+            id="cave-map"
+            width="560"
+            height="454"
+            role="img"
+            aria-label="Gotham map with three receivers and their bearing lines"
+          ></canvas>
+          <div class="cave-side">
+            <div id="cave-receivers"></div>
+            <div class="cave-rotate">
+              <button id="cave-left" type="button">◀ ROTATE</button
+              ><button id="cave-right" type="button">ROTATE ▶</button>
+            </div>
+            <small class="cave-help"
+              >A / D or ← → rotate · Shift fine · 1 2 3 select · drag on the map</small
+            >
+          </div>
+        </div>
+        <div class="cave-stage" data-stage="decrypt" hidden>
+          <h2>Lock the carrier</h2>
+          <p>Match the gold intercept with your receiver wave. Frequency first, then phase.</p>
+          <canvas
+            id="cave-wave"
+            width="560"
+            height="200"
+            role="img"
+            aria-label="Oscilloscope comparing the intercepted carrier with your tuned wave"
+          ></canvas>
+          <div class="cave-side">
+            <label>FREQUENCY <input id="cave-freq" type="range" step="0.01" /></label>
+            <label
+              >PHASE <input id="cave-phase" type="range" min="0" max="6.283" step="0.01"
+            /></label>
+            <div class="cave-match">CARRIER MATCH <b id="cave-match">0%</b></div>
+            <small class="cave-help">W / S frequency · A / D phase · Shift fine</small>
+          </div>
+        </div>
+        <div class="cave-stage" data-stage="identify" hidden>
+          <h2>Name the building</h2>
+          <p>
+            Two signatures were riding under the carrier. Only one building in The Narrows fits
+            both.
+          </p>
+          <ul id="cave-clues"></ul>
+          <div id="cave-suspects"></div>
+        </div>
+      </div>
+      <div id="cave-radio" aria-live="polite"></div>
+      <button id="cave-skip" type="button" hidden>SKIP &rarr;</button>
+    </section>
+    <section id="roof-hud" hidden aria-label="Kessler rooftops">
+      <header class="roof-top">
+        <div class="brand">KESSLER ROOFTOPS <small>CHAPTER III / PART TWO</small></div>
+        <div class="timer">
+          <small>PURGE IN</small><strong id="roof-time" data-clock-state="normal">4:00</strong>
+          <em id="roof-penalty" hidden>&minus;0:30</em>
+        </div>
+        <button id="roof-pause" aria-label="Pause game">Ⅱ</button>
+      </header>
+      <aside id="roof-status">
+        <ol id="roof-objectives">
+          <li class="active">DISABLE UPLINKS <b>0/3</b></li>
+          <li>COPY THE FLIGHT LOG</li>
+          <li>EXTRACT AT THE WATER TOWER</li>
+        </ol>
+        <div class="roof-alarm-row">
+          <small>ALARMS</small>
+          <span id="roof-alarms"><i></i><i></i><i></i></span>
+        </div>
+        <div class="roof-detect" data-state="hidden"><i id="roof-detect"></i></div>
+        <p id="roof-hint"></p>
+      </aside>
+      <div id="roof-beacons" aria-hidden="true"></div>
+      <div id="roof-threats" aria-hidden="true"></div>
+      <div id="roof-aware" aria-hidden="true"></div>
+      <div id="roof-flash" aria-hidden="true"></div>
+      <div id="roof-toast" hidden><small></small><strong></strong></div>
+      <div id="roof-prompt" hidden><span></span><i></i></div>
+      <div id="roof-radio" aria-live="polite"></div>
+      <small class="roof-help"
+        >WASD move · Shift run · Space grapple · E act · ← → or drag to look</small
+      >
+      <div id="roof-touch">
+        <div id="roof-stick"><i></i></div>
+        <div class="roof-buttons">
+          <button id="roof-run" type="button">RUN</button
+          ><button id="roof-act" type="button">ACT</button
+          ><button id="roof-grapple" type="button">GRAPPLE</button>
+        </div>
+      </div>
+      <button id="roof-skip" type="button" hidden>SKIP &rarr;</button>
     </section>
     <div id="chapter-card" hidden aria-live="polite"><small></small><strong></strong></div>
     <div id="error" hidden></div>

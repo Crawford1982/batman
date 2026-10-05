@@ -23,6 +23,10 @@ jobs:
   browser:
     runs-on: ubuntu-latest
     needs: verify
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [browser, ground, handover, cave, rooftop]
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v6
@@ -36,12 +40,10 @@ jobs:
       - name: Serve the production build
         run: npx vite preview --port 4173 --strictPort &
       - run: npx wait-on -t 30000 http://localhost:4173
-      - run: node tests/browser.mjs
-      - run: node tests/ground.mjs
-      - run: node tests/handover.mjs
+      - run: node tests/${{ matrix.suite }}.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: verification-screenshots
+          name: verification-screenshots-${{ matrix.suite }}
           path: verification/*.png
           if-no-files-found: ignore

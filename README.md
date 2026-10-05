@@ -75,3 +75,55 @@ Mission countdowns use active wall-clock time; pause and hidden tabs pause the m
 City instances are spatially batched and distance-culled; Adaptive can reduce render resolution further on slow devices. This reduces submitted geometry but does not guarantee 60 FPS. Briefings retain captioned mission text and the original synthesized score.
 
 Car navigation warns before each junction, including on touch screens. Reset to road preserves distance along the current leg, health, score and the running clock.
+
+## Chapter III — The Signal / Kessler rooftops (prototype)
+
+The Batcave trace (CHAPTER III / BATCAVE) names Kessler Cold Storage; CONTINUE, or CHAPTER III · II / ROOFTOPS from the menu, starts the rooftop infiltration. Disable three uplink dishes, copy the flight log and reach the water tower before the four-minute purge (each alarm costs 30 seconds), without raising three alarms. Guards are avoided or stunned from behind with the gauntlet EMP; there is no shooting.
+
+Controls: WASD move, Shift run, Space grapple to the highlighted roof, E (hold) to disable or copy, E behind a guard to stun, arrow keys or drag to turn the camera, Esc/P pause. Touch: left stick plus RUN / ACT / GRAPPLE. Controller: left stick, right stick X camera, A grapple, X act, RB/RT run, Start pause (simulated mapping, not hardware-tested).
+
+Character model: Quaternius "Animated Human", CC0; see public/characters/ASSET-NOTES.md. Tests: tests/rooftop.test.js (unit) and tests/rooftop.mjs (browser, needs the dev server).
+
+## Status and next steps — 5 October 2026
+
+Branch `chapter-3/rooftop-mission` (built on the unmerged Batcave branch `claude/adoring-meitner-s8m5t0`; a PR brings both).
+
+Done this session:
+
+- **CI fix.** The chapter handover cinematic ran on a 0.1 s frame clamp, so under CI's software rendering (~3 fps) its 8 seconds took ~45 and `tests/handover.mjs` timed out. It now runs on real time.
+- **Rooftop feel pass.** Guards who see a stunned colleague search the body (no alarm). Grapple landings are kept out of vents and plant rooms (you could land inside the Laundry Works vent). Awareness ring over each guard, red/amber screen-edge flashes, objective call-outs. Takedowns get a freeze-frame, slow-motion recovery, EMP shockwave, camera punch and a synthesized zap; new grapple, landing, alarm and notice sounds. The camera cranes over cover, then pulls in, when a hut blocks it.
+- **Batmobile tail lights.** The compressed model has no light meshes, so lamp bars with bloom halos sit on the rear: running glow, a bright flare and red road spill under braking, white reversing lamps.
+- Verified: 69 unit tests and the five browser suites (rooftop, cave, handover, browser, ground), plus desktop and phone-portrait screenshots.
+
+Review of the other levels:
+
+- **Batwing city is too generic.** Every tower is the same box with the same window grid and blue tone, and the street level is an empty dark grid. Highest value: a few building families with distinct roofs, some landmark towers, and lit streets with light traffic.
+- **Flight enemies are not convincing.** They are procedural primitives that read as a flat silhouette with two orange lights. Reuse the imported pursuit-drone model from Chapter II with darker armour and red optics.
+- **The Batcave needs depth.** The equipment is good but everything past the platform is black. Add layered cave walls and stalactites, mist, water below or a waterfall, and light shafts for scale.
+- **Rooftop fights** are acceptable after the feel pass; they still need a human playtest for balance (guard routes, spotting speed, the clock).
+
+Next, in order:
+
+1. **Voices for the Batcave and rooftops, owner approval needed.** Existing voices are vidIQ stock voices (Daniel as Alfred, Bill as Gordon, Brian as Batman), paid in credits per batch (about 14 each); see `public/voices/README.txt`. Reuse the same three voices for continuity. Rooftop lines are already written in `src/radio-lines.js` (`ROOFTOP_LINES`).
+2. Batcave depth pass.
+3. Flight enemies on the real drone model.
+4. Flight city variety.
+5. Owner playtest of the rooftops; listen to the new synthesized sounds on real hardware.
+
+Testing note for this machine: it has about 7 GB of RAM and crashed with several headless WebGL browsers open. Run the browser suites one at a time.
+
+
+## Connected campaign polish - 5 October 2026
+Flight clears the skies; driving restores shelter power but a rogue carrier remains.
+Continue now leads from driving to the Batcave trace and then Kessler infiltration.
+Extraction delivers the flight log to Gordon and closes Operation Silent Bell.
+Failure/retry, direct chapter entry and returning to the hangar remain available.
+
+Rooftops prioritize one objective, give route-specific hints and use distinct patrol pauses.
+Zero alarms and zero takedowns earns a 1,000-point Ghost bonus; takedowns remain a valid style.
+The closer exploration camera widens for grapples; skipping the intro positions it immediately.
+Snow glare is reduced, and textured rock layers give the cave more depth.
+Guard and animation assets were compressed from 8.3 MB combined to 1.5 MB.
+
+CI now runs cave and rooftop browser suites alongside flight, driving and handover.
+Physical-phone balance, audio and sustained performance still need an owner playtest.

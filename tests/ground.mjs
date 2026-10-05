@@ -1,8 +1,9 @@
 import { chromium } from "@playwright/test";
 import assert from "node:assert/strict";
 const b = await chromium.launch({ channel: "msedge", headless: true });
-const p = await b.newPage({ viewport: { width: 1440, height: 900 } }),
+const p = await b.newPage({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: process.env.CI ? 0.5 : 1 }),
   errors = [];
+p.setDefaultTimeout(60000);
 p.on("response", (r) => {
   if (r.status() >= 400) console.log("HTTP", r.status(), r.url());
 });
@@ -12,6 +13,7 @@ p.on("console", (m) => {
 });
 await p.goto((process.env.GAME_URL || "http://localhost:4173") + "/?test=1");
 await p.waitForFunction(() => window.__batwing?.ready);
+if (process.env.CI) await p.selectOption("#quality", "low");
 await p.click("#start-ground");
 await p.waitForFunction(() => window.__batwing.groundReady || window.__batwing.state.groundReady);
 await p.waitForTimeout(700);
@@ -62,6 +64,13 @@ await p.evaluate(() => {
 });
 assert.equal(await p.locator("#pause-title").textContent(), "Gotham is back online.");
 await p.click("#arrival-skip");
+assert.ok(await p.locator("#next-level").isVisible());
+await p.click("#next-level");
+await p.waitForFunction(() => window.__batwing.state.mode.startsWith("cave"));
+await p.click("#cave-skip");
+await p.waitForFunction(() => window.__batwing.state.cavePhase === "play");
+await p.click("#cave-pause");
+assert.equal((await p.evaluate(() => window.__batwing.state)).mode, "cavePaused");
 await p.click("#exit");
 assert.ok(await p.locator("#menu").isVisible());
 await p.click("#start");

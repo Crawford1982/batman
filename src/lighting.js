@@ -49,7 +49,8 @@ export function installHeightFog() {
 // share the same floor height, with structured occupancy: whole dark floors,
 // lit stairwell columns, warm retail at street level, three colour
 // temperatures. Distant facades fade to an even glow to avoid shimmer.
-export function installWindowShader(material) {
+// keepMap leaves the material's own texture (e.g. brick) under the windows.
+export function installWindowShader(material, { keepMap = false } = {}) {
   material.onBeforeCompile = (shader) => {
     shader.vertexShader = shader.vertexShader
       .replace(
@@ -112,7 +113,8 @@ export function installWindowShader(material) {
       )
       .replace(
         "#include <map_fragment>",
-        /* glsl */ `vec3 winColour;
+        /* glsl */ `${keepMap ? "#include <map_fragment>" : ""}
+  vec3 winColour;
   vec2 winInfo = windowAt( winColour );
   // Window glass is darker than masonry in the diffuse.
   diffuseColor.rgb *= mix( 1.0, 0.64, winInfo.x );`,
