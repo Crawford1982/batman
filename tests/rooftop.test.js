@@ -5,6 +5,7 @@ import {
   RooftopMission,
   ANTAGONIST,
   MAX_ALARMS,
+  LANDING_GRACE,
   TIME_LIMIT,
   VISION_RANGE,
   ALERT_HOLD,
@@ -273,4 +274,35 @@ test("score rewards a quiet, quick run and never goes negative", () => {
   assert.ok(rooftopScore(120, 0, 0) > rooftopScore(240, 0, 0));
   assert.ok(rooftopScore(120, 0, 2) > rooftopScore(120, 0, 0));
   assert.ok(rooftopScore(5000, 9, 0) >= 0);
+});
+
+test("guards only watch their own roof, matching the cones drawn on it", () => {
+  const m = withGuards("g1");
+  const g = m.guards[0];
+  g.wait = 99;
+  g.facing = Math.PI; // the laundry guard looks west toward the tenement
+  place(m, "tenement", 10, g.z);
+  run(m, 3);
+  assert.equal(g.state, "patrol", "a player on the next roof is not seen");
+  place(m, "laundry", g.x - 6, g.z);
+  m.update(DT);
+  assert.equal(g.state, "suspicious");
+});
+
+test("a grapple landing gets a short grace before suspicion builds at full rate", () => {
+  const m = withGuards("g1");
+  const g = m.guards[0];
+  g.wait = 99;
+  place(m, "tenement", 10, -2, 0);
+  m.update(DT, { grapple: true });
+  const to = m.player.zip.to;
+  // Stand the guard a few metres from the landing point, looking at it.
+  Object.assign(g, { x: to.x + 4, z: to.z, facing: Math.PI });
+  run(m, m.player.zip.duration + 0.05);
+  assert.equal(m.player.roof, "laundry");
+  assert.ok(m.player.grace > 0);
+  const graced = g.suspicion;
+  run(m, LANDING_GRACE * 0.8);
+  assert.ok(g.state !== "alert", "no instant alarm on landing");
+  assert.ok(g.suspicion - graced < 0.5);
 });

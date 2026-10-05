@@ -608,13 +608,23 @@ function beginCave() {
   cave.begin();
 }
 $("start-cave").onclick = beginCave;
-const roof = new RooftopLevel({ camera, audio, keys, onMode: (value) => (mode = value) });
+const roof = new RooftopLevel({
+  camera,
+  audio,
+  keys,
+  scene,
+  world,
+  renderer,
+  onMode: (value) => (mode = value),
+});
 function beginRoof() {
   handover.cancel();
   ground.hide();
   cave.hide();
   player.visible = false;
   for (const a of [enemies, shots, particles]) while (a.length) remove(a, 0);
+  for (const r of mission.relays) r.mesh.visible = false;
+  for (const r of world.rings) r.visible = false;
   $("menu").hidden = true;
   $("hud").hidden = true;
   $("briefing").hidden = true;
@@ -673,6 +683,10 @@ function update(dt, wallDt = dt) {
   }
   if (mode.startsWith("roof")) {
     roof.update(dt, wallDt);
+    // The rooftops are part of the city: keep its sky, snow, moon and grade alive.
+    world.update(dt, camera.position, t);
+    world.moon.position.copy(camera.position).add(new T.Vector3(500, 900, -2100));
+    grade.uniforms.time.value = t;
     return;
   }
   const controls = input();
@@ -931,11 +945,7 @@ function frame(now) {
   // render targets empty; drawing into them only spams GL errors.
   if (!innerWidth || !innerHeight || document.hidden || contextLost) return;
   renderer.info.reset();
-  const activeScene = mode.startsWith("cave")
-    ? cave.scene
-    : mode.startsWith("roof")
-      ? roof.scene
-      : scene;
+  const activeScene = mode.startsWith("cave") ? cave.scene : scene;
   renderPass.scene = activeScene;
   if (low) renderer.render(activeScene, camera);
   else composer.render();

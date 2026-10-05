@@ -27,6 +27,9 @@ export const MAX_ALARMS = 3;
 export const TIME_LIMIT = 360;
 export const HACK_SECONDS = 1.6;
 export const LOG_SECONDS = 3;
+// After a grapple landing, suspicion builds at a quarter rate for this long,
+// so a landing the player could not see in advance is not an instant alarm.
+export const LANDING_GRACE = 1;
 
 export const wrapAngle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -226,7 +229,15 @@ export class RooftopMission {
     this.takedowns = 0;
     this.events = [];
     this.actWas = false;
-    this.player = { x: s.x, z: s.z, roof: s.roof, facing: s.facing, zip: null, moving: 0 };
+    this.player = {
+      x: s.x,
+      z: s.z,
+      roof: s.roof,
+      facing: s.facing,
+      zip: null,
+      moving: 0,
+      grace: 0,
+    };
     this.uplinks = L.uplinks.map((u) => ({ ...u, done: false, progress: 0 }));
     this.terminal = { ...L.terminal, done: false, progress: 0 };
     this.guards = L.guards.map((g) => {
@@ -293,6 +304,7 @@ export class RooftopMission {
 
   updatePlayer(dt, input) {
     const p = this.player;
+    p.grace = Math.max(0, p.grace - dt);
     if (p.zip) {
       p.zip.t += dt;
       const k = p.zip.t / p.zip.duration,
@@ -304,6 +316,7 @@ export class RooftopMission {
         p.x = p.zip.to.x;
         p.z = p.zip.to.z;
         p.zip = null;
+        p.grace = LANDING_GRACE;
         this.emit("land", { roof: p.roof });
       }
       this.actWas = !!input.act;
@@ -453,11 +466,13 @@ export class RooftopMission {
       return;
     }
     const p = this.player,
-      seen = canSee(g, this.roof(g.roof).h, p, this.playerY(), this.layout.occluders),
+      // Guards watch their own roof; a zip counts once it is about to land there.
+      onRoof = p.zip ? p.zip.roof === g.roof && p.zip.t / p.zip.duration > 0.7 : p.roof === g.roof,
+      seen = onRoof && canSee(g, this.roof(g.roof).h, p, this.playerY(), this.layout.occluders),
       dist = Math.hypot(p.x - g.x, p.z - g.z);
     if (seen) {
       g.lastSeen = { x: p.x, z: p.z };
-      g.suspicion = Math.min(1, g.suspicion + suspicionRate(dist) * dt);
+      g.suspicion = Math.min(1, g.suspicion + suspicionRate(dist) * (p.grace > 0 ? 0.25 : 1) * dt);
     } else if (g.state !== "alert") g.suspicion = Math.max(0, g.suspicion - SUSPICION_DECAY * dt);
 
     switch (g.state) {

@@ -1,5 +1,5 @@
 import { TheatreBlock } from "./theatre-block.js";
-import { createDistricts, districtAt, reservedPlot } from "./districts.js";
+import { createDistricts, districtAt, overlapsKessler, reservedPlot } from "./districts.js";
 import * as T from "three";
 import { installHeightFog, installWindowShader } from "./lighting.js";
 import { createSkyline } from "./skyline.js";
@@ -82,6 +82,10 @@ export function createWorld(scene) {
         seed2: rand(),
       });
     }
+  // Filtering after generation keeps the random sequence, so the rest of the
+  // city is unchanged by the Kessler block.
+  for (let i = buildings.length - 1; i >= 0; i--)
+    if (overlapsKessler(buildings[i])) buildings.splice(i, 1);
   const geo = new T.BoxGeometry(1, 1, 1),
     blocks = new T.InstancedMesh(geo, mat, buildings.length),
     roofs = new T.InstancedMesh(
@@ -428,6 +432,7 @@ export function createWorld(scene) {
   return {
     theatreBlock,
     buildings,
+    ground,
     moon,
     rings,
     setGridIntegrity(value) {
