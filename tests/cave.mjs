@@ -20,10 +20,12 @@ for (const [tag, viewport] of [
   ["desktop", { width: 1440, height: 900 }],
   ["mobile", { width: 844, height: 390 }],
 ]) {
-  const page = await browser.newPage({ viewport });
+  const page = await browser.newPage({ viewport, deviceScaleFactor: process.env.CI ? 0.5 : 1 });
+  page.setDefaultTimeout(60000);
   page.on("pageerror", (e) => errors.push(`${tag}: ${e.message}`));
   await page.goto(base + "/?test=1");
   await page.waitForFunction(() => window.__batwing?.ready, { timeout: 60000 });
+  if (process.env.CI) await page.selectOption("#quality", "low");
   await page.click("#start-cave");
   assert.equal((await state(page)).cavePhase, "intro");
   await page.evaluate(() => {

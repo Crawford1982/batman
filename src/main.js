@@ -955,7 +955,7 @@ function frame(now) {
   const sample = sampler.push(wallDt, stalled);
   if (sample === null) return;
   fps = sample;
-  if ($("quality").value !== "auto" || !(mode === "play" || mode === "drive")) return;
+  if ($("quality").value !== "auto" || !["play", "drive", "cave", "roof"].includes(mode)) return;
   if (low) {
     const ratio = nextPixelRatio(renderer.getPixelRatio(), fps, {
       floor: 0.6,

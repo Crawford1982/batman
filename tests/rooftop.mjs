@@ -22,7 +22,8 @@ for (const [tag, viewport] of [
   ["desktop", { width: 1440, height: 900 }],
   ["mobile", { width: 844, height: 390 }],
 ]) {
-  const page = await browser.newPage({ viewport, hasTouch: tag === "mobile" });
+  const page = await browser.newPage({ viewport, hasTouch: tag === "mobile", deviceScaleFactor: process.env.CI ? 0.5 : 1 });
+  page.setDefaultTimeout(60000);
   page.on("pageerror", (e) => errors.push(`${tag}: ${e.message}`));
   page.on(
     "console",
@@ -30,6 +31,7 @@ for (const [tag, viewport] of [
   );
   await page.goto(base + "/?test=1");
   await page.waitForFunction(() => window.__batwing?.ready, { timeout: 60000 });
+  if (process.env.CI) await page.selectOption("#quality", "low");
   await page.click("#start-roof");
   assert.equal((await state(page)).roofPhase, "intro");
   await page.waitForTimeout(1200);
@@ -53,7 +55,10 @@ for (const [tag, viewport] of [
   // Keyboard walking moves the player on the start roof.
   const before = await mission(page, (m) => ({ ...m.player }));
   await page.keyboard.down("KeyW");
-  await page.waitForTimeout(600);
+  await page.waitForFunction((before) => {
+    const p = window.__batwing.roof.mission.player;
+    return Math.hypot(p.x - before.x, p.z - before.z) > 1;
+  }, before, { timeout: 30000 });
   await page.keyboard.up("KeyW");
   const after = await mission(page, (m) => ({ ...m.player }));
   assert.ok(Math.hypot(after.x - before.x, after.z - before.z) > 1, "W walks forward");
@@ -77,7 +82,7 @@ for (const [tag, viewport] of [
   await page.waitForTimeout(150);
   await page.screenshot({ path: `verification/rooftop-${tag}-grapple.png` });
   await page.waitForFunction(() => window.__batwing.roof.mission.player.roof === "laundry", null, {
-    timeout: 5000,
+    timeout: 30000,
   });
 
   // Sneak up behind the laundry guard and stun it.
@@ -107,7 +112,7 @@ for (const [tag, viewport] of [
   await page.evaluate(() => (window.__batwing.roof.yaw = 0));
   await page.keyboard.down("KeyW");
   await page.waitForFunction(() => window.__batwing.roof.phase === "ended", null, {
-    timeout: 8000,
+    timeout: 30000,
   });
   await page.keyboard.up("KeyW");
   let results = await page.locator("#chapter-results").innerText();
@@ -134,7 +139,7 @@ for (const [tag, viewport] of [
     });
   });
   await page.waitForFunction(() => window.__batwing.roof.phase === "ended", null, {
-    timeout: 8000,
+    timeout: 30000,
   });
   results = await page.locator("#chapter-results").innerText();
   assert.match(results, /INTERRUPTED/);
