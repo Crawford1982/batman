@@ -345,3 +345,56 @@
     margin-top: 7px;
   }
 }
+
+#roof-hint {
+  margin: 12px 0 0;
+  color: #c9d7e2;
+  font:
+    500 12px/1.45 Manrope,
+    sans-serif;
+  letter-spacing: 0.2px;
+}
+#roof-beacons > div {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: #8fd3ff;
+  font:
+    700 11px "Barlow Condensed",
+    sans-serif;
+  letter-spacing: 1.6px;
+  text-shadow: 0 1px 3px #000;
+  white-space: nowrap;
+}
+#roof-beacons > div[hidden] {
+  display: none;
+}
+#roof-beacons i {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  transform: rotate(45deg);
+  box-shadow: 0 0 10px currentColor;
+  animation: roof-beacon 1.2s ease-in-out infinite alternate;
+}
+#roof-beacons > div[data-kind="log"] {
+  color: #edcf87;
+}
+#roof-beacons > div[data-edge="1"] span {
+  opacity: 0.75;
+}
+#roof-beacons > div[data-near="1"] i {
+  background: currentColor;
+}
+@keyframes roof-beacon {
+  to {
+    transform: rotate(45deg) scale(0.8);
+    opacity: 0.6;
+  }
+}
+#roof-hud.cinematic #roof-beacons {
+  opacity: 0;
+}

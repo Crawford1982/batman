@@ -922,13 +922,16 @@ void main() {
       );
       this.clips = Object.fromEntries(moves.animations.map((c) => [c.name, c]));
       this.swap(this.player, vigilante.scene, (m) => {
-        // Charcoal and black for the hooded outfit; skin left as authored.
-        if (/Ranger/.test(m.name)) m.color.setHex(0x3a3d44);
+        // The suit is painted into the texture; give it a slight sheen.
+        if (/Vigilante/.test(m.name)) m.roughness = 0.72;
       });
+      this.dressVigilante(this.player.root);
       this.guardFigures.forEach((f, i) =>
         this.swap(f, crew.scene, (m) => {
           if (/Peasant/.test(m.name))
             m.color.setHex([0x6b7685, 0x77705f, 0x5f6b62, 0x6f6672][i % 4]);
+          else if (/Hair/.test(m.name))
+            m.color.setHex([0x2a211b, 0x3b2c20, 0x1c1a19, 0x4a3a2a][i % 4]);
         }),
       );
       this.modelState = "ready";
@@ -963,6 +966,74 @@ void main() {
       figure.actions[name] = action;
     }
     figure.current = null;
+  }
+  // Cowl ears on the Head bone and a cape on the upper spine, sized from the
+  // body's bind pose so they fit whatever scale the model arrives at.
+  dressVigilante(root) {
+    const bone = (n) => root.getObjectByName(n),
+      head = bone("Head"),
+      chest = bone("spine_03"),
+      neck = bone("neck_01");
+    if (!head || !chest || !neck) return;
+    root.updateMatrixWorld(true);
+    const local = (o) => root.worldToLocal(o.getWorldPosition(new T.Vector3())),
+      h = local(head),
+      c = local(chest),
+      n = local(neck),
+      box = new T.Box3().setFromObject(root),
+      top = root.worldToLocal(new T.Vector3(0, box.max.y, 0)).y,
+      // Toes point forward in the bind pose; the cape hangs the other way.
+      front = Math.sign(local(bone("ball_l")).z - local(bone("foot_l")).z) || 1,
+      suit = new T.MeshStandardMaterial({ color: 0x1b1d22, roughness: 0.6, side: T.DoubleSide });
+    this.reflect(suit);
+    for (const side of [-1, 1]) {
+      const ear = new T.Mesh(new T.ConeGeometry(0.026, 0.12, 8), suit);
+      ear.position.set(h.x + side * 0.052, top + 0.025, h.z - front * 0.01);
+      ear.rotation.z = -side * 0.12;
+      ear.castShadow = true;
+      root.add(ear);
+      head.attach(ear);
+    }
+    // Cape: a tapered grid hung from the shoulders, animated per vertex.
+    const length = Math.max(0.9, n.y - 0.3),
+      geo = new T.PlaneGeometry(1, length, 8, 12);
+    geo.translate(0, -length / 2, 0);
+    const pos = geo.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      const t = Math.max(0, -pos.getY(i) / length),
+        x = pos.getX(i) * (0.44 + 0.5 * t);
+      pos.setX(i, x);
+      // Wrap the edges forward around the shoulders, easing out toward the hem.
+      pos.setZ(i, x * x * 1.7 * (1 - 0.55 * t));
+    }
+    this.cape = new T.Mesh(geo, suit);
+    this.cape.position.set(c.x, n.y - 0.04, c.z - front * 0.15);
+    this.cape.castShadow = true;
+    this.cape.userData = { base: Float32Array.from(pos.array), length, front, sway: 0 };
+    root.add(this.cape);
+    chest.attach(this.cape);
+  }
+  updateCape(dt) {
+    const cape = this.cape;
+    if (!cape) return;
+    const p = this.mission.player,
+      d = cape.userData,
+      want = p.zip ? 1 : p.moving * (this.running ? 1 : 0.45);
+    d.sway += (want - d.sway) * Math.min(1, dt * 3);
+    const pos = cape.geometry.attributes.position,
+      b = d.base,
+      s = d.sway;
+    for (let i = 0; i < pos.count; i++) {
+      const x = b[i * 3],
+        t = Math.max(0, -b[i * 3 + 1] / d.length),
+        flow = Math.pow(t, 1.4) * (0.05 + s * 0.45),
+        ripple = Math.sin(this.time * (3 + s * 5) + t * 5 + x * 4) * 0.025 * t * (0.6 + s * 1.5);
+      // Streams back and lifts as speed builds; always clears the legs.
+      pos.setZ(i, d.front * (b[i * 3 + 2] - flow - ripple));
+      pos.setY(i, b[i * 3 + 1] + flow * 0.35 * s);
+    }
+    pos.needsUpdate = true;
+    cape.geometry.computeVertexNormals();
   }
   async loadSurfaces() {
     const loader = new T.TextureLoader(),
@@ -1268,6 +1339,7 @@ void main() {
     this.penaltyFlash = 0;
     this.padStart = false;
     for (const el of $("roof-threats").children) el.hidden = true;
+    for (const el of $("roof-beacons").children) el.hidden = true;
     this.landTime = 0;
     this.sneakTime = 0;
     this.takedownAnim = 0;
@@ -1557,6 +1629,7 @@ void main() {
     }
     this.target = target;
     this.line.visible = !!p.zip;
+    this.updateCape(dt);
     if (p.zip) {
       const from = new T.Vector3(p.x, py + 1.5, p.z),
         to = new T.Vector3(p.zip.to.x, p.zip.to.y + PARAPET, p.zip.to.z),
@@ -1658,10 +1731,69 @@ void main() {
     prompt.querySelector("span").textContent = text;
     prompt.querySelector("i").style.width = Math.round(progress * 100) + "%";
     prompt.hidden = !text;
+    $("roof-hint").textContent = action?.jammed
+      ? "An alerted guard is jamming you. Break line of sight and let him stand down."
+      : m.stage === "uplinks"
+        ? `Find the three uplink dishes (blue markers). Stand beside one and hold ${act}.`
+        : m.stage === "log"
+          ? `Uplinks down. Go to the control hut on Kessler and hold ${act} at the terminal.`
+          : "Log copied. Grapple to the water tower and step onto the gold pad.";
     prompt.dataset.state =
       (action?.jammed && !action.locked) || (!action && m.landingWatched(this.target))
         ? "blocked"
         : "normal";
+  }
+
+  // World markers over the current objectives, with distance; pinned to the
+  // screen edge when off screen.
+  updateBeacons() {
+    const m = this.mission,
+      p = m.player,
+      box = $("roof-beacons"),
+      targets =
+        m.stage === "uplinks"
+          ? m.uplinks.filter((u) => !u.done).map((u) => [u, `UPLINK ${u.id}`, "uplink"])
+          : m.stage === "log"
+            ? [[m.terminal, "FLIGHT LOG", "log"]]
+            : [[m.layout.extraction, "EXTRACTION", "log"]];
+    while (box.children.length < 3) {
+      const el = document.createElement("div");
+      el.innerHTML = "<i></i><span></span>";
+      box.appendChild(el);
+    }
+    this.camera.updateMatrixWorld();
+    const v = new T.Vector3();
+    [...box.children].forEach((el, i) => {
+      const t = targets[i];
+      if (!t || this.phase !== "play") return (el.hidden = true);
+      const [o, label, kind] = t;
+      v.set(this.origin.x + o.x, m.roof(o.roof).h + 2.4, this.origin.z + o.z).project(this.camera);
+      const behind = v.z > 1;
+      let x = behind ? -v.x : v.x,
+        y = behind ? -v.y : v.y;
+      const edge = behind || Math.abs(x) > 0.94 || Math.abs(y) > 0.86;
+      if (edge) {
+        if (behind && Math.hypot(x, y) < 1e-3) y = -1;
+        const k = 0.94 / Math.max(Math.abs(x), Math.abs(y) / 0.86);
+        x *= k;
+        y *= k;
+      }
+      const dist = Math.hypot(o.x - p.x, o.z - p.z) + (o.roof === p.roof ? 0 : 0.001);
+      el.hidden = false;
+      el.dataset.kind = kind;
+      el.dataset.edge = edge ? "1" : "0";
+      el.dataset.near = o.roof === p.roof && dist < 6 ? "1" : "0";
+      // Keep pinned labels fully on screen and clear of the objectives panel.
+      let px = (x * 0.5 + 0.5) * innerWidth,
+        py = (0.5 - y * 0.5) * innerHeight;
+      const panel = $("roof-status").getBoundingClientRect();
+      if (px < panel.right + 20 && py < panel.bottom + 40) py = panel.bottom + 40;
+      px = Math.min(innerWidth - 110, Math.max(110, px));
+      el.style.left = `${px}px`;
+      el.style.top = `${py}px`;
+      el.querySelector("span").textContent =
+        `${label} · ${Math.round(dist)} M${o.roof === p.roof ? "" : " · " + m.roof(o.roof).name}`;
+    });
   }
 
   // Edge arrows toward guards who are watching the player but are off screen.
@@ -1751,5 +1883,6 @@ void main() {
       this.placeCamera(1 - Math.exp(-step * (p.zip ? 5 : 8)));
     }
     this.updateThreats();
+    this.updateBeacons();
   }
 }
