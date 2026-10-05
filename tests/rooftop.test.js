@@ -14,7 +14,9 @@ import {
   NOISE_RADIUS,
   HACK_SECONDS,
   ALARM_COOLDOWN,
+  BODY_SUSPICION,
   canSee,
+  PLAYER_RADIUS,
   canTakedown,
   grappleTarget,
   inRoof,
@@ -402,4 +404,63 @@ test("a second guard spotting you right after an alarm does not count as another
   assert.equal(g4.state, "alert");
   assert.equal(m.alarms, 1);
   assert.ok(m.time < ALARM_COOLDOWN);
+});
+
+test("a guard who sees a stunned colleague searches the body once, without an alarm", () => {
+  const m = withGuards("g3", "g4");
+  const [g3, g4] = m.guards;
+  place(m, "tenement", 0, 0);
+  Object.assign(g3, { state: "down", x: 70, z: 8 });
+  // g4 faces away from the body, then turns toward it.
+  Object.assign(g4, { x: 62, z: 8, facing: Math.PI, wait: 99 });
+  m.update(DT);
+  assert.equal(g4.state, "patrol", "facing away");
+  g4.facing = 0;
+  m.update(DT);
+  assert.equal(g4.state, "search");
+  assert.deepEqual(g4.lastSeen, { x: 70, z: 8 });
+  assert.ok(g4.suspicion >= BODY_SUSPICION - 0.05);
+  assert.equal(m.alarms, 0);
+  assert.ok(m.drainEvents().some((e) => e.type === "body" && e.body === "g3"));
+  run(m, SEARCH_TIME + 1);
+  assert.equal(g4.state, "patrol");
+  // Already found: walking past it again changes nothing.
+  Object.assign(g4, { x: 62, z: 8, facing: 0, wait: 99 });
+  m.update(DT);
+  assert.equal(g4.state, "patrol");
+});
+
+test("grapple landings never put the player inside a vent or plant room", () => {
+  let checked = 0;
+  for (const from of LAYOUT.roofs)
+    for (let gx = 0; gx <= 8; gx++)
+      for (let gz = 0; gz <= 8; gz++)
+        for (let i = 0; i < 16; i++) {
+          const p = {
+            roof: from.id,
+            x: from.x - from.w / 2 + 1 + (gx / 8) * (from.w - 2),
+            z: from.z - from.d / 2 + 1 + (gz / 8) * (from.d - 2),
+            facing: (i / 16) * Math.PI * 2,
+          };
+          const t = grappleTarget(p, LAYOUT.roofs, LAYOUT.occluders);
+          if (!t) continue;
+          checked++;
+          const roof = roofById(LAYOUT, t.roof);
+          assert.ok(inRoof(roof, t.x, t.z, 1.9), `${t.roof} ${t.x},${t.z} on roof`);
+          for (const o of LAYOUT.occluders.filter((o) => o.roof === t.roof))
+            assert.ok(
+              Math.abs(t.x - o.x) >= o.w / 2 + PLAYER_RADIUS ||
+                Math.abs(t.z - o.z) >= o.d / 2 + PLAYER_RADIUS,
+              `${t.roof} ${t.x.toFixed(1)},${t.z.toFixed(1)} inside cover at ${o.x},${o.z}`,
+            );
+        }
+  assert.ok(checked > 500);
+  // The case found in play: Tenement east edge, aiming at Laundry Works' vent.
+  const t = grappleTarget(
+    { roof: "tenement", x: 8, z: -2, facing: -0.18 },
+    LAYOUT.roofs,
+    LAYOUT.occluders,
+  );
+  assert.equal(t.roof, "laundry");
+  assert.ok(t.x < 24.5 - PLAYER_RADIUS || t.z > -1 + PLAYER_RADIUS);
 });

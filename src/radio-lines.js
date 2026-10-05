@@ -59,6 +59,7 @@ export const ROOFTOP_LINES = {
   heard: ["ALFRED", "He heard your footsteps, sir. Walk when they're close."],
   jammed: ["ALFRED", "Not with a guard on alert up there. He'd see it go dark. Lose him first."],
   takedown: ["ALFRED", "Stunned and restrained. He'll wake with a headache."],
+  body: ["ALFRED", "They've found the man you stunned. Keep out of sight while they search."],
   logDone: [
     "ALFRED",
     "Log copied. The override signature belongs to Ines Varga, codename TOLLER. The Batwing is at the water tower.",

@@ -40,6 +40,8 @@ export const LOG_SECONDS = 3;
 // After a grapple landing, suspicion builds at a quarter rate for this long,
 // so a landing the player could not see in advance is not an instant alarm.
 export const LANDING_GRACE = 1;
+// Suspicion a guard starts its search with after finding a stunned colleague.
+export const BODY_SUSPICION = 0.6;
 
 export const wrapAngle = (a) => Math.atan2(Math.sin(a), Math.cos(a));
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -174,15 +176,46 @@ export function canSee(guard, gy, point, py, occluders) {
 // Closer targets fill the meter faster: about 0.8 s point blank, 2.4 s at range.
 export const suspicionRate = (dist) => 1 / (0.8 + 1.6 * clamp(dist / VISION_RANGE, 0, 1));
 
-// The nearest point on another roof, inset from its edge, that lies in front of
-// the player and within reach. Returns { roof, x, z } or null.
-export function grappleTarget(player, roofs) {
+// Move a landing point on roof out of any cover box, to the nearest clear spot
+// that is still inside the roof's 2 m edge inset.
+export function clearOfCover(roof, x, z, occluders) {
+  const pad = PLAYER_RADIUS + 0.4,
+    x0 = roof.x - roof.w / 2 + 2,
+    x1 = roof.x + roof.w / 2 - 2,
+    z0 = roof.z - roof.d / 2 + 2,
+    z1 = roof.z + roof.d / 2 - 2;
+  for (const o of occluders) {
+    if (o.roof !== roof.id) continue;
+    const l = o.x - o.w / 2 - pad,
+      r = o.x + o.w / 2 + pad,
+      b = o.z - o.d / 2 - pad,
+      f = o.z + o.d / 2 + pad;
+    if (x <= l || x >= r || z <= b || z >= f) continue;
+    const exits = [
+      [l, z],
+      [r, z],
+      [x, b],
+      [x, f],
+    ].filter(([ex, ez]) => ex >= x0 && ex <= x1 && ez >= z0 && ez <= z1);
+    exits.sort((a, c) => Math.hypot(a[0] - x, a[1] - z) - Math.hypot(c[0] - x, c[1] - z));
+    if (exits[0]) [x, z] = exits[0];
+  }
+  return { x, z };
+}
+
+// The nearest point on another roof, inset from its edge and clear of cover,
+// that lies in front of the player and within reach. Returns { roof, x, z } or null.
+export function grappleTarget(player, roofs, occluders = []) {
   let best = null,
     bestScore = Infinity;
   for (const roof of roofs) {
     if (roof.id === player.roof) continue;
-    const x = clamp(player.x, roof.x - roof.w / 2 + 2, roof.x + roof.w / 2 - 2),
-      z = clamp(player.z, roof.z - roof.d / 2 + 2, roof.z + roof.d / 2 - 2),
+    const { x, z } = clearOfCover(
+        roof,
+        clamp(player.x, roof.x - roof.w / 2 + 2, roof.x + roof.w / 2 - 2),
+        clamp(player.z, roof.z - roof.d / 2 + 2, roof.z + roof.d / 2 - 2),
+        occluders,
+      ),
       dist = Math.hypot(x - player.x, z - player.z);
     if (dist > GRAPPLE_RANGE || dist < 0.5) continue;
     const off = Math.abs(wrapAngle(Math.atan2(z - player.z, x - player.x) - player.facing));
@@ -362,7 +395,7 @@ export class RooftopMission {
       return;
     }
     if (input.grapple) {
-      const target = grappleTarget(p, this.layout.roofs);
+      const target = grappleTarget(p, this.layout.roofs, this.layout.occluders);
       if (target) {
         const to = this.roof(target.roof),
           dist = Math.hypot(target.x - p.x, target.z - p.z);
@@ -535,6 +568,26 @@ export class RooftopMission {
       if (g.state === "patrol") {
         g.state = "suspicious";
         this.emit("heard", { guard: g.id });
+      }
+    }
+
+    // A stunned colleague in view: go and look, already on edge. Not an alarm.
+    if (!seen && g.state !== "alert") {
+      const h = this.roof(g.roof).h,
+        body = this.guards.find(
+          (b) =>
+            b.state === "down" &&
+            !b.found &&
+            b.roof === g.roof &&
+            canSee(g, h, b, h, this.layout.occluders),
+        );
+      if (body) {
+        body.found = true;
+        g.state = "search";
+        g.timer = 0;
+        g.lastSeen = { x: body.x, z: body.z };
+        g.suspicion = Math.max(g.suspicion, BODY_SUSPICION);
+        this.emit("body", { guard: g.id, body: body.id });
       }
     }
 

@@ -34,8 +34,12 @@ const textureUrl = (name) => TEXTURE_URLS[`./textures/rooftop/${name}.webp`];
 
 const $ = (id) => document.getElementById(id);
 const INTRO_SECONDS = 8;
+const EMP_SECONDS = 0.55;
+const BASE_FOV = 52;
+const ZERO = new T.Vector3();
 const CAMERA_DISTANCE = 7.5;
 const CAMERA_PITCH = 0.36;
+const CAMERA_PITCH_MAX = 0.84;
 const PARAPET = 1.05;
 const smooth = (x) => x * x * (3 - 2 * x);
 const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
@@ -799,6 +803,22 @@ void main() {
     this.interactRing.rotation.x = -Math.PI / 2;
     this.interactRing.visible = false;
     a.add(this.interactRing);
+    // EMP discharge: a ground shockwave and a short burst of blue light.
+    this.empRing = new T.Mesh(
+      new T.RingGeometry(0.8, 1, 48),
+      new T.MeshBasicMaterial({
+        color: new T.Color(1.2, 2.2, 3.4),
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: T.AdditiveBlending,
+      }),
+    );
+    this.empRing.rotation.x = -Math.PI / 2;
+    this.empRing.visible = false;
+    this.empLight = new T.PointLight(0x7fc4ff, 0, 14, 2);
+    a.add(this.empRing, this.empLight);
+    this.emp = 0;
   }
 
   buildLights() {
@@ -1304,7 +1324,7 @@ void main() {
     if (!this.player) this.buildFigures();
     this.loadAssets();
     this.saved = { fov: this.camera.fov, near: this.camera.near, far: this.camera.far };
-    this.camera.fov = 52;
+    this.camera.fov = BASE_FOV;
     this.camera.near = 0.2;
     this.camera.far = 4500;
     this.camera.updateProjectionMatrix();
@@ -1343,6 +1363,13 @@ void main() {
     this.landTime = 0;
     this.sneakTime = 0;
     this.takedownAnim = 0;
+    this.hitstop = this.slow = this.shake = this.dip = this.punch = this.emp = 0;
+    this.slowLength = 1;
+    this.shakeOffset = new T.Vector3();
+    clearTimeout(this.toastTimer);
+    $("roof-toast").hidden = true;
+    $("roof-flash").classList.remove("go");
+    for (const el of $("roof-aware").children) el.hidden = true;
     for (const k in this.touch) this.touch[k] = typeof this.touch[k] === "boolean" ? false : 0;
     for (const f of this.figures) {
       f.mixer?.stopAllAction();
@@ -1402,6 +1429,46 @@ void main() {
     const at = this.audio.ctx.currentTime;
     notes.forEach((f, i) => this.audio.tone(f, at + i * 0.09, 0.45, 0.05, type));
   }
+  // Restart a CSS one-shot by toggling it off for a frame.
+  restart(el, on) {
+    el.classList.remove("go");
+    el.hidden = true;
+    void el.offsetWidth;
+    el.hidden = false;
+    if (on) el.classList.add("go");
+  }
+  flash(kind) {
+    const el = $("roof-flash");
+    el.dataset.kind = kind;
+    this.restart(el, true);
+  }
+  toast(label, title, kind = "") {
+    const el = $("roof-toast");
+    el.querySelector("small").textContent = label;
+    el.querySelector("strong").textContent = title;
+    el.dataset.kind = kind;
+    this.restart(el);
+    clearTimeout(this.toastTimer);
+    this.toastTimer = setTimeout(() => (el.hidden = true), 2600);
+  }
+  // Freeze the action for a beat, then ease back from slow motion.
+  impact(freeze, slow = 0) {
+    this.hitstop = Math.max(this.hitstop, freeze);
+    this.slow = Math.max(this.slow, slow);
+    this.slowLength = Math.max(this.slow, 0.001);
+  }
+  timeScale(step) {
+    if (this.hitstop > 0) {
+      this.hitstop -= step;
+      return 0.04;
+    }
+    if (this.slow > 0) {
+      this.slow = Math.max(0, this.slow - step);
+      const k = this.slow / this.slowLength;
+      return 1 - 0.65 * k * k;
+    }
+    return 1;
+  }
 
   finish() {
     const m = this.mission,
@@ -1437,45 +1504,72 @@ void main() {
     const m = this.mission;
     for (const e of m.drainEvents()) {
       if (e.type === "grapple") {
-        this.chime([330, 660], "sine");
+        this.audio.whoosh(m.player.zip?.duration ?? 0.8);
         this.play(this.player, "jumpStart", 0.08);
       } else if (e.type === "land") {
         this.landTime = 0.45;
         this.play(this.player, "jumpLand", 0.06);
+        this.audio.thud(0.8);
+        this.dip = 0.32;
+        this.shake = Math.max(this.shake, 0.05);
       } else if (e.type === "grapple-miss") this.chime([180], "sine");
       else if (e.type === "uplink") {
         this.chime([523, 784]);
+        this.audio.zap();
         this.radio(ROOFTOP_LINES.uplink);
-      } else if (e.type === "stage")
+        if (e.count < m.uplinks.length)
+          this.toast(
+            `UPLINK ${e.id} OFFLINE`,
+            `${e.count} / ${m.uplinks.length} DISHES DOWN`,
+            "good",
+          );
+      } else if (e.type === "stage") {
         this.radio(e.stage === "log" ? ROOFTOP_LINES.uplinksDone : ROOFTOP_LINES.logDone);
-      else if (e.type === "terminal-locked") this.radio(ROOFTOP_LINES.locked);
+        this.chime(e.stage === "log" ? [392, 523, 784] : [523, 659, 784, 1046]);
+        if (e.stage === "log") this.toast("CARRIER SILENT", "FLIGHT LOG UNLOCKED", "good");
+        else this.toast("FLIGHT LOG COPIED", "EXTRACT AT THE WATER TOWER", "good");
+      } else if (e.type === "body") {
+        this.audio.notice(true);
+        this.flash("body");
+        if (performance.now() - this.lastAlarmLine > 8000) this.radio(ROOFTOP_LINES.body);
+        this.toast("GUARD ALERTED", "BODY DISCOVERED", "warn");
+      } else if (e.type === "terminal-locked") this.radio(ROOFTOP_LINES.locked);
       else if (e.type === "jammed") {
         this.chime([180, 150], "square");
         this.radio(ROOFTOP_LINES.jammed);
       } else if (e.type === "heard") {
-        this.chime([392], "sine");
+        this.audio.notice();
         if (performance.now() - this.lastHeardLine > 15000) {
           this.lastHeardLine = performance.now();
           this.radio(ROOFTOP_LINES.heard);
         }
       } else if (e.type === "takedown") {
-        this.chime([220, 880], "square");
+        this.audio.zap();
         this.radio(ROOFTOP_LINES.takedown);
         const i = m.guards.findIndex((g) => g.id === e.guard);
         if (i >= 0) {
           this.play(this.guardFigures[i], "hit", 0.05);
           this.guardFigures[i].downAt = 0.45;
+          const g = m.guards[i];
+          this.empAt = { x: g.x, y: m.roof(g.roof).h, z: g.z };
+          this.emp = EMP_SECONDS;
         }
+        this.flash("emp");
+        this.impact(0.11, 0.6);
+        this.punch = 6;
+        this.shake = Math.max(this.shake, 0.12);
         this.play(this.player, "takedown", 0.06);
         this.takedownAnim = 0.75;
       } else if (e.type === "suspicious") {
         if (performance.now() - this.lastAlarmLine > 8000) this.radio(ROOFTOP_LINES.suspicious);
-        this.chime([440], "sine");
+        this.audio.notice();
       } else if (e.type === "alarm") {
         this.lastAlarmLine = performance.now();
         this.penaltyFlash = 2.5;
-        this.audio.hit?.();
-        this.chime([880, 660, 880, 660], "square");
+        this.audio.alarm();
+        this.flash("alert");
+        this.impact(0.06);
+        this.shake = Math.max(this.shake, 0.18);
         if (e.alarms < MAX_ALARMS)
           this.radio(e.alarms === 1 ? ROOFTOP_LINES.alarm1 : ROOFTOP_LINES.alarm2);
       } else if (e.type === "end") {
@@ -1486,7 +1580,10 @@ void main() {
               ? ROOFTOP_LINES.lostAlarms
               : ROOFTOP_LINES.lostTime,
         );
-        if (m.outcome === "won") this.chime([392, 523, 659, 784]);
+        if (m.outcome === "won") {
+          this.chime([392, 523, 659, 784]);
+          this.impact(0, 1.4);
+        } else this.flash("alert");
         this.endDelay = 1.6;
       }
     }
@@ -1620,7 +1717,8 @@ void main() {
       l.material.opacity = extract ? (Math.sin(this.time * 6 - i * 0.8) > 0 ? 1 : 0.25) : 0.2;
     });
 
-    const target = !p.zip && m.phase === "play" ? grappleTarget(p, m.layout.roofs) : null;
+    const target =
+      !p.zip && m.phase === "play" ? grappleTarget(p, m.layout.roofs, m.layout.occluders) : null;
     this.marker.visible = !!target;
     if (target) {
       this.marker.position.set(target.x, roofH(target.roof) + 0.08, target.z);
@@ -1643,6 +1741,19 @@ void main() {
     if (near) {
       this.interactRing.position.set(near.x, roofH(near.roof) + 0.05, near.z);
       this.interactRing.material.opacity = 0.25 + 0.2 * Math.sin(this.time * 4);
+    }
+    if (this.emp > 0 && this.empAt) {
+      this.emp = Math.max(0, this.emp - dt);
+      const k = 1 - this.emp / EMP_SECONDS;
+      this.empRing.visible = this.emp > 0;
+      this.empRing.position.set(this.empAt.x, this.empAt.y + 0.1, this.empAt.z);
+      this.empRing.scale.setScalar(0.6 + k * 6.5);
+      this.empRing.material.opacity = (1 - k) * (1 - k) * 0.7;
+      this.empLight.position.set(this.empAt.x, this.empAt.y + 1.2, this.empAt.z);
+      this.empLight.intensity = 24 * (1 - k) ** 3;
+    } else {
+      this.empRing.visible = false;
+      this.empLight.intensity = 0;
     }
     // The shadow camera follows the player along the moonlight.
     const wp = new T.Vector3(p.x, py, p.z);
@@ -1805,6 +1916,42 @@ void main() {
     });
   }
 
+  // A ring over each guard who is suspicious, searching or alerted.
+  updateAwareness() {
+    const m = this.mission,
+      box = $("roof-aware");
+    while (box.children.length < m.guards.length) {
+      const el = document.createElement("div");
+      el.innerHTML = "<b></b>";
+      el.hidden = true;
+      box.appendChild(el);
+    }
+    this.camera.updateMatrixWorld();
+    const v = new T.Vector3();
+    m.guards.forEach((g, i) => {
+      const el = box.children[i],
+        state =
+          g.state === "alert"
+            ? "alert"
+            : g.state === "search"
+              ? "search"
+              : g.suspicion > 0.02 && g.state !== "down"
+                ? "suspicious"
+                : null;
+      if (!state || this.phase !== "play") return (el.hidden = true);
+      v.set(this.origin.x + g.x, m.roof(g.roof).h + 2.35, this.origin.z + g.z).project(this.camera);
+      if (v.z > 1 || Math.abs(v.x) > 1.05 || Math.abs(v.y) > 1.05) return (el.hidden = true);
+      el.hidden = false;
+      if (el.dataset.state !== state) {
+        el.dataset.state = state;
+        el.querySelector("b").textContent = state === "alert" ? "!" : "?";
+      }
+      if (state !== "alert") el.style.setProperty("--fill", g.suspicion.toFixed(3));
+      el.style.left = `${(v.x * 0.5 + 0.5) * 100}%`;
+      el.style.top = `${(0.5 - v.y * 0.5) * 100}%`;
+    });
+  }
+
   // Edge arrows toward guards who are watching the player but are off screen.
   updateThreats() {
     const m = this.mission,
@@ -1841,13 +1988,82 @@ void main() {
       py = m.playerY(),
       o = this.origin,
       target = new T.Vector3(o.x + p.x, py + 1.5, o.z + p.z),
-      want = new T.Vector3(
-        target.x - Math.cos(this.yaw) * CAMERA_DISTANCE * Math.cos(CAMERA_PITCH),
-        py + 1.5 + CAMERA_DISTANCE * Math.sin(CAMERA_PITCH),
-        target.z - Math.sin(this.yaw) * CAMERA_DISTANCE * Math.cos(CAMERA_PITCH),
-      );
-    this.camera.position.lerp(want, k);
+      boom = (pitch) =>
+        new T.Vector3(
+          target.x - Math.cos(this.yaw) * CAMERA_DISTANCE * Math.cos(pitch),
+          target.y + CAMERA_DISTANCE * Math.sin(pitch),
+          target.z - Math.sin(this.yaw) * CAMERA_DISTANCE * Math.cos(pitch),
+        );
+    // When cover blocks the boom, crane up over it; pull in only as a last resort.
+    let pitch = CAMERA_PITCH,
+      want = boom(pitch),
+      hit = this.cameraBlock(target, want);
+    while (hit < 1 && pitch < CAMERA_PITCH_MAX) {
+      pitch = Math.min(CAMERA_PITCH_MAX, pitch + 0.12);
+      want = boom(pitch);
+      hit = this.cameraBlock(target, want);
+    }
+    if (hit < 1) want.lerpVectors(target, want, Math.max(0.16, hit - 0.1));
+    if (pitch > CAMERA_PITCH || hit < 1) k = Math.max(k, 0.12);
+    this.camera.position.sub(this.shakeOffset || ZERO).lerp(want, k);
+    // Pulled in close, aim a little ahead so the player does not fill the frame.
+    const ahead = hit < 1 ? (1 - hit) * 1.5 : 0;
+    target.x += Math.cos(this.yaw) * ahead;
+    target.z += Math.sin(this.yaw) * ahead;
     this.camera.lookAt(target);
+  }
+  // First fraction of the segment a -> b (world space) inside a solid box, or 1.
+  cameraBlock(a, b) {
+    if (!this.solids) {
+      const o = this.origin,
+        box = (x, z, w, d, y0, y1) =>
+          new T.Box3(
+            new T.Vector3(o.x + x - w / 2, y0, o.z + z - d / 2),
+            new T.Vector3(o.x + x + w / 2, y1, o.z + z + d / 2),
+          );
+      this.solids = [
+        ...LAYOUT.roofs.map((r) => box(r.x, r.z, r.w, r.d, -50, r.h + PARAPET)),
+        ...LAYOUT.occluders
+          .filter((c) => c.height)
+          .map((c) => {
+            const h = this.mission.roof(c.roof).h;
+            return box(c.x, c.z, c.w + 0.3, c.d + 0.3, h, h + c.height + 0.35);
+          }),
+      ];
+      this.ray = new T.Ray();
+      this.rayHit = new T.Vector3();
+    }
+    const len = a.distanceTo(b);
+    this.ray.origin.copy(a);
+    this.ray.direction.subVectors(b, a).normalize();
+    let best = 1;
+    for (const s of this.solids) {
+      if (s.containsPoint(a)) continue;
+      if (this.ray.intersectBox(s, this.rayHit))
+        best = Math.min(best, a.distanceTo(this.rayHit) / len);
+    }
+    return best;
+  }
+  // Shake, landing dip and FOV: zips widen the lens, takedowns punch in.
+  cameraFeel(step) {
+    const p = this.mission.player,
+      off = this.shakeOffset;
+    this.shake = Math.max(0, this.shake - step * 0.6);
+    this.dip = Math.max(0, this.dip - step * 1.4);
+    this.punch = Math.max(0, this.punch - step * 14);
+    const s = this.shake * this.shake * 6,
+      t = this.time * 47;
+    off.set(
+      Math.sin(t) * s,
+      Math.sin(t * 1.31 + 1) * s - this.dip * this.dip * 2.2,
+      Math.sin(t * 0.83 + 2) * s,
+    );
+    this.camera.position.add(off);
+    const want = BASE_FOV + (p.zip ? 9 : 0) - this.punch;
+    if (Math.abs(this.camera.fov - want) > 0.01) {
+      this.camera.fov += (want - this.camera.fov) * Math.min(1, step * (p.zip ? 4 : 7));
+      this.camera.updateProjectionMatrix();
+    }
   }
 
   update(dt, wallDt = dt) {
@@ -1874,11 +2090,13 @@ void main() {
       if (this.introTime >= INTRO_SECONDS) this.skip();
       return;
     }
+    const sim =
+      this.phase === "play" || this.phase === "ending" ? step * this.timeScale(step) : step;
     if (this.phase === "play") {
       const input = this.readInput();
       this.running = input.run;
       this.yaw += input.turn * 2.2 * step;
-      m.update(step, input);
+      m.update(sim, input);
       this.handleEvents();
       this.penaltyFlash = Math.max(0, this.penaltyFlash - step);
       this.updateHud();
@@ -1888,10 +2106,12 @@ void main() {
       if (this.endDelay <= 0) this.finish();
     }
     if (this.phase !== "paused") {
-      this.sync(this.phase === "ended" ? 0 : step);
+      this.sync(this.phase === "ended" ? 0 : sim);
       this.placeCamera(1 - Math.exp(-step * (p.zip ? 5 : 8)));
+      this.cameraFeel(this.phase === "ended" ? 0 : step);
     }
     this.updateThreats();
+    this.updateAwareness();
     this.updateBeacons();
   }
 }

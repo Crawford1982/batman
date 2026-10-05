@@ -21,7 +21,15 @@ Note on "pass 1": `src/grapple.js` / `src/grapple-level.js` (pendulum physics, c
 - Fixed: a global `.intro { display: none }` rule (max-height 550px) hid the Batcave HUD and its Skip button during the intro on phone landscape. HUD state class renamed to `cinematic` in both chapters.
 - Tests: tests/rooftop.test.js (15 pure-logic tests: layout, reachability, vision, grapple, state transitions, takedown rules, objectives, win/loss, reset, score). tests/rooftop.mjs browser check (desktop + phone landscape). cave/flight/driving browser checks re-run and passing.
 
-**Pass 3 should pick up**
+**Feel pass (5 October 2026)**
+- Guards who see a stunned colleague search the body (suspicion starts at 0.6, no alarm, each body found once).
+- Grapple landings are pushed out of vents and plant rooms (previously you could land inside the Laundry Works vent).
+- Awareness ring over each suspicious / searching / alerted guard; red screen edges on an alarm; objective and body-found call-outs.
+- Takedowns: 0.11 s freeze, slow-motion recovery, EMP shockwave and light, camera punch, synthesized zap. Alarm stinger, grapple whoosh, landing thud and dip, wider lens while zipping.
+- Camera cranes up over cover, then pulls in, when a plant room or building blocks it.
+- Still owner-only: listen to the new sounds and judge the hit-stop on real hardware.
+
+**Pass 3 should pick up** (item 3 done in the feel pass; item 2's clipping was already in place)
 1. Human playtest and balance. Only scripted checks have played it; tune guard routes, cone size, suspicion rates, hack times and the 6:00 clock from real runs.
 2. Cone readability: clip cones to the roof edge (they overhang the street) and show cover shadows; cover is honoured by the logic but not drawn.
 3. Stunned guards should be discoverable: a patrol seeing a downed colleague goes to search.

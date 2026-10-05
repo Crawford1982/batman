@@ -405,3 +405,181 @@
     bottom: 150px;
   }
 }
+
+/* Awareness over each guard: the ring fills as he grows suspicious. */
+#roof-aware > div {
+  --c: #ffc35a;
+  --fill: 0;
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  margin: -15px 0 0 -15px;
+  transition: opacity 0.25s;
+}
+#roof-aware > div[hidden] {
+  display: none;
+}
+#roof-aware > div::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(var(--c) calc(var(--fill) * 360deg), #ffffff26 0);
+  -webkit-mask: radial-gradient(circle, transparent 56%, #000 60%);
+  mask: radial-gradient(circle, transparent 56%, #000 60%);
+  filter: drop-shadow(0 0 4px var(--c));
+}
+#roof-aware b {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--c);
+  font:
+    700 18px "Barlow Condensed",
+    sans-serif;
+  text-shadow:
+    0 0 8px var(--c),
+    0 1px 2px #000;
+}
+#roof-aware > div[data-state="search"]::before {
+  background: repeating-conic-gradient(var(--c) 0 30deg, transparent 30deg 45deg);
+  animation: roof-aware-spin 2.4s linear infinite;
+}
+#roof-aware > div[data-state="alert"] {
+  --c: #ff4b3a;
+  --fill: 1;
+  animation: roof-aware-pop 0.35s cubic-bezier(0.2, 1.8, 0.4, 1);
+}
+#roof-aware > div[data-state="alert"] b {
+  font-size: 22px;
+}
+@keyframes roof-aware-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+@keyframes roof-aware-pop {
+  from {
+    transform: scale(1.9);
+  }
+}
+#roof-hud.cinematic #roof-aware {
+  opacity: 0;
+}
+
+/* Full-screen hits: red edges when spotted, a blue-white flash on an EMP. */
+#roof-flash {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+#roof-flash.go[data-kind="alert"] {
+  box-shadow: inset 0 0 22vmin 4vmin #ff2a1a99;
+  animation: roof-flash 1.1s ease-out forwards;
+}
+#roof-flash.go[data-kind="emp"] {
+  background: radial-gradient(circle at 50% 55%, #d7efff55, #5aa8ff22 40%, transparent 70%);
+  animation: roof-flash 0.4s ease-out forwards;
+}
+#roof-flash.go[data-kind="body"] {
+  box-shadow: inset 0 0 18vmin 2vmin #ffc35a66;
+  animation: roof-flash 0.9s ease-out forwards;
+}
+@keyframes roof-flash {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* Objective and event call-outs, top centre. */
+#roof-toast {
+  position: absolute;
+  left: 50%;
+  top: 17%;
+  transform: translateX(-50%);
+  padding: 10px 56px 12px;
+  background: radial-gradient(closest-side, #020812d9, #02081299 60%, transparent);
+  text-align: center;
+  white-space: nowrap;
+  font-family: "Barlow Condensed", sans-serif;
+  text-shadow: 0 2px 12px #000;
+  animation: roof-toast 2.6s ease-out forwards;
+}
+#roof-toast[hidden] {
+  display: none;
+}
+#roof-toast small {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 5px;
+  color: #8fb6d4;
+}
+#roof-toast strong {
+  display: block;
+  margin-top: 2px;
+  padding: 0 18px;
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: 6px;
+  color: #eef4f8;
+  border-top: 1px solid #5aa8ff66;
+  border-bottom: 1px solid #5aa8ff66;
+}
+#roof-toast[data-kind="good"] strong {
+  color: #9ff0bd;
+  border-color: #58e08a66;
+}
+#roof-toast[data-kind="warn"] strong {
+  color: #ffd27a;
+  border-color: #ffc35a66;
+}
+@keyframes roof-toast {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+    letter-spacing: 10px;
+  }
+  12% {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+  78% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+@media (max-width: 899px), (max-height: 550px) {
+  #roof-toast {
+    top: 13%;
+  }
+  #roof-toast strong {
+    font-size: 20px;
+    letter-spacing: 4px;
+  }
+  #roof-aware > div {
+    transform: scale(0.8);
+  }
+}
+/* Portrait phones: the status panel fills the top; call-outs go mid-screen. */
+@media (max-width: 600px) and (orientation: portrait) {
+  #roof-toast {
+    top: 34%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #roof-aware > div,
+  #roof-aware > div::before,
+  #roof-toast {
+    animation: none;
+  }
+  #roof-flash.go {
+    animation-duration: 0.01s;
+  }
+}
