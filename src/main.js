@@ -670,7 +670,9 @@ function update(dt, wallDt = dt) {
     const pressed = !!pad?.buttons[9]?.pressed;
     if (pressed && !handover.padPressed) handover.skip();
     handover.padPressed = pressed;
-    handover.update(Math.min(wallDt, 0.1));
+    // A timed cinematic: run on real time so slow devices are not held in it
+    // for minutes. Hidden tabs already pause it inside update().
+    handover.update(Math.min(wallDt, 0.5));
     return;
   }
   if (mode.startsWith("drive")) {
