@@ -40,8 +40,8 @@
   color: #c7d6df;
   border-color: #677f9050;
 }
-#cave-hud.intro #cave-panel,
-#cave-hud.intro .timer {
+#cave-hud.cinematic #cave-panel,
+#cave-hud.cinematic .timer {
   opacity: 0;
   pointer-events: none;
 }

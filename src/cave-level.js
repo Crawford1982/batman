@@ -378,7 +378,7 @@ export class CaveLevel {
     this.onMode("caveIntro");
     $("pause-menu").hidden = true;
     $("cave-hud").hidden = false;
-    $("cave-hud").classList.add("intro");
+    $("cave-hud").classList.add("cinematic");
     $("cave-skip").hidden = false;
     chapterCard("CHAPTER III / THE SIGNAL", "Find who rang the bell");
     this.radio(
@@ -447,7 +447,7 @@ export class CaveLevel {
     if (this.phase === "intro") {
       this.phase = "play";
       this.onMode("cave");
-      $("cave-hud").classList.remove("intro");
+      $("cave-hud").classList.remove("cinematic");
       $("cave-skip").hidden = true;
       clearPresentation();
       this.radio(
@@ -503,7 +503,7 @@ export class CaveLevel {
     this.revealTime = 0;
     this.found = suspect;
     $("cave-skip").hidden = false;
-    $("cave-hud").classList.add("intro");
+    $("cave-hud").classList.add("cinematic");
     this.radio(
       `ALFRED / ${suspect.name.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}, The Narrows. Leased last month through a shell company.`,
     );
@@ -533,9 +533,10 @@ export class CaveLevel {
       score,
     });
     $("pause-title").textContent = "Source located.";
-    $("pause-copy").textContent = "To be continued in The Narrows.";
+    $("pause-copy").textContent = "Kessler Cold Storage, The Narrows. Go in quietly.";
     $("resume").hidden = true;
-    $("next-level").hidden = true;
+    $("next-level").textContent = "CONTINUE / KESSLER ROOFTOPS →";
+    $("next-level").hidden = false;
     $("pause-menu").hidden = false;
   }
 
