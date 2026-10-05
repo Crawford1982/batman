@@ -50,7 +50,7 @@ export const ANTAGONIST = {
   codename: "TOLLER",
   name: "Ines Varga",
   detail:
-    "Former Wayne Aerospace flight-systems engineer. Her remote-override autopilot was shelved in 2019; Silent Bell used it.",
+    "Former Wayne Aerospace flight-systems engineer. Her remote-override autopilot was shelved before the winter trials; Silent Bell used it.",
 };
 
 // Roofs in The Narrows around Kessler Cold Storage. h is the roof height.
@@ -88,6 +88,7 @@ export const LAYOUT = {
   guards: [
     {
       id: "g1",
+      pause: 2.4,
       roof: "laundry",
       route: [
         [28, -14],
@@ -97,6 +98,7 @@ export const LAYOUT = {
     },
     {
       id: "g2",
+      pause: 1.8,
       roof: "garage",
       route: [
         [18, 38],
@@ -106,6 +108,7 @@ export const LAYOUT = {
     },
     {
       id: "g3",
+      pause: 0.7,
       roof: "kessler",
       route: [
         [58, 0],
@@ -115,6 +118,7 @@ export const LAYOUT = {
     },
     {
       id: "g4",
+      pause: 1.0,
       roof: "kessler",
       route: [
         [86, 30],
@@ -252,7 +256,14 @@ export function canTakedown(player, guard) {
 
 export function rooftopScore(seconds, alarms, takedowns) {
   const base = Math.max(800, Math.round(5000 - seconds * 6));
-  return Math.max(0, base - alarms * 900 + takedowns * 150 + (alarms === 0 ? 1500 : 0));
+  return Math.max(
+    0,
+    base -
+      alarms * 900 +
+      takedowns * 150 +
+      (alarms === 0 ? 1500 : 0) +
+      (alarms === 0 && takedowns === 0 ? 1000 : 0),
+  );
 }
 
 export class RooftopMission {
@@ -293,6 +304,7 @@ export class RooftopMission {
         id: g.id,
         roof: g.roof,
         route: g.route,
+        pause: g.pause ?? 1.2,
         x,
         z,
         facing: Math.atan2(nz - z, nx - x),
@@ -606,7 +618,7 @@ export class RooftopMission {
         const [wx, wz] = g.route[g.waypoint];
         if (this.stepGuard(g, dt, wx, wz, GUARD_SPEED) <= 0.05) {
           g.waypoint = (g.waypoint + 1) % g.route.length;
-          g.wait = 1.2;
+          g.wait = g.pause ?? 1.2;
         }
         break;
       }

@@ -84,6 +84,11 @@ for (const [tag, viewport] of [
   assert.doesNotMatch(results, /ARMOR/);
   await page.screenshot({ path: `verification/cave-${tag}-results.png` });
 
+  await page.click("#next-level");
+  await page.waitForFunction(() => window.__batwing.state.mode.startsWith("roof"));
+  await page.click("#roof-skip");
+  await page.waitForFunction(() => window.__batwing.state.roofPhase === "play");
+  await page.keyboard.press("Escape");
   await page.click("#exit");
   assert.equal((await state(page)).cavePhase, "off");
   await page.click("#start");

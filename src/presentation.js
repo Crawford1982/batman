@@ -1,4 +1,5 @@
 import { recordBest } from "./best-times.js";
+import { TIME_LIMIT as ROOF_LIMIT } from "./rooftop-mission.js";
 const $ = (id) => document.getElementById(id);
 let timer;
 export function chapterCard(kicker, title) {
@@ -17,10 +18,22 @@ export function clearPresentation() {
   $("chapter-card").hidden = true;
   $("chapter-results").hidden = true;
 }
-const TIME_LIMITS = { batwing: 600, batmobile: 300, rooftops: 360 };
+const TIME_LIMITS = { batwing: 600, batmobile: 300, rooftops: ROOF_LIMIT };
 const clock = (seconds) =>
   `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
-export function showResults(chapter, win, seconds, score, health, detail) {
+// `operation` overrides the OPERATION line when a win clears only part of the
+// operation and the story continues (e.g. the Batmobile clears the grid but a
+// rogue carrier survives). Callers that pass nothing keep COMPLETE/INTERRUPTED.
+export function showResults(
+  chapter,
+  win,
+  seconds,
+  score,
+  health,
+  detail,
+  operation,
+  remainingTime,
+) {
   clearPresentation();
   let storage;
   try {
@@ -35,12 +48,24 @@ export function showResults(chapter, win, seconds, score, health, detail) {
   const limit = TIME_LIMITS[chapter];
   const timeText =
     clock(seconds) +
-    (win && limit ? ` · finished with ${clock(Math.max(0, limit - seconds))} remaining` : "");
+    (win && limit
+      ? ` · finished with ${clock(Math.max(0, remainingTime ?? limit - seconds))} remaining`
+      : "");
   const panel = $("chapter-results");
   panel.replaceChildren();
   panel.hidden = false;
   for (const [label, value] of [
-    ["OPERATION", win ? "COMPLETE" : "INTERRUPTED"],
+    [
+      "OPERATION",
+      operation ||
+        (win
+          ? chapter === "batcave"
+            ? "SOURCE IDENTIFIED"
+            : chapter === "batwing"
+              ? "SKIES SECURED"
+              : "COMPLETE"
+          : "INTERRUPTED"),
+    ],
     ["TIME", timeText],
     ["SCORE", score.toLocaleString()],
     health === null ? null : ["ARMOR", Math.max(0, Math.round(health)) + "%"],

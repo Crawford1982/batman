@@ -279,7 +279,7 @@ test("reset restores a fresh mission", () => {
 test("score rewards a quiet, quick run and never goes negative", () => {
   assert.ok(rooftopScore(120, 0, 0) > rooftopScore(120, 1, 0));
   assert.ok(rooftopScore(120, 0, 0) > rooftopScore(240, 0, 0));
-  assert.ok(rooftopScore(120, 0, 2) > rooftopScore(120, 0, 0));
+  assert.ok(rooftopScore(120, 0, 2) > rooftopScore(120, 0, 1)); // takedowns still score; Ghost rewards avoiding all guards
   assert.ok(rooftopScore(5000, 9, 0) >= 0);
 });
 
@@ -463,4 +463,10 @@ test("grapple landings never put the player inside a vent or plant room", () => 
   );
   assert.equal(t.roof, "laundry");
   assert.ok(t.x < 24.5 - PLAYER_RADIUS || t.z > -1 + PLAYER_RADIUS);
+});
+
+test("ghost route competes with takedowns, and an alarm forfeits its bonus", () => {
+  assert.ok(rooftopScore(120, 0, 0) > rooftopScore(120, 0, 4));
+  assert.equal(rooftopScore(120, 0, 0) - rooftopScore(120, 0, 1), 850);
+  assert.ok(rooftopScore(120, 1, 0) < rooftopScore(120, 0, 0));
 });

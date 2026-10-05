@@ -62,6 +62,12 @@ await p.evaluate(() => {
 });
 assert.equal(await p.locator("#pause-title").textContent(), "Gotham is back online.");
 await p.click("#arrival-skip");
+assert.ok(await p.locator("#next-level").isVisible());
+await p.click("#next-level");
+await p.waitForFunction(() => window.__batwing.state.mode.startsWith("cave"));
+await p.click("#cave-skip");
+await p.waitForFunction(() => window.__batwing.state.cavePhase === "play");
+await p.keyboard.press("Escape");
 await p.click("#exit");
 assert.ok(await p.locator("#menu").isVisible());
 await p.click("#start");

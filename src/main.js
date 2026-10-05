@@ -633,7 +633,8 @@ function beginRoof() {
 }
 $("start-roof").onclick = beginRoof;
 // After the Batcave trace the same button continues to the Kessler rooftops.
-$("next-level").onclick = () => (mode.startsWith("cave") ? beginRoof() : beginGround());
+$("next-level").onclick = () =>
+  mode.startsWith("drive") ? beginCave() : mode.startsWith("cave") ? beginRoof() : beginGround();
 const handover = new ChapterHandover({
   ground,
   camera,

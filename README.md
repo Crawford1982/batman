@@ -111,3 +111,19 @@ Next, in order:
 5. Owner playtest of the rooftops; listen to the new synthesized sounds on real hardware.
 
 Testing note for this machine: it has about 7 GB of RAM and crashed with several headless WebGL browsers open. Run the browser suites one at a time.
+
+
+## Connected campaign polish - 5 October 2026
+Flight clears the skies; driving restores shelter power but a rogue carrier remains.
+Continue now leads from driving to the Batcave trace and then Kessler infiltration.
+Extraction delivers the flight log to Gordon and closes Operation Silent Bell.
+Failure/retry, direct chapter entry and returning to the hangar remain available.
+
+Rooftops prioritize one objective, give route-specific hints and use distinct patrol pauses.
+Zero alarms and zero takedowns earns a 1,000-point Ghost bonus; takedowns remain a valid style.
+The closer exploration camera widens for grapples; skipping the intro positions it immediately.
+Snow glare is reduced, and textured rock layers give the cave more depth.
+Guard and animation assets were compressed from 8.3 MB combined to 1.5 MB.
+
+CI now runs cave and rooftop browser suites alongside flight, driving and handover.
+Physical-phone balance, audio and sustained performance still need an owner playtest.

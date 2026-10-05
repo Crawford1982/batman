@@ -467,6 +467,35 @@ export function buildBatcave(scene) {
   water.rotation.x = -Math.PI / 2;
   water.position.y = -5;
   scene.add(water);
+  // Three cheap silhouette layers make the equipment sit inside a cavern.
+  const ridgeMaterial = new T.MeshStandardMaterial({
+    color: 0x344252,
+    roughness: 0.93,
+    emissive: 0x0b1728,
+    emissiveIntensity: 0.09,
+  });
+  const ridgeGeometry = new T.IcosahedronGeometry(1, 3);
+  const ridgeVertices = ridgeGeometry.attributes.position;
+  for (let i = 0; i < ridgeVertices.count; i++) {
+    const x = ridgeVertices.getX(i),
+      y = ridgeVertices.getY(i),
+      z = ridgeVertices.getZ(i);
+    const eroded = 1 + Math.sin(x * 13 + y * 7) * 0.12 + Math.cos(z * 17 - y * 11) * 0.08;
+    ridgeVertices.setXYZ(i, x * eroded, y * eroded, z * eroded);
+  }
+  ridgeGeometry.computeVertexNormals();
+  const ridges = new T.InstancedMesh(ridgeGeometry, ridgeMaterial, 12);
+  const ridgePose = new T.Object3D();
+  for (let i = 0; i < 12; i++) {
+    const layer = Math.floor(i / 4),
+      col = i % 4;
+    ridgePose.position.set(-42 + col * 27, 2 + layer * 4, -28 - layer * 16);
+    ridgePose.scale.set(12 + (i % 3) * 3, 19 + (i % 4) * 3, 6);
+    ridgePose.rotation.set(0.12 * (i % 3), i * 0.63, (i % 2 ? 1 : -1) * 0.18);
+    ridgePose.updateMatrix();
+    ridges.setMatrixAt(i, ridgePose.matrix);
+  }
+  scene.add(ridges);
 
   // Strings of caged work bulbs along the cavern walls give the dark depth.
   const bulbs = new T.InstancedMesh(new T.SphereGeometry(0.22, 8, 6), mats.lamp, 48),
@@ -532,6 +561,9 @@ export function buildBatcave(scene) {
       Object.assign(shellMat, { map, normalMap: normal, roughnessMap: rough });
       shellMat.color.setHex(0x6c7480);
       shellMat.needsUpdate = true;
+      Object.assign(ridgeMaterial, { map, normalMap: normal, roughnessMap: rough });
+      ridgeMaterial.normalScale.set(0.7, 0.7);
+      ridgeMaterial.needsUpdate = true;
       const [pm, pn] = await Promise.all([
         tex("metal_plate_02_diff", true, [2, 2]),
         tex("metal_plate_02_nor", false, [2, 2]),
@@ -561,7 +593,7 @@ export function buildBatcave(scene) {
       const mat = (r) =>
         r.traverse(
           (o) =>
-            o.isMesh && ((o.material = o.material.clone()), o.material.color.multiplyScalar(0.6)),
+            o.isMesh && ((o.material = o.material.clone()), o.material.color.multiplyScalar(0.82)),
         );
       for (let i = 0, placed = 0; placed < 22 && i < 200; i++) {
         const a = Math.PI * (0.85 + rand() * 1.3),

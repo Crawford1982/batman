@@ -36,6 +36,16 @@ for (const [tag, viewport] of [
   await page.screenshot({ path: `verification/rooftop-${tag}-intro.png` });
   await page.click("#roof-skip");
   await page.waitForFunction(() => window.__batwing.state.roofPhase === "play");
+  const viewDistance = await page.evaluate(() => {
+    const r = window.__batwing.roof,
+      p = r.mission.player;
+    return r.camera.position.distanceTo({
+      x: r.origin.x + p.x,
+      y: r.mission.playerY() + 1.5,
+      z: r.origin.z + p.z,
+    });
+  });
+  assert.ok(viewDistance < 10, "skipping intro enters the close gameplay camera immediately");
   await page.waitForFunction(() => window.__batwing.state.roofModel === "ready", null, {
     timeout: 30000,
   });
@@ -104,7 +114,8 @@ for (const [tag, viewport] of [
   assert.match(results, /COMPLETE/);
   assert.match(results, /1 stunned/);
   assert.doesNotMatch(results, /ARMOR/);
-  assert.match(await page.locator("#pause-title").innerText(), /TOLLER/);
+  assert.match(await page.locator("#pause-title").innerText(), /Silent Bell is over/);
+  assert.match(await page.locator("#pause-copy").innerText(), /Gordon has the flight log/);
   await page.screenshot({ path: `verification/rooftop-${tag}-results.png` });
 
   // Restart, then lose to three alarms.

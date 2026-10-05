@@ -39,6 +39,8 @@ jobs:
       - run: node tests/browser.mjs
       - run: node tests/ground.mjs
       - run: node tests/handover.mjs
+      - run: node tests/cave.mjs
+      - run: node tests/rooftop.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

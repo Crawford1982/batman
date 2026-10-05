@@ -52,7 +52,7 @@ export class CaveLevel {
     this.phase = "off";
     this.scene = new T.Scene();
     this.scene.background = new T.Color(0x020409);
-    this.scene.fog = new T.FogExp2(0x03070d, 0.021);
+    this.scene.fog = new T.FogExp2(0x0b1421, 0.012);
     this.screens = [];
     this.bats = [];
     this.parallax = { x: 0, y: 0 };

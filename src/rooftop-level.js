@@ -54,6 +54,21 @@ const MARKER_CLEAR = new T.Color(1.4, 1.9, 2.4);
 const MARKER_WATCHED = new T.Color(2.6, 0.5, 0.35);
 const MOON_DIR = new T.Vector3(-520, 360, -700).normalize();
 
+function pHint(m, act, jump) {
+  const roof = m.player.roof;
+  if (roof === "tenement")
+    return `Walk toward the east roof edge. Aim at Laundry Works; use ${jump} when its landing marker is clear.`;
+  if (roof === "laundry" && m.uplinks.find((u) => u.id === "A").done)
+    return "Laundry uplink disabled. Follow the next marker; cross quietly toward the garage or Kessler.";
+  if (roof === "garage" && m.uplinks.find((u) => u.id === "B").done)
+    return "Garage uplink disabled. Follow the next marker and use cover between patrols.";
+  if (roof === "laundry")
+    return `Watch the guard pause and turn. Cross behind him, then hold ${act} at uplink A. Walking stays quiet.`;
+  if (roof === "garage")
+    return `Take the covered route around the plant rooms. Avoid running near the guard; hold ${act} at uplink B.`;
+  return `Two patrols watch Kessler. Use the hut to break sight, then hold ${act} at uplink C. No alarms or takedowns earns GHOST.`;
+}
+
 function seeded(seed) {
   return () => {
     seed |= 0;
@@ -129,7 +144,7 @@ for (int i = 0; i < ${walls.length}; i++) {
 float drift = smoothstep(2.6, 0.35, edgeDist + (sn - 0.5) * 2.2);
 float snow = clamp(drift * 0.95 + smoothstep(0.66, 0.82, sn) * 0.4, 0.0, 1.0);
 float wet = smoothstep(0.36, 0.22, sn);
-diffuseColor.rgb = mix(diffuseColor.rgb * mix(1.0, 0.75, wet), vec3(0.48, 0.53, 0.58), snow);`,
+diffuseColor.rgb = mix(diffuseColor.rgb * mix(1.0, 0.75, wet), vec3(0.31, 0.36, 0.42), snow);`,
       )
       .replace(
         "#include <roughnessmap_fragment>",
@@ -332,7 +347,7 @@ export class RooftopLevel {
       wood: std({ color: 0x6d5a4a, roughness: 0.9, side: T.DoubleSide }),
       steel: std({ color: 0x3b424b, roughness: 0.45, metalness: 0.8 }),
       paint: std({ color: 0xd9dde0, roughness: 0.35, metalness: 0.3, side: T.DoubleSide }),
-      snow: std({ color: 0xc4ccd4, roughness: 0.95 }),
+      snow: std({ color: 0x8d9caa, roughness: 0.95 }),
       duct: std({ color: 0xaeb5bc, roughness: 0.38, metalness: 0.75 }),
       asphalt: std({ color: 0x23282e, roughness: 0.75, metalness: 0.05 }),
       pavement: std({ color: 0x5d636a, roughness: 0.9 }),
@@ -1413,6 +1428,8 @@ void main() {
     clearTimeout(this.planTimer);
     this.phase = "play";
     this.onMode("roof");
+    this.camera.up.set(0, 1, 0);
+    this.placeCamera(1);
     $("roof-hud").classList.remove("cinematic");
     $("roof-skip").hidden = true;
     clearPresentation();
@@ -1483,7 +1500,9 @@ void main() {
       m.time,
       score,
       null,
-      `${m.uplinksDown}/3 uplinks · ${m.alarms} alarm${m.alarms === 1 ? "" : "s"} · ${m.takedowns} stunned${win && m.alarms === 0 ? " · GHOST" : ""}`,
+      `${m.uplinksDown}/3 uplinks · ${m.alarms} alarm${m.alarms === 1 ? "" : "s"} · ${m.takedowns} stunned${win && m.alarms === 0 ? (m.takedowns === 0 ? " · GHOST +1,000" : " · UNDETECTED") : ""}`,
+      undefined,
+      m.timeLeft(),
     );
     window.gothamAnalytics?.event("level_end", {
       level_name: "rooftops",
@@ -1491,10 +1510,10 @@ void main() {
       elapsed_seconds: m.time,
       score,
     });
-    $("pause-title").textContent = win
-      ? `${ANTAGONIST.codename} has a name.`
-      : "The trail went cold.";
-    $("pause-copy").textContent = win ? `${ANTAGONIST.name}. ${ANTAGONIST.detail}` : m.reason;
+    $("pause-title").textContent = win ? "Silent Bell is over." : "The trail went cold.";
+    $("pause-copy").textContent = win
+      ? `The shelters are warm. The uplinks are silent. Gordon has the flight log linking ${ANTAGONIST.codename} to ${ANTAGONIST.name}. Evidence secured. Gotham makes it through the night.`
+      : m.reason;
     $("resume").hidden = true;
     $("next-level").hidden = true;
     $("pause-menu").hidden = false;
@@ -1845,7 +1864,7 @@ void main() {
     $("roof-hint").textContent = action?.jammed
       ? "An alerted guard is jamming you. Break line of sight and let him stand down."
       : m.stage === "uplinks"
-        ? `Find the three uplink dishes (blue markers). Stand beside one and hold ${act}.`
+        ? pHint(m, act, jump)
         : m.stage === "log"
           ? `Uplinks down. Go to the control hut on Kessler and hold ${act} at the terminal.`
           : "Log copied. Grapple to the water tower and step onto the gold pad.";
@@ -1863,7 +1882,14 @@ void main() {
       box = $("roof-beacons"),
       targets =
         m.stage === "uplinks"
-          ? m.uplinks.filter((u) => !u.done).map((u) => [u, `UPLINK ${u.id}`, "uplink"])
+          ? m.uplinks
+              .filter((u) => !u.done)
+              .sort((a, b) => {
+                if (p.roof === "tenement") return a.id.localeCompare(b.id);
+                return Math.hypot(a.x - p.x, a.z - p.z) - Math.hypot(b.x - p.x, b.z - p.z);
+              })
+              .slice(0, 1)
+              .map((u) => [u, `NEXT · UPLINK ${u.id}`, "uplink"])
           : m.stage === "log"
             ? [[m.terminal, "FLIGHT LOG", "log"]]
             : [[m.layout.extraction, "EXTRACTION", "log"]];
@@ -1988,11 +2014,16 @@ void main() {
       py = m.playerY(),
       o = this.origin,
       target = new T.Vector3(o.x + p.x, py + 1.5, o.z + p.z),
+      distance = p.zip
+        ? CAMERA_DISTANCE
+        : this.target
+          ? CAMERA_DISTANCE * 0.9
+          : CAMERA_DISTANCE * 0.72,
       boom = (pitch) =>
         new T.Vector3(
-          target.x - Math.cos(this.yaw) * CAMERA_DISTANCE * Math.cos(pitch),
-          target.y + CAMERA_DISTANCE * Math.sin(pitch),
-          target.z - Math.sin(this.yaw) * CAMERA_DISTANCE * Math.cos(pitch),
+          target.x - Math.cos(this.yaw) * distance * Math.cos(pitch),
+          target.y + distance * Math.sin(pitch),
+          target.z - Math.sin(this.yaw) * distance * Math.cos(pitch),
         );
     // When cover blocks the boom, crane up over it; pull in only as a last resort.
     let pitch = CAMERA_PITCH,

@@ -73,7 +73,7 @@ export class GroundLevel {
     );
     document.body.insertAdjacentHTML(
       "beforeend",
-      `<section id="arrival-film" hidden aria-label="Mission complete"><div class="arrival-top">OPERATION SILENT BELL / GOTHAM CATHEDRAL</div><div class="arrival-copy"><small>GCPD / SECURE CHANNEL</small><h2>The city has a tomorrow.</h2><p>Override accepted. Heat restored.<br>Gordon’s people are safe inside.</p><button id="arrival-skip">VIEW MISSION RESULTS →</button></div></section>`,
+      `<section id="arrival-film" hidden aria-label="Grid threat cleared"><div class="arrival-top">OPERATION SILENT BELL / GOTHAM CATHEDRAL</div><div class="arrival-copy"><small>GCPD / SECURE CHANNEL</small><h2>The city has a tomorrow.</h2><p>Override accepted. Heat restored.<br>Gordon’s people are safe inside. One rogue carrier is still re-keying the hijack from the Narrows.</p><button id="arrival-skip">VIEW MISSION RESULTS →</button></div></section>`,
     );
     $("arrival-skip").onclick = () => this.endArrival();
     document
@@ -585,6 +585,7 @@ export class GroundLevel {
       this.car.score,
       this.car.health,
       `${this.car.checkpoint} / ${DRIVE_ROUTE.length} checkpoints · ${this.cleanSections} clean sections · ${this.evasions} evasions · ${this.countered} EMP counters`,
+      win ? "GRID RESTORED · SIGNAL ACTIVE" : undefined,
     );
     window.gothamAnalytics?.event("level_end", {
       level_name: "batmobile",
@@ -596,7 +597,7 @@ export class GroundLevel {
     this.onMode("driveEnded");
     $("pause-title").textContent = win ? "Gotham is back online." : "The override is lost.";
     $("pause-copy").textContent = win
-      ? `Gordon has the core. The drones are grounded. ${this.car.score} points · ${Math.floor(this.car.elapsed / 60)}m ${Math.floor(this.car.elapsed % 60)}s. The cathedral is safe. Operation Silent Bell complete.`
+      ? `Gordon has the override and the shelters are warm. ${this.car.score} points · ${Math.floor(this.car.elapsed / 60)}m ${Math.floor(this.car.elapsed % 60)}s. Alfred still hears a rogue carrier in the Narrows. Return to the Batcave and trace its source.`
       : this.car.health <= 0
         ? "The Batmobile is disabled. Use EMP against mines and marked drone strikes."
         : "The rogue network reconnected. Follow the route and use jet boost on the straights.";
@@ -637,6 +638,8 @@ export class GroundLevel {
     this.onMode("driveEnded");
     $("arrival-film").hidden = true;
     $("pause-menu").hidden = false;
+    $("next-level").textContent = "CONTINUE / THE SIGNAL →";
+    $("next-level").hidden = false;
   }
   radio(text) {
     this.audio.radioMessage(text);
