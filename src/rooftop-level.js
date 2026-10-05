@@ -1762,7 +1762,9 @@ void main() {
       box.appendChild(el);
     }
     this.camera.updateMatrixWorld();
-    const v = new T.Vector3();
+    const v = new T.Vector3(),
+      compact = innerWidth < 900,
+      placed = [];
     [...box.children].forEach((el, i) => {
       const t = targets[i];
       if (!t || this.phase !== "play") return (el.hidden = true);
@@ -1788,11 +1790,18 @@ void main() {
         py = (0.5 - y * 0.5) * innerHeight;
       const panel = $("roof-status").getBoundingClientRect();
       if (px < panel.right + 20 && py < panel.bottom + 40) py = panel.bottom + 40;
-      px = Math.min(innerWidth - 110, Math.max(110, px));
+      const text = `${label} · ${Math.round(dist)} M${
+          o.roof === p.roof || compact ? "" : " · " + m.roof(o.roof).name
+        }`,
+        half = text.length * 3.4 + 8;
+      px = Math.min(innerWidth - half, Math.max(half, px));
+      // Nudge a label down past any earlier one it would overlap.
+      for (const q of placed)
+        if (Math.abs(px - q.x) < half + q.half && Math.abs(py - q.y) < 34) py = q.y + 34;
+      placed.push({ x: px, y: py, half });
       el.style.left = `${px}px`;
       el.style.top = `${py}px`;
-      el.querySelector("span").textContent =
-        `${label} · ${Math.round(dist)} M${o.roof === p.roof ? "" : " · " + m.roof(o.roof).name}`;
+      el.querySelector("span").textContent = text;
     });
   }
 

@@ -398,3 +398,10 @@
 #roof-hud.cinematic #roof-beacons {
   opacity: 0;
 }
+
+/* Phone portrait: the action buttons sit higher than the prompt line. */
+@media (pointer: coarse) and (max-aspect-ratio: 3/4) {
+  #roof-prompt {
+    bottom: 150px;
+  }
+}

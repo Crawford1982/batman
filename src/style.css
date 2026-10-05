@@ -738,9 +738,16 @@ footer a {
   color: #efc986;
 }
 
-@media (min-height: 551px) and (max-height: 700px) {
+/* Short laptop screens too: the chapter buttons must clear the footer. */
+@media (min-height: 551px) and (max-height: 820px) {
   .menu-content {
-    top: 18%;
+    top: 16%;
+  }
+  #start-ground,
+  #start-cave,
+  #start-roof {
+    margin-top: 7px;
+    padding: 10px 25px;
   }
   .menu-content h1 {
     font-size: 96px;

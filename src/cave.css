@@ -100,6 +100,16 @@
 #cave-map {
   cursor: crosshair;
 }
+/* Desktop and laptop: cap the puzzle canvases so the controls under them
+   stay in view without scrolling the panel. Aspect ratio is kept. */
+@media (min-width: 761px) and (min-height: 501px) {
+  .cave-stage canvas {
+    width: auto;
+    max-width: 100%;
+    max-height: calc(100vh - 470px);
+    margin: 0 auto;
+  }
+}
 .cave-side {
   margin-top: 12px;
 }
