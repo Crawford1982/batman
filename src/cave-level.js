@@ -20,6 +20,7 @@ import {
   caveScore,
   wrapAngle,
 } from "./cave-puzzles.js";
+import { buildBatcave } from "./batcave-set.js";
 import "./cave.css";
 
 const $ = (id) => document.getElementById(id);
@@ -56,180 +57,24 @@ export class CaveLevel {
     this.bats = [];
     this.parallax = { x: 0, y: 0 };
     this.viewShift = 0;
-    this.buildCave();
-    this.buildComputer();
+    this.buildSet();
     this.buildBats();
     this.bindUI();
   }
 
-  buildCave() {
-    const rand = seeded(1989);
-    const shell = new T.SphereGeometry(70, 64, 40);
-    const p = shell.attributes.position,
-      v = new T.Vector3();
-    for (let i = 0; i < p.count; i++) {
-      v.fromBufferAttribute(p, i).normalize();
-      const n =
-        Math.sin(v.x * 7.1 + v.y * 3.3) * 0.5 +
-        Math.sin(v.z * 9.7 - v.x * 4.1) * 0.35 +
-        Math.sin(v.y * 15 + v.z * 11) * 0.18;
-      v.multiplyScalar(70 * (1 + n * 0.09));
-      p.setXYZ(i, v.x * 1.25, v.y * 0.62 + 8, v.z * 1.1);
-    }
-    shell.computeVertexNormals();
-    this.scene.add(
-      new T.Mesh(
-        shell,
-        new T.MeshStandardMaterial({
-          color: 0x2b3038,
-          roughness: 1,
-          flatShading: true,
-          side: T.BackSide,
-        }),
-      ),
-    );
-
-    const stalactite = new T.ConeGeometry(0.9, 1, 6);
-    stalactite.rotateX(Math.PI);
-    stalactite.translate(0, -0.5, 0);
-    const rocks = new T.InstancedMesh(
-      stalactite,
-      new T.MeshStandardMaterial({ color: 0x23272d, roughness: 1, flatShading: true }),
-      90,
-    );
-    const m = new T.Matrix4(),
-      q = new T.Quaternion();
-    for (let i = 0; i < rocks.count; i++) {
-      const a = rand() * TAU,
-        r = 8 + rand() * 62,
-        len = 3 + rand() * 11;
-      m.compose(
-        new T.Vector3(Math.cos(a) * r, 46 - r * 0.32 + rand() * 4, Math.sin(a) * r * 0.85),
-        q,
-        new T.Vector3(0.6 + rand() * 1.4, len, 0.6 + rand() * 1.4),
-      );
-      rocks.setMatrixAt(i, m);
-    }
-    this.scene.add(rocks);
-
-    const water = new T.Mesh(
-      new T.PlaneGeometry(260, 260),
-      new T.MeshStandardMaterial({ color: 0x02070d, metalness: 0.85, roughness: 0.18 }),
-    );
-    water.rotation.x = -Math.PI / 2;
-    water.position.y = -5;
-    this.scene.add(water);
-
-    const steel = new T.MeshStandardMaterial({ color: 0x2a3038, metalness: 0.75, roughness: 0.42 });
-    const deck = new T.Mesh(new T.CylinderGeometry(15, 15.5, 0.9, 6), steel);
-    deck.rotation.y = Math.PI / 6;
-    this.scene.add(deck);
-    for (let i = 0; i < 6; i++) {
-      const leg = new T.Mesh(new T.CylinderGeometry(0.5, 0.7, 6, 8), steel);
-      const a = (i / 6) * TAU;
-      leg.position.set(Math.cos(a) * 11, -3.2, Math.sin(a) * 11);
-      this.scene.add(leg);
-    }
-    const edge = new T.Mesh(
-      new T.RingGeometry(14.5, 14.85, 6),
-      new T.MeshBasicMaterial({ color: 0x5aa8ff, side: T.DoubleSide }),
-    );
-    edge.rotation.set(-Math.PI / 2, 0, Math.PI / 6);
-    edge.position.y = 0.47;
-    this.scene.add(edge);
-    const bridge = new T.Mesh(new T.BoxGeometry(4.2, 0.45, 34), steel);
-    bridge.position.set(0, 0.1, 31);
-    this.scene.add(bridge);
-    for (const side of [-1, 1]) {
-      const strip = new T.Mesh(
-        new T.BoxGeometry(0.12, 0.08, 34),
-        new T.MeshBasicMaterial({ color: 0x3f7fd0 }),
-      );
-      strip.position.set(side * 2.1, 0.38, 31);
-      this.scene.add(strip);
-    }
-
-    this.scene.add(new T.HemisphereLight(0x4a5f80, 0x0a0c10, 1.1));
-    const bulbGeo = new T.SphereGeometry(0.22, 8, 6);
-    const bulbs = new T.InstancedMesh(bulbGeo, new T.MeshBasicMaterial({ color: 0xffc070 }), 44);
-    for (let i = 0; i < bulbs.count; i++) {
-      const side = i < 22 ? -1 : 1,
-        u = (i % 22) / 21,
-        z = -45 + u * 70;
-      m.compose(
-        new T.Vector3(
-          side * (52 - Math.abs(z + 10) * 0.25),
-          16 - Math.sin(u * Math.PI * 4) ** 2 * 3,
-          z,
-        ),
-        q,
-        new T.Vector3(1, 1, 1),
-      );
-      bulbs.setMatrixAt(i, m);
-    }
-    this.scene.add(bulbs);
-    for (const [x, z, color] of [
-      [-44, -15, 0xffa860],
-      [44, -15, 0xffa860],
-      [0, -55, 0x5f8dff],
-    ]) {
-      const lamp = new T.PointLight(color, 220, 60, 1.4);
-      lamp.position.set(x, 14, z);
-      this.scene.add(lamp);
-    }
-    const work = new T.SpotLight(0xffc47a, 260, 60, 0.6, 0.6, 1.4);
-    work.position.set(6, 24, 6);
-    work.target.position.set(0, 0, -4);
-    this.scene.add(work, work.target);
-    this.screenLight = new T.PointLight(0x5fa8ff, 70, 34, 1.3);
-    this.screenLight.position.set(0, 5, -6);
-    this.scene.add(this.screenLight);
-    const rim = new T.PointLight(0x3a6dff, 40, 90, 1.2);
-    rim.position.set(-30, 18, -40);
-    this.scene.add(rim);
-  }
-
-  buildComputer() {
-    const frameMat = new T.MeshStandardMaterial({
-      color: 0x14181e,
-      metalness: 0.6,
-      roughness: 0.5,
-    });
-    const desk = new T.Mesh(new T.BoxGeometry(11, 1.1, 2.6), frameMat);
-    desk.position.set(0, 1.1, -7.2);
-    this.scene.add(desk);
-    const keyboard = new T.Mesh(
-      new T.BoxGeometry(4, 0.08, 0.9),
-      new T.MeshBasicMaterial({ color: 0x1d3e66 }),
-    );
-    keyboard.position.set(0, 1.7, -6.6);
-    keyboard.rotation.x = -0.15;
-    this.scene.add(keyboard);
-    const layout = [
-      { x: 0, y: 4.9, w: 6.4, h: 3.6, ry: 0, main: true },
-      { x: -5.6, y: 4.6, w: 3.8, h: 2.6, ry: 0.42 },
-      { x: 5.6, y: 4.6, w: 3.8, h: 2.6, ry: -0.42 },
-      { x: -4.6, y: 7.6, w: 3.4, h: 2, ry: 0.32 },
-      { x: 4.6, y: 7.6, w: 3.4, h: 2, ry: -0.32 },
-    ];
-    for (const [i, s] of layout.entries()) {
+  // The Batcomputer set and cavern live in batcave-set.js; this class keeps
+  // the screens' canvases, the camera and the puzzles.
+  buildSet() {
+    this.set = buildBatcave(this.scene);
+    this.screenLight = this.set.screenLight;
+    for (const [i, s] of this.set.screens.entries()) {
       const canvas = document.createElement("canvas");
-      canvas.width = s.main ? 640 : 384;
+      canvas.width = s.main ? 640 : s.w > 0.5 ? 384 : 192;
       canvas.height = Math.round((canvas.width * s.h) / s.w);
       const texture = new T.CanvasTexture(canvas);
       texture.colorSpace = T.SRGBColorSpace;
-      const group = new T.Group();
-      group.position.set(s.x, s.y, -8.6 + Math.abs(s.ry) * 2.2);
-      group.rotation.y = s.ry;
-      const bezel = new T.Mesh(new T.BoxGeometry(s.w + 0.3, s.h + 0.3, 0.25), frameMat);
-      bezel.position.z = -0.14;
-      const screen = new T.Mesh(
-        new T.PlaneGeometry(s.w, s.h),
-        new T.MeshBasicMaterial({ map: texture, toneMapped: false }),
-      );
-      group.add(bezel, screen);
-      this.scene.add(group);
-      this.screens.push({ canvas, ctx: canvas.getContext("2d"), texture, main: !!s.main, seed: i });
+      s.mesh.material = new T.MeshBasicMaterial({ map: texture, toneMapped: false });
+      this.screens.push({ canvas, ctx: canvas.getContext("2d"), texture, main: s.main, seed: i });
     }
   }
 
@@ -364,6 +209,10 @@ export class CaveLevel {
   }
 
   begin() {
+    if (!this.kitRequested) {
+      this.kitRequested = true;
+      this.set.loadKit();
+    }
     clearPresentation();
     this.audio.stopVoice();
     this.audio.start();
@@ -727,7 +576,9 @@ export class CaveLevel {
         w = s.canvas.width,
         h = s.canvas.height;
       if (s.main && this.stage !== "identify" && this.phase !== "intro") {
+        c.filter = "brightness(1.7) contrast(1.15)";
         c.drawImage(this.stage === "trace" ? this.map : this.wave, 0, 0, w, h);
+        c.filter = "none";
       } else {
         c.fillStyle = "#03101d";
         c.fillRect(0, 0, w, h);
@@ -755,6 +606,14 @@ export class CaveLevel {
           }
         c.globalAlpha = 1;
       }
+      // CRT treatment: scanlines and a dark vignette toward the tube's edge.
+      c.fillStyle = "rgba(0,0,0,0.22)";
+      for (let y = 0; y < h; y += 3) c.fillRect(0, y, w, 1);
+      const vg = c.createRadialGradient(w / 2, h / 2, h * 0.45, w / 2, h / 2, w * 0.75);
+      vg.addColorStop(0, "rgba(0,0,0,0)");
+      vg.addColorStop(1, "rgba(0,0,0,0.35)");
+      c.fillStyle = vg;
+      c.fillRect(0, 0, w, h);
       s.texture.needsUpdate = true;
     }
   }
@@ -778,8 +637,8 @@ export class CaveLevel {
       $("cave-radio").textContent = "";
       this.radioUntil = 0;
     }
-    const rest = new T.Vector3(this.parallax.x * 0.6, 4.4 - this.parallax.y * 0.3, 7.5),
-      focus = new T.Vector3(0, 4.6, -9);
+    const rest = new T.Vector3(this.parallax.x * 0.6, 5.8 - this.parallax.y * 0.3, 8.5),
+      focus = new T.Vector3(0, 4.9, -8.6);
     if (this.phase === "intro") {
       this.introTime += Math.min(wallDt, 0.1);
       const k = smooth(Math.min(1, this.introTime / INTRO_SECONDS));
@@ -819,5 +678,6 @@ export class CaveLevel {
       }
     }
     this.screenLight.intensity = 62 + Math.sin(now * 3.1) * 6;
+    this.set.update(now, this.phase === "play" && this.stage !== "identify" ? wallDt * 4 : 0);
   }
 }

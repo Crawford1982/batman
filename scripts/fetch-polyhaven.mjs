@@ -1,4 +1,5 @@
-// Download the CC0 Poly Haven sources used by the Kessler rooftops into
+// Download the CC0 Poly Haven sources used by the Kessler rooftops and the
+// Batcave into
 // ../assets-source/polyhaven (outside the repository). Re-run is idempotent.
 // Then run scripts/build-rooftop-kit.mjs to produce the delivered assets.
 //
@@ -30,6 +31,17 @@ export const TEXTURES = [
   "rusty_metal_shutter",
   "roof_planks",
 ];
+// Batcave (Chapter III part one): photogrammetry rock faces for the cavern
+// walls, and the industrial fittings around the Batcomputer dais.
+export const CAVE_MODELS = [
+  "rock_face_01",
+  "rock_face_02",
+  "mounted_fluorescent_lights",
+  "hanging_industrial_lamp",
+  "metal_tool_chest",
+  "security_camera_02",
+];
+export const CAVE_TEXTURES = ["rock_face_03", "metal_plate_02"];
 export const HDRI = "rooftop_night";
 const OUT = "../assets-source/polyhaven";
 
@@ -44,7 +56,7 @@ const json = async (url) => (await fetch(url)).json();
 
 if (import.meta.url === `file:///${process.argv[1].replace(/\\/g, "/")}`) {
   const credits = {};
-  for (const id of MODELS) {
+  for (const id of [...MODELS, ...CAVE_MODELS]) {
     const files = await json(`https://api.polyhaven.com/files/${id}`),
       gltf = files.gltf["1k"].gltf;
     await get(gltf.url, `${OUT}/models/${id}/${id}.gltf`);
@@ -53,7 +65,7 @@ if (import.meta.url === `file:///${process.argv[1].replace(/\\/g, "/")}`) {
     credits[id] = Object.keys((await json(`https://api.polyhaven.com/info/${id}`)).authors);
     console.log("model", id);
   }
-  for (const id of TEXTURES) {
+  for (const id of [...TEXTURES, ...CAVE_TEXTURES]) {
     const files = await json(`https://api.polyhaven.com/files/${id}`);
     for (const [map, key] of [
       ["Diffuse", "diff"],

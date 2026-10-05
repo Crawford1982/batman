@@ -24,6 +24,7 @@ const MODELS = {
   crew: "src/models/crew.glb",
   moves: "src/models/moves.glb",
   rooftop: "src/models/rooftop-kit.glb",
+  cave: "src/models/cave-kit.glb",
 };
 const MAX_TEXTURE = 1024;
 
