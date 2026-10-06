@@ -35,6 +35,7 @@ const launchEye = new T.Vector3();
 const params = new URLSearchParams(location.search);
 const testMode = params.has("test");
 let renderer;
+let initializationFailed = false;
 try {
   renderer = new T.WebGLRenderer({
     canvas: $("game"),
@@ -42,9 +43,15 @@ try {
     powerPreference: "high-performance",
   });
 } catch (e) {
+  initializationFailed = true;
+  $("start").disabled = true;
+  $("start").textContent = "WebGL NOT AVAILABLE";
+  $("loading").hidden = false;
+  $("loading").innerHTML =
+    'WebGL could not start. <a href="./about.html" style="color: #e4c17e;">Learn about system requirements</a> · <a href="./trailer/" style="color: #e4c17e;">Watch trailer</a>';
   $("error").hidden = false;
-  $("error").textContent =
-    "WebGL could not start. Enable hardware acceleration in your browser, then reload.";
+  $("error").innerHTML =
+    'WebGL initialization failed. Enable hardware acceleration in your browser settings, then <button onclick="location.reload()" style="display: inline; padding: 8px 16px; margin: 0 8px; font-size: 11px;">RETRY</button>';
   throw e;
 }
 renderer.info.autoReset = false;
@@ -132,56 +139,79 @@ function quality() {
 }
 $("quality").onchange = quality;
 quality();
-$("loading").textContent = modelProgress(0, 0);
-createModelLoader().load(
-  batwingUrl,
-  (g) => {
-    aircraft = g.scene;
-    const box = new T.Box3().setFromObject(aircraft),
-      size = box.getSize(new T.Vector3()),
-      center = box.getCenter(new T.Vector3());
-    aircraft.position.sub(center);
-    const scaled = new T.Group();
-    scaled.add(aircraft);
-    scaled.scale.setScalar(17 / size.x);
-    scaled.rotation.y = Math.PI;
-    modelPivot.add(scaled);
-    aircraft.traverse((o) => {
-      if (o.isMesh) {
-        o.frustumCulled = false;
-        if (o.material) {
-          for (const material of Array.isArray(o.material) ? o.material : [o.material]) {
-            material.envMapIntensity = 0.65;
-            if (material.metalness > 0.8) material.metalness = 0.65;
-            // Broaden hull highlights while keeping canopy glass glossy.
-            if (material.metalness > 0.35 && !material.transparent) {
-              material.roughness = Math.max(material.roughness, 0.34);
-              material.onBeforeCompile = (shader) => {
-                shader.fragmentShader = shader.fragmentShader.replace(
-                  "#include <roughnessmap_fragment>",
-                  "#include <roughnessmap_fragment>\nroughnessFactor = max(roughnessFactor, 0.34);",
-                );
-              };
+if (!initializationFailed) {
+  $("loading").textContent = modelProgress(0, 0);
+  
+  // Timeout to detect stuck loading
+  const loadTimeout = setTimeout(() => {
+    if (!ready) {
+      $("start").disabled = true;
+      $("start").textContent = "LOADING TIMEOUT";
+      $("loading").hidden = false;
+      $("loading").innerHTML =
+        'Aircraft loading timed out. Check your connection. <a href="./about.html" style="color: #e4c17e;">About & controls</a> · <a href="./trailer/" style="color: #e4c17e;">Watch trailer</a>';
+      $("error").hidden = false;
+      $("error").innerHTML =
+        'Asset loading failed or timed out. <button onclick="location.reload()" style="display: inline; padding: 8px 16px; margin: 0 8px; font-size: 11px;">RETRY</button>';
+    }
+  }, 15000);
+
+  createModelLoader().load(
+    batwingUrl,
+    (g) => {
+      clearTimeout(loadTimeout);
+      aircraft = g.scene;
+      const box = new T.Box3().setFromObject(aircraft),
+        size = box.getSize(new T.Vector3()),
+        center = box.getCenter(new T.Vector3());
+      aircraft.position.sub(center);
+      const scaled = new T.Group();
+      scaled.add(aircraft);
+      scaled.scale.setScalar(17 / size.x);
+      scaled.rotation.y = Math.PI;
+      modelPivot.add(scaled);
+      aircraft.traverse((o) => {
+        if (o.isMesh) {
+          o.frustumCulled = false;
+          if (o.material) {
+            for (const material of Array.isArray(o.material) ? o.material : [o.material]) {
+              material.envMapIntensity = 0.65;
+              if (material.metalness > 0.8) material.metalness = 0.65;
+              // Broaden hull highlights while keeping canopy glass glossy.
+              if (material.metalness > 0.35 && !material.transparent) {
+                material.roughness = Math.max(material.roughness, 0.34);
+                material.onBeforeCompile = (shader) => {
+                  shader.fragmentShader = shader.fragmentShader.replace(
+                    "#include <roughnessmap_fragment>",
+                    "#include <roughnessmap_fragment>\nroughnessFactor = max(roughnessFactor, 0.34);",
+                  );
+                };
+              }
             }
           }
         }
-      }
-    });
-    ready = true;
-    $("start").disabled = false;
-    $("start").textContent = "BEGIN OPERATION  →";
-    $("loading").hidden = true;
-  },
-  (event) => {
-    $("loading").textContent = modelProgress(event.loaded, event.total);
-  },
-  (e) => {
-    $("loading").hidden = false;
-    $("loading").textContent = "Aircraft failed to load. Reload to retry.";
-    $("error").hidden = false;
-    $("error").textContent = e.message;
-  },
-);
+      });
+      ready = true;
+      $("start").disabled = false;
+      $("start").textContent = "BEGIN OPERATION  →";
+      $("loading").hidden = true;
+    },
+    (event) => {
+      $("loading").textContent = modelProgress(event.loaded, event.total);
+    },
+    (e) => {
+      clearTimeout(loadTimeout);
+      $("start").disabled = true;
+      $("start").textContent = "ASSET LOAD FAILED";
+      $("loading").hidden = false;
+      $("loading").innerHTML =
+        'Aircraft model failed to load. <a href="./about.html" style="color: #e4c17e;">About the game</a> · <a href="./trailer/" style="color: #e4c17e;">Watch trailer instead</a>';
+      $("error").hidden = false;
+      $("error").innerHTML =
+        `Asset load error: ${e.message}. Check your connection. <button onclick="location.reload()" style="display: inline; padding: 8px 16px; margin: 0 8px; font-size: 11px;">RETRY</button>`;
+    },
+  );
+}
 const flameMat = new T.MeshBasicMaterial({
   color: 0x84cdff,
   transparent: true,
