@@ -6,6 +6,11 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 4173",
     "build": "vite build --base=./ && node scripts/copy-trailer.mjs",
+    "build:portal": "node scripts/build-portal.mjs && vite build --config vite.config.portal.js && node scripts/package-portal.mjs",
+    "build:portal:prepare": "node scripts/build-portal.mjs",
+    "build:portal:vite": "vite build --config vite.config.portal.js",
+    "build:portal:package": "node scripts/package-portal.mjs",
+    "dev:portal": "node scripts/build-portal.mjs && vite --config vite.config.portal.js --port 4174",
     "test": "node --test tests/*.test.js",
     "verify": "node tests/browser.mjs",
     "compress": "node scripts/compress-models.mjs",

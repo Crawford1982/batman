@@ -1,8 +1,11 @@
 node_modules/
 dist/
+dist-portal/
+portal-src/
 verification/*.png
 verification/*.html
 batwing-website.zip
+shadow-striker-portal.zip
 *.log
 .env
 .env.*
