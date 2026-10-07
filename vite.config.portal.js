@@ -16,15 +16,17 @@ export default defineConfig({
   build: {
     outDir: 'dist-portal',
     emptyOutDir: true,
+    sourcemap: false,  // Disable sourcemaps for portal build
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'portal/index.html')
+      },
+      output: {
+        sourcemap: false  // Ensure sourcemaps are disabled
       }
     },
     assetsInlineLimit: 0,
-    // Disable minification for now (can enable later with proper dependencies)
     minify: false,
-    // Smaller chunks for faster loading
     chunkSizeWarningLimit: 1000
   },
   // Ensure compatibility with iframe embedding

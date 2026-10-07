@@ -316,7 +316,7 @@ async function main() {
   }
   
   // Update any remaining files with chapter/level names
-  const moreFiles = ['cave-level.js', 'rooftop-level.js', 'mission.js', 'feedback.js', 'presentation.js'];
+  const moreFiles = ['cave-level.js', 'rooftop-level.js', 'mission.js', 'feedback.js', 'presentation.js', 'ground-level.js', 'main.js'];
   for (const file of moreFiles) {
     const filePath = path.join(portalSrcDir, file);
     try {
@@ -328,9 +328,9 @@ async function main() {
         .replace(/chapter === "batcave"/g, 'chapter === "headquarters"')
         .replace(/chapter === "batwing"/g, 'chapter === "striker"')
         .replace(/chapter === "batmobile"/g, 'chapter === "nightblade"')
-        .replace(/gothamAnalytics/g, 'steelCityAnalytics')
-        .replace(/localStorage\.setItem\("gotham-/g, 'localStorage.setItem("steel-city-')
-        .replace(/localStorage\.getItem\("gotham-/g, 'localStorage.getItem("steel-city-')
+        .replace(/gothamAnalytics/g, 'portalAnalytics')
+        .replace(/localStorage\.setItem\("gotham-/g, 'localStorage.setItem("portal-')
+        .replace(/localStorage\.getItem\("gotham-/g, 'localStorage.getItem("portal-')
         .replace(/voice:\s*"batman"/g, 'voice: "striker"');
       await fs.writeFile(filePath, content);
     } catch (err) {
