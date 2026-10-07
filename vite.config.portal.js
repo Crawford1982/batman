@@ -6,6 +6,7 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig({
   base: './',
+  publicDir: 'portal',  // Use portal directory instead of public for portal build
   resolve: {
     alias: {
       // Point src imports to portal-src
