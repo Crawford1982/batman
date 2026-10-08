@@ -44,13 +44,17 @@ const TEXT_REPLACEMENTS = {
   'GOTHAM CITY': 'STEEL CITY',
   'GOTHAM': 'STEEL CITY',
   
-  // Districts
+  // Districts (specific locations first, then general terms)
   'OLD GOTHAM': 'OLD QUARTER',
   'Old Gotham': 'Old Quarter',
   'TRICORNER DOCKS': 'RIVERSIDE DOCKS',
   'Tricorner Docks': 'Riverside Docks',
+  'TRICORNER SUBSTATION': 'RIVERSIDE SUBSTATION',
+  'TRICORNER': 'RIVERSIDE',
+  'Tricorner': 'Riverside',
   'THE NARROWS': 'THE FLATS',
   'The Narrows': 'The Flats',
+  'the Narrows': 'the Flats',
   'NARROWS': 'FLATS',
   'GOTHAM RIVER': 'CENTRAL RIVER',
   'Gotham River': 'Central River',
@@ -58,7 +62,6 @@ const TEXT_REPLACEMENTS = {
   // Landmarks
   'WAYNE TOWER': 'VANGUARD TOWER',
   'Wayne Tower': 'Vanguard Tower',
-  'TRICORNER SUBSTATION': 'RIVERSIDE SUBSTATION',
   
   // Organization
   'Wayne Aerospace': 'Vanguard Systems',
@@ -424,6 +427,13 @@ async function main() {
   );
   // Fix the script path from ../portal-src/main.js to ./portal-src/main.js
   indexContent = indexContent.replace('../portal-src/', './portal-src/');
+  
+  // Apply text replacements to index.html
+  for (const [oldText, newText] of Object.entries(TEXT_REPLACEMENTS)) {
+    const regex = new RegExp(oldText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+    indexContent = indexContent.replace(regex, newText);
+  }
+  
   await fs.writeFile(
     path.join(rootDir, 'index.portal.html'),
     indexContent
