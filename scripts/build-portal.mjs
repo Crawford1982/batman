@@ -69,6 +69,16 @@ const TEXT_REPLACEMENTS = {
   'Gordon': 'CHIEF REEVES',
   'GORDON': 'CHIEF REEVES',
   
+  // Voice file references - replace alfred-/gordon- with handler-/reeves-
+  'alfred-': 'handler-',
+  'gordon-': 'reeves-',
+  'batman-air': 'striker-air',
+  'batman-drive': 'nightblade-drive',
+  
+  // Standalone voice character IDs (must come after prefixed versions to avoid double replacement)
+  '"alfred"': '"handler"',
+  '"gordon"': '"reeves"',
+  
   // Misc
   'Batman 1989': 'Shadow Striker',
   'WINTER, 1989': 'WINTER',

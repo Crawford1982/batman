@@ -5,31 +5,31 @@ export const GROUND_CONTACT =
   "CHIEF REEVES / They've found you. Keep moving—drones are lining up an attack.";
 
 export const RADIO_LINES = {
-  "alfred-theatre": [
+  "handler-theatre": [
     "HANDLER",
     "The theatre district is deserted, sir, but those rooftops are not.",
   ],
-  "alfred-railway": ["HANDLER", "The elevated railway will give you cover, keep moving."],
-  "alfred-emp": ["HANDLER", "Their tracking signal has dropped, nicely done."],
-  "alfred-relay-down": ["HANDLER", "That relay is offline, their grip on the city is weakening."],
-  "gordon-north": ["CHIEF REEVES", "Head north into the Old Quarter, we are keeping the shelter doors open."],
-  "gordon-approach": ["CHIEF REEVES", "We can hear your engine, bring the override to the front steps."],
-  "gordon-hold": ["CHIEF REEVES", "The families are holding on, just get here in one piece."],
-  "gordon-last-wave": [
+  "handler-railway": ["HANDLER", "The elevated railway will give you cover, keep moving."],
+  "handler-emp": ["HANDLER", "Their tracking signal has dropped, nicely done."],
+  "handler-relay-down": ["HANDLER", "That relay is offline, their grip on the city is weakening."],
+  "reeves-north": ["CHIEF REEVES", "Head north into the Old Quarter, we are keeping the shelter doors open."],
+  "reeves-approach": ["CHIEF REEVES", "We can hear your engine, bring the override to the front steps."],
+  "reeves-hold": ["CHIEF REEVES", "The families are holding on, just get here in one piece."],
+  "reeves-last-wave": [
     "CHIEF REEVES",
     "This is their last attack, hold the corridor and we can get everyone out.",
   ],
 
-  "alfred-patrol": ["HANDLER", "The city is quiet, take a moment to get your bearings."],
-  "alfred-relays": ["HANDLER", "Attack source identified, disable the three red command relays."],
-  "alfred-drive": ["HANDLER", "Take the override to the cathedral and follow the gold route."],
-  "alfred-left": ["HANDLER", "Turn left at the junction, the corridor is clear."],
-  "gordon-inbound": ["CHIEF REEVES", "Bomber inbound, intercept it before it reaches the shelter."],
-  "gordon-hit": ["CHIEF REEVES", "The shelter has been hit, we cannot take much more of this."],
-  "gordon-final": ["CHIEF REEVES", "Relays are down, stop the last three bombers while we evacuate."],
-  "gordon-safe": ["CHIEF REEVES", "The override is accepted, heat is restored and our people are safe."],
-  "batman-air": ["THE OPERATIVE", "I'm on it, keep those people moving."],
-  "batman-drive": ["THE OPERATIVE", "Hold on, Chief, I'm bringing the override."],
+  "handler-patrol": ["HANDLER", "The city is quiet, take a moment to get your bearings."],
+  "handler-relays": ["HANDLER", "Attack source identified, disable the three red command relays."],
+  "handler-drive": ["HANDLER", "Take the override to the cathedral and follow the gold route."],
+  "handler-left": ["HANDLER", "Turn left at the junction, the corridor is clear."],
+  "reeves-inbound": ["CHIEF REEVES", "Bomber inbound, intercept it before it reaches the shelter."],
+  "reeves-hit": ["CHIEF REEVES", "The shelter has been hit, we cannot take much more of this."],
+  "reeves-final": ["CHIEF REEVES", "Relays are down, stop the last three bombers while we evacuate."],
+  "reeves-safe": ["CHIEF REEVES", "The override is accepted, heat is restored and our people are safe."],
+  "striker-air": ["THE OPERATIVE", "I'm on it, keep those people moving."],
+  "nightblade-drive": ["THE OPERATIVE", "Hold on, Chief, I'm bringing the override."],
 };
 
 // Chapter III, part two (Kessler rooftops). Text-only captions; no recordings
