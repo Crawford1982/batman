@@ -68,13 +68,15 @@ test('portal GLB models must have embedded textures (no external image URIs)', (
             `Embedded images must be valid PNG/JPEG files.`
           );
           
-          // Check PNG or JPEG signature
+          // Check PNG, JPEG, or WebP signature
           const isPNG = imageData[0] === 0x89 && imageData[1] === 0x50 && imageData[2] === 0x4E && imageData[3] === 0x47;
           const isJPEG = imageData[0] === 0xFF && imageData[1] === 0xD8 && imageData[2] === 0xFF;
+          const isWebP = imageData[0] === 0x52 && imageData[1] === 0x49 && imageData[2] === 0x46 && imageData[3] === 0x46 &&
+                         imageData[8] === 0x57 && imageData[9] === 0x45 && imageData[10] === 0x42 && imageData[11] === 0x50;
           
           assert.ok(
-            isPNG || isJPEG,
-            `${glbFile}: Image ${i} is not a valid PNG or JPEG (first 4 bytes: ${Array.from(imageData.subarray(0, 4)).map(b => '0x' + b.toString(16)).join(' ')})`
+            isPNG || isJPEG || isWebP,
+            `${glbFile}: Image ${i} is not a valid PNG, JPEG, or WebP (first 4 bytes: ${Array.from(imageData.subarray(0, 4)).map(b => '0x' + b.toString(16)).join(' ')})`
           );
           
           // For PNG, check dimensions are at least 16x16

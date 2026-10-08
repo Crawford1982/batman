@@ -49,6 +49,9 @@ const TEXT_REPLACEMENTS = {
   'Old Gotham': 'Old Quarter',
   'TRICORNER DOCKS': 'RIVERSIDE DOCKS',
   'Tricorner Docks': 'Riverside Docks',
+  'THE NARROWS': 'THE FLATS',
+  'The Narrows': 'The Flats',
+  'NARROWS': 'FLATS',
   'GOTHAM RIVER': 'CENTRAL RIVER',
   'Gotham River': 'Central River',
   
@@ -64,12 +67,19 @@ const TEXT_REPLACEMENTS = {
   'WAYNE': 'APEX',
   'EXPERIMENTAL DIVISION': 'TACTICAL DIVISION',
   
-  // Characters
-  'Batman': 'THE OPERATIVE',
+  // Characters (mid-sentence)
+  'Batman': 'the operative',
+  'Alfred': 'Handler',
+  'Gordon': 'Chief Reeves',
+  
+  // Character speaker labels (must come before general replacements to avoid conflicts)
+  'BATMAN /': 'THE OPERATIVE /',
+  'GORDON /': 'CHIEF REEVES /',
+  'ALFRED /': 'HANDLER /',
+  
+  // Character names in caps (general)
   'BATMAN': 'THE OPERATIVE',
-  'Alfred': 'HANDLER',
   'ALFRED': 'HANDLER',
-  'Gordon': 'CHIEF REEVES',
   'GORDON': 'CHIEF REEVES',
   
   // Voice file references - replace alfred-/gordon- with handler-/reeves-
@@ -367,6 +377,20 @@ async function main() {
         .replace(/localStorage\.setItem\("gotham-/g, 'localStorage.setItem("portal-')
         .replace(/localStorage\.getItem\("gotham-/g, 'localStorage.getItem("portal-')
         .replace(/voice:\s*"batman"/g, 'voice: "striker"');
+      
+      // Special fix for main.js: Chapter II HUD bug fix
+      if (file === 'main.js') {
+        // Fix doubled HUD when starting Chapter II from title screen
+        content = content.replace(
+          /function beginGround\(\) \{\n  cave\.hide\(\);/,
+          'function beginGround() {\n  handover.cancel();\n  cave.hide();'
+        );
+        content = content.replace(
+          /\$\("menu"\)\.hidden = true;\n  \$\("hud"\)\.hidden = true;/,
+          '$("menu").hidden = true;\n  $("hud").hidden = true;  // Hide air chapter HUD\n  if ($("mission-hud")) $("mission-hud").hidden = true;  // Hide air mission HUD'
+        );
+      }
+      
       await fs.writeFile(filePath, content);
     } catch (err) {
       // File might not exist, that's OK

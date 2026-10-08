@@ -781,13 +781,6 @@ footer a {
   .settings {
     margin-top: 6px;
   }
-  #controls {
-    padding: 12px 0;
-  }
-  footer {
-    bottom: 20px;
-    padding-top: 14px;
-  }
 }
 
 /* Chapter presentation uses only composited UI; no extra scene geometry. */

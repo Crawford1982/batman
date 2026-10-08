@@ -108,7 +108,7 @@ export class Mission {
 export const BRIEFING = [
   {
     title: "THE CITY IS GOING DARK.",
-    location: "RIVERSIDE DOCKS · 23:40",
+    location: "TRICORNER DOCKS · 23:40",
     voice: "alfred",
     speaker: "ALFRED / ENCRYPTED CHANNEL",
     text: "Someone has seized the Wayne defence network. Armed aircraft are moving inland from the docks.",
@@ -117,7 +117,7 @@ export const BRIEFING = [
   },
   {
     title: "THE COLD IS THE WEAPON.",
-    location: "OLD QUARTER · EMERGENCY SHELTER",
+    location: "OLD GOTHAM · EMERGENCY SHELTER",
     voice: "gordon",
     speaker: "GORDON / GCPD DISPATCH",
     text: "They're targeting the heating grid. Families are sheltering in the cathedral. We have ten minutes to get them out.",

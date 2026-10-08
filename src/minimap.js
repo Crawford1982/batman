@@ -44,10 +44,10 @@ export class Minimap {
     c.textAlign = "center";
     c.fillStyle = "#8ea8b9";
     for (const [label, x, z] of [
-      ["OLD QUARTER", -1850, -1850],
+      ["OLD GOTHAM", -1850, -1850],
       ["MIDTOWN", 500, -1850],
-      ["THE FLATS", -1800, 1800],
-      ["RIVERSIDE", 1800, 1800],
+      ["THE NARROWS", -1800, 1800],
+      ["TRICORNER", 1800, 1800],
     ]) {
       c.fillText(label, ...mapPoint(x, z));
     }

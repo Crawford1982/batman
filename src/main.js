@@ -611,7 +611,6 @@ const ground = new GroundLevel({
   onExit: () => $("exit").click(),
 });
 function beginGround() {
-  handover.cancel();
   cave.hide();
   roof.hide();
   player.visible = false;
@@ -619,8 +618,7 @@ function beginGround() {
   for (const r of mission.relays) r.mesh.visible = false;
   for (const r of world.rings) r.visible = false;
   $("menu").hidden = true;
-  $("hud").hidden = true;  // Hide air chapter HUD
-  if ($("mission-hud")) $("mission-hud").hidden = true;  // Hide air mission HUD
+  $("hud").hidden = true;
   $("briefing").hidden = true;
   $("next-level").hidden = true;
   ground.begin();
@@ -639,8 +637,7 @@ function beginCave() {
   $("next-level").hidden = true;
   cave.begin();
 }
-const caveBtnEl = $("start-cave");
-if (caveBtnEl) caveBtnEl.onclick = beginCave;
+$("start-cave").onclick = beginCave;
 const roof = new RooftopLevel({
   camera,
   audio,
@@ -664,8 +661,7 @@ function beginRoof() {
   $("next-level").hidden = true;
   roof.begin();
 }
-const roofBtnEl = $("start-roof");
-if (roofBtnEl) roofBtnEl.onclick = beginRoof;
+$("start-roof").onclick = beginRoof;
 // After the Batcave trace the same button continues to the Kessler rooftops.
 $("next-level").onclick = () =>
   mode.startsWith("drive") ? beginCave() : mode.startsWith("cave") ? beginRoof() : beginGround();

@@ -12,12 +12,12 @@ export const DRIVE_ROUTE = [
     x: -522.5,
     z: 0,
     name: "WESTBOUND EXIT",
-    line: "GORDON / Head north into Old Quarter. Drones are tracking you.",
+    line: "GORDON / Head north into Old Gotham. Drones are tracking you.",
   },
   {
     x: -522.5,
     z: -997.5,
-    name: "OLD QUARTER TURN",
+    name: "OLD GOTHAM TURN",
     line: "ALFRED / Turn left at the junction. The cathedral is ahead.",
   },
   {

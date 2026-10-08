@@ -65,11 +65,11 @@ export function createWorld(scene) {
         continue;
       const district = districtAt(x * 95, z * 95);
       const h =
-        district === "RIVERSIDE DOCKS"
+        district === "TRICORNER DOCKS"
           ? 18 + rand() * 40
-          : district === "OLD QUARTER"
+          : district === "OLD GOTHAM"
             ? 35 + rand() * 85
-            : district === "THE FLATS"
+            : district === "THE NARROWS"
               ? 40 + rand() * 115
               : 65 + Math.pow(rand(), 1.5) * 185;
       buildings.push({
@@ -103,11 +103,11 @@ export function createWorld(scene) {
     blocks.setColorAt(
       i,
       new T.Color(
-        district === "OLD QUARTER"
+        district === "OLD GOTHAM"
           ? 0xb49d88
-          : district === "RIVERSIDE DOCKS"
+          : district === "TRICORNER DOCKS"
             ? 0x839796
-            : district === "THE FLATS"
+            : district === "THE NARROWS"
               ? 0x9e8b99
               : 0xa7bed5,
       ),

@@ -288,7 +288,7 @@ function glowTexture(inner, outer) {
 }
 
 // Kessler Cold Storage rooftops: the infiltration that follows the Batcave
-// trace. The block is built into the city at its real place in The Flats,
+// trace. The block is built into the city at its real place in The Narrows,
 // so the rooftops share Gotham's sky, moon, snow, fog and film grade. Mission
 // rules live in rooftop-mission.js; this file draws, animates and reads input.
 export class RooftopLevel {
