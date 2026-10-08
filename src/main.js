@@ -620,6 +620,7 @@ function beginGround() {
   for (const r of world.rings) r.visible = false;
   $("menu").hidden = true;
   $("hud").hidden = true;  // Hide air chapter HUD
+  if ($("mission-hud")) $("mission-hud").hidden = true;  // Hide air mission HUD
   $("briefing").hidden = true;
   $("next-level").hidden = true;
   ground.begin();

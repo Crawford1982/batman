@@ -1,130 +1,137 @@
-#!/usr/bin/env node
-/**
- * Test portal build with Playwright: serve dist-portal, open title + Ch I + Ch II,
- * capture console errors and HTTP errors
- */
 import { chromium } from 'playwright';
-import { createServer } from 'http';
-import { readFileSync, statSync } from 'fs';
-import { join, extname } from 'path';
 import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { createServer } from 'http';
+import { readFile } from 'fs/promises';
+import { existsSync } from 'fs';
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const distPortal = join(__dirname, 'dist-portal');
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const distDir = join(__dirname, 'dist-portal');
 
-const mimeTypes = {
-  '.html': 'text/html',
-  '.js': 'text/javascript',
-  '.css': 'text/css',
-  '.json': 'application/json',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.svg': 'image/svg+xml',
-  '.webp': 'image/webp',
-  '.ico': 'image/x-icon',
-  '.glb': 'model/gltf-binary',
-  '.hdr': 'application/octet-stream',
-  '.mp3': 'audio/mpeg',
-  '.txt': 'text/plain'
-};
-
-// Simple static server
-const server = createServer((req, res) => {
-  let filePath = join(distPortal, req.url === '/' ? 'index.html' : req.url);
+const server = createServer(async (req, res) => {
+  let filePath = join(distDir, req.url === '/' ? 'index.portal.html' : req.url);
   
-  try {
-    const stat = statSync(filePath);
-    if (stat.isDirectory()) {
-      filePath = join(filePath, 'index.html');
-    }
-    
-    const ext = extname(filePath);
-    const contentType = mimeTypes[ext] || 'application/octet-stream';
-    
-    const content = readFileSync(filePath);
-    res.writeHead(200, { 'Content-Type': contentType });
-    res.end(content);
-  } catch (err) {
+  if (!existsSync(filePath)) {
     res.writeHead(404);
     res.end('Not found');
+    return;
+  }
+  
+  const ext = filePath.split('.').pop();
+  const mimeTypes = {
+    html: 'text/html',
+    js: 'application/javascript',
+    css: 'text/css',
+    png: 'image/png',
+    glb: 'model/gltf-binary',
+    webp: 'image/webp',
+    hdr: 'application/octet-stream'
+  };
+  
+  try {
+    const content = await readFile(filePath);
+    res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' });
+    res.end(content);
+  } catch (err) {
+    res.writeHead(500);
+    res.end('Error');
   }
 });
 
-async function main() {
-  await new Promise((resolve) => server.listen(8765, resolve));
-  console.log('🌐 Serving dist-portal on http://localhost:8765\n');
+await new Promise(resolve => server.listen(3456, resolve));
+console.log('Server running on http://localhost:3456');
+
+const browser = await chromium.launch({
+  headless: true,
+  args: ['--use-gl=swiftshader', '--disable-gpu']
+});
+
+const context = await browser.newContext({ viewport: { width: 1280, height: 720 } });
+const page = await context.newPage();
+
+const errors = [];
+const logs = [];
+
+page.on('console', msg => {
+  logs.push(`[${msg.type()}] ${msg.text()}`);
+  if (msg.type() === 'error') errors.push(msg.text());
+});
+
+page.on('pageerror', err => {
+  errors.push(`Page error: ${err.message}`);
+});
+
+page.on('requestfailed', req => {
+  errors.push(`Request failed: ${req.url()} - ${req.failure().errorText}`);
+});
+
+await page.goto('http://localhost:3456');
+await page.waitForLoadState('networkidle');
+
+// Test Chapter I
+console.log('\n=== Testing Chapter I ===');
+await page.click('#start-air');
+await page.waitForSelector('#briefing', { state: 'visible', timeout: 5000 });
+await page.click('#skip-briefing');
+await page.waitForTimeout(15000); // Play for 15 seconds
+await page.screenshot({ path: 'chapter-i-15s.png' });
+
+// Check HUD elements
+const airHudCount = await page.evaluate(() => {
+  const titleEls = document.querySelectorAll('[id*="hud"] h1, [id*="mission"] h1');
+  const timerEls = document.querySelectorAll('[id*="time"]:not([hidden])');
+  return { titles: titleEls.length, timers: timerEls.length };
+});
+console.log(`Chapter I HUD elements: ${JSON.stringify(airHudCount)}`);
+
+// Return to menu
+await page.keyboard.press('Escape');
+await page.waitForTimeout(500);
+await page.click('#exit');
+await page.waitForSelector('#menu', { state: 'visible', timeout: 5000 });
+
+// Test Chapter II
+console.log('\n=== Testing Chapter II ===');
+await page.click('#start-ground');
+await page.waitForTimeout(2000);
+
+// Wait for drive-launch button to be enabled
+await page.waitForSelector('#drive-launch:not([disabled])', { timeout: 30000 });
+await page.click('#drive-launch');
+await page.waitForTimeout(15000); // Play for 15 seconds
+await page.screenshot({ path: 'chapter-ii-15s.png' });
+
+// Check for doubled HUD
+const groundHudCheck = await page.evaluate(() => {
+  const airHud = document.querySelector('#hud');
+  const missionHud = document.querySelector('#mission-hud');
+  const driveHud = document.querySelector('#drive-hud');
   
-  const browser = await chromium.launch({ headless: true });
-  const context = await browser.newContext({
-    viewport: { width: 1280, height: 720 },
-    ignoreHTTPSErrors: true
-  });
-  
-  const errors = [];
-  const httpErrors = [];
-  
-  context.on('response', (response) => {
-    const status = response.status();
-    if (status >= 400) {
-      httpErrors.push(`${status} ${response.url()}`);
-    }
-  });
-  
-  const page = await context.newPage();
-  
-  page.on('console', (msg) => {
-    if (msg.type() === 'error') {
-      errors.push(`Console error: ${msg.text()}`);
-    }
-  });
-  
-  page.on('pageerror', (err) => {
-    errors.push(`Page error: ${err.message}`);
-  });
-  
-  // Test title screen
-  console.log('📄 Loading title screen...');
-  await page.goto('http://localhost:8765/', { waitUntil: 'networkidle' });
-  await page.waitForTimeout(3000);
-  console.log('   Title screen loaded');
-  
-  // Test Chapter I (by reloading and triggering it via evaluation)
-  console.log('🎮 Testing Chapter I assets...');
-  await page.goto('http://localhost:8765/', { waitUntil: 'networkidle' });
-  await page.waitForTimeout(2000);
-  // Check that start button exists
-  const startBtn = await page.$('#start');
-  console.log(`   Start button found: ${!!startBtn}`);
-  
-  // Test Chapter II by navigating and checking
-  console.log('🚗 Testing Chapter II assets...');
-  await page.goto('http://localhost:8765/', { waitUntil: 'networkidle' });
-  await page.waitForTimeout(2000);
-  const groundBtn = await page.$('#start-ground');
-  console.log(`   Chapter II button found: ${!!groundBtn}`);
-  
-  await browser.close();
-  server.close();
-  
-  console.log('\n📊 Test Results:\n');
-  console.log(`Console errors: ${errors.length}`);
-  errors.forEach(e => console.log(`  ❌ ${e}`));
-  
-  console.log(`\nHTTP 4xx/5xx responses: ${httpErrors.length}`);
-  httpErrors.forEach(e => console.log(`  ❌ ${e}`));
-  
-  if (errors.length === 0 && httpErrors.length === 0) {
-    console.log('\n✅ All tests passed: 0 errors, 0 HTTP failures\n');
-    process.exit(0);
-  } else {
-    console.log(`\n❌ Tests failed: ${errors.length} console errors, ${httpErrors.length} HTTP errors\n`);
-    process.exit(1);
-  }
+  return {
+    airHudVisible: airHud && !airHud.hidden && getComputedStyle(airHud).display !== 'none',
+    missionHudVisible: missionHud && !missionHud.hidden && getComputedStyle(missionHud).display !== 'none',
+    driveHudVisible: driveHud && !driveHud.hidden && getComputedStyle(driveHud).display !== 'none',
+  };
+});
+
+console.log(`Chapter II HUD state: ${JSON.stringify(groundHudCheck)}`);
+
+if (groundHudCheck.airHudVisible || groundHudCheck.missionHudVisible) {
+  errors.push('DOUBLED HUD BUG: Air chapter HUD elements are visible in Chapter II');
 }
 
-main().catch(err => {
-  console.error('Fatal error:', err);
-  process.exit(1);
-});
+console.log(`\n=== Test Results ===`);
+console.log(`Total console messages: ${logs.length}`);
+console.log(`Errors: ${errors.length}`);
+if (errors.length > 0) {
+  console.log('\nErrors found:');
+  errors.forEach(err => console.log(`  - ${err}`));
+}
+
+console.log('\nFirst 20 console logs:');
+logs.slice(0, 20).forEach(log => console.log(`  ${log}`));
+
+await browser.close();
+server.close();
+
+process.exit(errors.length > 0 ? 1 : 0);
