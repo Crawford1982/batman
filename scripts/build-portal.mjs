@@ -23,6 +23,9 @@ const TEXT_REPLACEMENTS = {
   'BATWING': 'SHADOW STRIKER',
   // NOTE: lowercase 'batwing' is handled separately in Step 4 to avoid breaking imports
   
+  // CSS classes
+  '.batwing-logo': '.striker-logo',
+  
   // Vehicle (in UI text only)  
   'Batmobile': 'Nightblade',
   'BATMOBILE': 'NIGHTBLADE',
@@ -386,6 +389,21 @@ async function main() {
   // Step 6: Create asset licensing documentation
   console.log('📄 Creating asset licensing documentation...');
   await createPortalCredits();
+  
+  // Step 7: Prepare index.html for Vite build
+  console.log('📁 Preparing index.html for build...');
+  
+  // Copy and fix index.html from portal-public to root as index.portal.html
+  let indexContent = await fs.readFile(
+    path.join(rootDir, 'portal-public', 'index.html'),
+    'utf-8'
+  );
+  // Fix the script path from ../portal-src/main.js to ./portal-src/main.js
+  indexContent = indexContent.replace('../portal-src/', './portal-src/');
+  await fs.writeFile(
+    path.join(rootDir, 'index.portal.html'),
+    indexContent
+  );
   
   console.log('\n✅ Portal source files prepared in portal-src/');
   console.log('\n⚠️  IMPORTANT: Review portal/ASSET-LICENSING.md');

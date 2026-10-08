@@ -6,7 +6,7 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig({
   base: './',
-  publicDir: 'portal',  // Use portal directory instead of public for portal build
+  publicDir: false,  // Disable publicDir - manually copy needed files instead
   resolve: {
     alias: {
       // Point src imports to portal-src
@@ -19,9 +19,12 @@ export default defineConfig({
     sourcemap: false,  // Disable sourcemaps for portal build
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'portal/index.html')
+        main: resolve(__dirname, 'index.portal.html')
       },
       output: {
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
         sourcemap: false  // Ensure sourcemaps are disabled
       }
     },

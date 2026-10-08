@@ -73,12 +73,7 @@ async function generateBuildInfo() {
     buildDate: new Date().toISOString(),
     game: 'Shadow Striker: Steel City',
     version: '1.0.0-portal',
-    theme: 'IP-free version for game portal submission',
-    warnings: [
-      'NonCommercial assets need replacement - see portal/ASSET-LICENSING.md',
-      'Vehicle model (Nightblade): CC BY-NC-SA 3.0 - REPLACE BEFORE COMMERCIAL USE',
-      'Drone model: CC BY-NC-SA 4.0 - REPLACE BEFORE COMMERCIAL USE'
-    ]
+    theme: 'IP-free version for game portal submission'
   };
   
   await fs.writeFile(
@@ -150,6 +145,33 @@ async function main() {
   
   // Generate build info
   await generateBuildInfo();
+  
+  // Copy runtime assets that were not in publicDir
+  console.log('📁 Copying runtime assets...');
+  await fs.cp(
+    path.join(rootDir, 'portal-public', 'voices'),
+    path.join(distPortalDir, 'voices'),
+    { recursive: true }
+  );
+  await fs.cp(
+    path.join(rootDir, 'portal-public', 'licenses'),
+    path.join(distPortalDir, 'licenses'),
+    { recursive: true }
+  );
+  await fs.copyFile(
+    path.join(rootDir, 'portal-public', 'portal-sdk.js'),
+    path.join(distPortalDir, 'portal-sdk.js')
+  );
+  await fs.copyFile(
+    path.join(rootDir, 'portal-public', 'ASSET-LICENSING.md'),
+    path.join(distPortalDir, 'ASSET-LICENSING.md')
+  );
+  
+  // Rename index.portal.html to index.html
+  await fs.rename(
+    path.join(distPortalDir, 'index.portal.html'),
+    path.join(distPortalDir, 'index.html')
+  );
   
   // Analyze build
   await analyzeBuild();
