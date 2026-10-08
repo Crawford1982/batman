@@ -51,9 +51,45 @@ test('portal GLB models must have embedded textures (no external image URIs)', (
           `${glbFile}: Image ${i} (${image.name || 'unnamed'}) has external URI: ${image.uri}. ` +
           `All textures must be embedded. Use gltf-transform to embed external textures.`
         );
+        
+        // If image is embedded via bufferView, validate it's a real image
+        if (image.bufferView !== undefined) {
+          const bufferView = gltf.bufferViews[image.bufferView];
+          assert.ok(bufferView, `${glbFile}: Image ${i} references missing bufferView ${image.bufferView}`);
+          
+          // Read binary chunk to get image data
+          const binaryChunkStart = 20 + jsonChunkLength + 8; // after JSON chunk header
+          const imageStart = binaryChunkStart + bufferView.byteOffset;
+          const imageData = buffer.subarray(imageStart, imageStart + bufferView.byteLength);
+          
+          assert.ok(
+            imageData.length >= 100,
+            `${glbFile}: Image ${i} is only ${imageData.length} bytes (likely a stub). ` +
+            `Embedded images must be valid PNG/JPEG files.`
+          );
+          
+          // Check PNG or JPEG signature
+          const isPNG = imageData[0] === 0x89 && imageData[1] === 0x50 && imageData[2] === 0x4E && imageData[3] === 0x47;
+          const isJPEG = imageData[0] === 0xFF && imageData[1] === 0xD8 && imageData[2] === 0xFF;
+          
+          assert.ok(
+            isPNG || isJPEG,
+            `${glbFile}: Image ${i} is not a valid PNG or JPEG (first 4 bytes: ${Array.from(imageData.subarray(0, 4)).map(b => '0x' + b.toString(16)).join(' ')})`
+          );
+          
+          // For PNG, check dimensions are at least 16x16
+          if (isPNG) {
+            const width = imageData.readUInt32BE(16);
+            const height = imageData.readUInt32BE(20);
+            assert.ok(
+              width >= 16 && height >= 16,
+              `${glbFile}: Image ${i} dimensions ${width}x${height} are too small (minimum 16x16)`
+            );
+          }
+        }
       }
     }
   }
   
-  console.log(`✓ Checked ${glbFiles.length} GLB files: all textures embedded`);
+  console.log(`✓ Checked ${glbFiles.length} GLB files: all textures embedded and valid`);
 });

@@ -166,6 +166,10 @@ async function main() {
     path.join(rootDir, 'portal-public', 'ASSET-LICENSING.md'),
     path.join(distPortalDir, 'ASSET-LICENSING.md')
   );
+  await fs.copyFile(
+    path.join(rootDir, 'portal-public', 'favicon.svg'),
+    path.join(distPortalDir, 'favicon.svg')
+  );
   
   // Rename index.portal.html to index.html
   await fs.rename(
