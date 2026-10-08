@@ -239,18 +239,9 @@ After uploading to each portal, the owner should:
 
 ## Known Issues and Limitations
 
-### Non-Critical (Already Documented)
+### Audio Content (Unverified)
 
-⚠️ **NC-Licensed Models:**  
-The vehicle and drone models use Creative Commons NonCommercial licenses. This is documented in `portal/ASSET-LICENSING.md`. For ad-supported portals (CrazyGames Full Launch, GameDistribution), these models should technically be replaced with CC0 or CC-BY alternatives.
-
-**Impact:**  
-- Basic Launch on CrazyGames: No ads, so NC assets are fine
-- GameDistribution: Technically violates NC terms if ads are shown
-- itch.io: No monetisation by default, so NC assets are fine
-
-**Recommendation:**  
-If the owner plans to monetise (especially via GameDistribution), consider replacing the vehicle and drone models. For now, the game can be submitted as-is for testing and initial launch.
+Voice audio files were not transcribed or inspected for spoken character names. Manual review recommended if concerned.
 
 ### Portal SDK Status Summary
 

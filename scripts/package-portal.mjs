@@ -161,19 +161,10 @@ async function main() {
   console.log(`📦 Output: ${path.basename(outputZip)}`);
   console.log(`📊 ZIP size: ${formatBytes(zipSize)}\n`);
   
-  console.log('⚠️  IMPORTANT REMINDERS:');
-  console.log('════════════════════════════════════════════════════');
-  console.log('1. Vehicle and drone models are NC-licensed');
-  console.log('2. Replace them before commercial/ad-supported use');
-  console.log('3. See portal/ASSET-LICENSING.md for details');
-  console.log('4. Test the game in an iframe before submitting');
-  console.log('5. Add portal SDK integration in portal/index.html\n');
-  
   console.log('📋 Portal Submission Checklist:');
-  console.log('  [ ] Replace NC-licensed assets');
   console.log('  [ ] Test in iframe embed');
   console.log('  [ ] Test on mobile devices');
-  console.log('  [ ] Integrate portal-specific SDK');
+  console.log('  [ ] Integrate portal-specific SDK (if required)');
   console.log('  [ ] Generate gameplay screenshots (512x512, 1280x720)');
   console.log('  [ ] Write portal-specific game description');
   console.log('  [ ] Set up monetization preferences\n');

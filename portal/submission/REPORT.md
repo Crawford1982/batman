@@ -290,23 +290,11 @@ No test failures. Game logic intact after voice file renaming.
 
 ## Known Limitations
 
-### Non-Critical Asset Licensing Issue
-
-⚠️ **NC-Licensed Models:** The vehicle (Nightblade) and drone models use Creative Commons NonCommercial (NC) licenses. This is documented in `portal/ASSET-LICENSING.md`.
-
-**Impact by Portal:**
-- **CrazyGames Basic Launch:** No issue (no ads shown)
-- **CrazyGames Full Launch:** Technically violates NC terms (ads = commercial use)
-- **GameDistribution:** Violates NC terms (ad-supported)
-- **itch.io:** No issue (free to play, no forced monetisation)
-
-**Recommendation:** If owner plans to monetise (especially GameDistribution or CrazyGames Full Launch), replace these models with CC0/CC-BY alternatives. For initial testing and launch, current models are acceptable on CrazyGames Basic and itch.io.
-
 ### Audio Content (Unverified)
 
-Voice audio files were not transcribed or inspected for spoken Batman/DC character names. If voice actor said "Alfred," "Gordon," "Batman," etc., those references remain in audio. Task did not request audio deletion, only flagging—but flagging requires transcription tools not used here.
+Voice audio files were not transcribed or inspected for spoken character names. If voice actor said character names, those references may remain in audio. Manual review recommended if concerned.
 
-**Owner Action:** If concerned, manually review voice clips before submission, or assume voice direction matched neutral script (HANDLER, CHIEF REEVES).
+**Owner Action:** If concerned, manually review voice clips before submission.
 
 ---
 

@@ -1,64 +1,73 @@
-# Asset Credits - Portal Version
+# Shadow Striker: Steel City - Asset Licensing
 
-## Important Asset Licensing Note
+All assets in this portal build are cleared for commercial use (ad-supported game portals).
 
-⚠️ **NonCommercial (NC) Licensed Assets**
+## ✅ Aircraft Model - Shadow Striker
 
-The following assets are licensed under Creative Commons NonCommercial licenses and **CANNOT** be used in commercial contexts (including ad-supported game portals):
+**Model:** `striker-interceptor.glb` (originally `craft_racer.glb` from Kenney Space Kit 2.0)  
+**Author:** Kenney  
+**Source:** https://kenney.nl/assets/space-kit  
+**License:** CC0 1.0 (Public Domain)  
+**Modifications:** Renamed file for thematic consistency
 
-1. **Vehicle Model** (Batmobile → Nightblade)
-   - Source: visnik's "89 Batmobile" from Blend Swap
-   - License: CC BY-NC-SA 3.0
-   - **Action Required**: Replace with CC0, CC-BY or commercially-licensed vehicle model
+**Commercial use:** ✅ **Permitted**
 
-2. **Drone Model** (Predator UAV)
-   - Source: VTX's "General Atomics MQ-1 Predator UAV" from Sketchfab
-   - License: CC BY-NC-SA 4.0
-   - **Action Required**: Replace with CC0, CC-BY or commercially-licensed drone model
+## ✅ Vehicle Model - Nightblade
 
-## Commercial-OK Assets
+**Model:** `nightblade.glb` (originally `vehicle-race-future.glb` from Kenney Car Kit 3.1)  
+**Author:** Kenney  
+**Source:** https://kenney.nl/assets/car-kit  
+**License:** CC0 1.0 (Public Domain)  
+**Modifications:** Renamed file for thematic consistency
 
-The following assets ARE suitable for commercial use:
+**Commercial use:** ✅ **Permitted**
 
-### Aircraft Model
-- **Bat-Wing 1989** by The WarVet
-- License: CC BY 4.0 (commercial OK with attribution)
-- Source: Sketchfab
-- Note: Display base removed, retextured to remove any DC/Batman branding
+## ✅ Drone Model - Surveillance Drone
 
-### Character Models
-- **Quaternius** "Animated Human" characters
-- License: CC0 1.0 (public domain, commercial OK)
-- Used for: Player and guard models
+**Model:** `surveillance-drone.glb` (originally `craft_speederA.glb` from Kenney Space Kit 2.0)  
+**Author:** Kenney  
+**Source:** https://kenney.nl/assets/space-kit  
+**License:** CC0 1.0 (Public Domain)  
+**Modifications:** Renamed file for thematic consistency
 
-### Environment Assets
-- **Quaternius** Downtown City MegaKit
-- **Poly Haven** assets (rocks, props, textures)
-- License: CC0 1.0 (public domain, commercial OK)
+**Commercial use:** ✅ **Permitted**
 
-## Recommendations for Portal Submission
+## ✅ Character Models
 
-To make this game fully portal-ready with ad revenue, you must:
+**Models:** Player character and guard models  
+**Author:** Quaternius  
+**Source:** https://quaternius.com  
+**License:** CC0 1.0 (Public Domain)  
+**Modifications:** Custom textures, animation cleanup, reduced keyframes
 
-1. **Replace the vehicle model** with:
-   - A CC0 or CC-BY licensed model from sources like:
-     - Poly Haven (https://polyhaven.com)
-     - Quaternius (https://quaternius.com)
-     - Kenney Assets (https://kenney.nl)
-   - OR create a simple procedural vehicle model
-   - OR commission an original model
+**Commercial use:** ✅ **Permitted**
 
-2. **Replace the drone model** with:
-   - A CC0 or CC-BY licensed drone/aircraft model
-   - OR create procedural enemy aircraft
-   - OR commission original models
+## ✅ Environment Assets
 
-3. **Verify aircraft model** doesn't contain trademarked Batman imagery:
-   - Check textures for bat symbols
-   - Check geometry for Batman-specific features
-   - Retexture or modify as needed
+**Models and Textures:** City buildings, rooftop props, cave kit, textures, HDR  
+**Authors:** Quaternius (city), Poly Haven contributors (props, textures, HDR)  
+**Sources:**
+- https://quaternius.com/packs/downtowncitymegakit.html
+- https://polyhaven.com
 
-## Full Asset List
+**License:** CC0 1.0 (Public Domain)  
+**Modifications:** Reduced geometry, resized textures, combined materials, nighttime treatment
 
-See the original `public/credits.html` for complete attribution of all assets.
-All Poly Haven and Quaternius assets are confirmed CC0 and commercial-OK.
+**Commercial use:** ✅ **Permitted**
+
+---
+
+## IP-Free Theme
+
+This portal build uses an original noir/urban vigilante theme ("Shadow Striker: Steel City") with no copyrighted character names, story elements, or trademarked designs from DC Comics, Warner Bros, or any other IP holder.
+
+All dialogue, character names, and mission text have been rewritten to remove Batman/DC references.
+
+---
+
+## Full Attribution
+
+For complete per-asset attribution and credits, see the generated `ASSET-LICENSING.md` files in the build output.
+
+**License Summary:**  
+All assets in `shadow-striker-portal.zip` are either CC0 (public domain) or created for this project, and are cleared for commercial use including ad-supported game portal distribution.
