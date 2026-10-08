@@ -386,11 +386,16 @@ async function main() {
         // Fix doubled HUD when starting Chapter II from title screen
         content = content.replace(
           /function beginGround\(\) \{\n  cave\.hide\(\);/,
-          'function beginGround() {\n  handover.cancel();\n  cave.hide();'
+          'function beginGround() {\n  if (typeof handover !== "undefined") handover.cancel();\n  cave.hide();'
         );
         content = content.replace(
           /\$\("menu"\)\.hidden = true;\n  \$\("hud"\)\.hidden = true;/,
           '$("menu").hidden = true;\n  $("hud").hidden = true;  // Hide air chapter HUD\n  if ($("mission-hud")) $("mission-hud").hidden = true;  // Hide air mission HUD'
+        );
+        // Also fix beginCave for consistency
+        content = content.replace(
+          /function beginCave\(\) \{\n  handover\.cancel\(\);/,
+          'function beginCave() {\n  if (typeof handover !== "undefined") handover.cancel();'
         );
       }
       
