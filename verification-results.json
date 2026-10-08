@@ -1,0 +1,15 @@
+{
+  "errors": [
+    {
+      "type": "test-error",
+      "message": "page.waitForSelector: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('#start:not([disabled])') to be visible\n",
+      "stack": "page.waitForSelector: Timeout 30000ms exceeded.\nCall log:\n  - waiting for locator('#start:not([disabled])') to be visible\n\n    at main (/workspace/verify-portal-build.mjs:71:16)"
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: net::ERR_CONNECTION_RESET",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED"
+  ],
+  "httpErrors": [],
+  "timestamp": "2026-10-08T08:17:10.239Z"
+}
