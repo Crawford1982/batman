@@ -611,6 +611,7 @@ const ground = new GroundLevel({
   onExit: () => $("exit").click(),
 });
 function beginGround() {
+  handover.cancel();
   cave.hide();
   roof.hide();
   player.visible = false;
@@ -618,7 +619,7 @@ function beginGround() {
   for (const r of mission.relays) r.mesh.visible = false;
   for (const r of world.rings) r.visible = false;
   $("menu").hidden = true;
-  $("hud").hidden = true;
+  $("hud").hidden = true;  // Hide air chapter HUD
   $("briefing").hidden = true;
   $("next-level").hidden = true;
   ground.begin();

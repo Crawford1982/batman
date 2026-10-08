@@ -53,7 +53,7 @@ export const ANTAGONIST = {
     "Former Wayne Aerospace flight-systems engineer. Her remote-override autopilot was shelved before the winter trials; Silent Bell used it.",
 };
 
-// Roofs in The Narrows around Kessler Cold Storage. h is the roof height.
+// Roofs in The Flats around Kessler Cold Storage. h is the roof height.
 export const LAYOUT = {
   roofs: [
     { id: "tenement", name: "TENEMENT", x: 0, z: 0, w: 22, d: 20, h: 18 },

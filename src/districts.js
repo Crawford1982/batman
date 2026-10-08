@@ -5,20 +5,20 @@ export const RELAY_SITES = [
   { name: "WAYNE TOWER", district: "MIDTOWN", x: -270, y: 352, z: -380 },
   {
     name: "CATHEDRAL SHELTER",
-    district: "OLD GOTHAM",
+    district: "OLD QUARTER",
     x: -1100,
     y: 214,
     z: -1000,
   },
   {
-    name: "TRICORNER SUBSTATION",
-    district: "TRICORNER DOCKS",
+    name: "RIVERSIDE SUBSTATION",
+    district: "RIVERSIDE DOCKS",
     x: 1420,
     y: 124,
     z: 1050,
   },
 ];
-// Kessler Cold Storage (Chapter III rooftops) is a built block in The Narrows.
+// Kessler Cold Storage (Chapter III rooftops) is a built block in The Flats.
 // KESSLER_ORIGIN maps the rooftop mission's local metres into the city; its
 // Kessler roof centre lands on the Batcave trace's transmitter (cave-puzzles
 // ORIGIN). Random towers overlapping the block are dropped after generation.
@@ -35,9 +35,9 @@ export function overlapsKessler(b) {
 }
 export function districtAt(x, z) {
   if (x > 850 && z > 300) return "TRICORNER DOCKS";
-  if (x < -650 && z < -350) return "OLD GOTHAM";
+  if (x < -650 && z < -350) return "OLD QUARTER";
   if (x < -650 && z > 350) return "THE NARROWS";
-  if (Math.abs(x - 720) < 160) return "GOTHAM RIVER";
+  if (Math.abs(x - 720) < 160) return "CENTRAL RIVER";
   return "MIDTOWN";
 }
 export function reservedPlot(x, z) {
@@ -87,7 +87,7 @@ export function createDistricts(scene, collisions) {
   const box = (key, x, y, z, w, h, d) => shape(key, new T.BoxGeometry(w, h, d), x, y, z);
   const collider = (x, z, w, d, h) => collisions.push({ x, z, w, d, h });
 
-  // Old Gotham cathedral: twin bell towers, rose window, nave and flying buttresses.
+  // Old Quarter cathedral: twin bell towers, rose window, nave and flying buttresses.
   box("stone", -1100, 48, -1000, 95, 96, 145);
   shape("roof", new T.CylinderGeometry(0, 69, 38, 4), -1100, 111, -1000, [0, Math.PI / 4, 0]);
   collider(-1100, -1000, 95, 145, 127);

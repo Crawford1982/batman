@@ -9,7 +9,7 @@ export const RADIO_LINES = {
   "alfred-railway": ["ALFRED", "The elevated railway will give you cover, keep the car moving."],
   "alfred-emp": ["ALFRED", "Their tracking signal has dropped, nicely done, sir."],
   "alfred-relay-down": ["ALFRED", "That relay is offline, their grip on the city is weakening."],
-  "gordon-north": ["GORDON", "Head north into Old Gotham, we are keeping the shelter doors open."],
+  "gordon-north": ["GORDON", "Head north into Old Quarter, we are keeping the shelter doors open."],
   "gordon-approach": ["GORDON", "We can hear your engine, bring the override to the front steps."],
   "gordon-hold": ["GORDON", "The families are holding on, just get that car here in one piece."],
   "gordon-last-wave": [
@@ -26,7 +26,7 @@ export const RADIO_LINES = {
   "gordon-final": ["GORDON", "Relays are down, stop the last three bombers while we evacuate."],
   "gordon-safe": ["GORDON", "The override is accepted, heat is restored and our people are safe."],
   "batman-air": ["BATMAN", "I'm on it, keep those people moving."],
-  "batman-drive": ["BATMAN", "Hold on, Gordon, I'm bringing the override."],
+  "batman-drive": ["BATMAN", "Hold on, Chief Reeves, I'm bringing the override."],
 };
 
 // Chapter III, part two (Kessler rooftops). Text-only captions; no recordings

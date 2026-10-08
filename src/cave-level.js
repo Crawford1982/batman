@@ -354,7 +354,7 @@ export class CaveLevel {
     $("cave-skip").hidden = false;
     $("cave-hud").classList.add("cinematic");
     this.radio(
-      `ALFRED / ${suspect.name.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}, The Narrows. Leased last month through a shell company.`,
+      `ALFRED / ${suspect.name.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase())}, The Flats. Leased last month through a shell company.`,
     );
     setTimeout(() => {
       if (this.phase === "reveal")
@@ -382,7 +382,7 @@ export class CaveLevel {
       score,
     });
     $("pause-title").textContent = "Source located.";
-    $("pause-copy").textContent = "Kessler Cold Storage, The Narrows. Go in quietly.";
+    $("pause-copy").textContent = "Kessler Cold Storage, The Flats. Go in quietly.";
     $("resume").hidden = true;
     $("next-level").textContent = "CONTINUE / KESSLER ROOFTOPS →";
     $("next-level").hidden = false;
@@ -495,10 +495,10 @@ export class CaveLevel {
     c.textAlign = "center";
     for (const [name, x, z] of [
       ["MIDTOWN", 0, 60],
-      ["OLD GOTHAM", -1180, -1380],
-      ["THE NARROWS", -1180, 1180],
-      ["TRICORNER DOCKS", 1400, 1300],
-      ["GOTHAM RIVER", 720, -1300],
+      ["OLD QUARTER", -1180, -1380],
+      ["THE FLATS", -1180, 1180],
+      ["RIVERSIDE DOCKS", 1400, 1300],
+      ["CENTRAL RIVER", 720, -1300],
     ]) {
       const [mx, my] = this.toMap(x, z);
       c.fillText(name, mx, my);
@@ -588,7 +588,7 @@ export class CaveLevel {
         const rand = seeded(s.seed * 97 + Math.floor(t * 4));
         if (s.main && this.stage === "identify") {
           c.fillStyle = "#edcf87";
-          c.fillText("CROSS-REFERENCE / THE NARROWS", 24, 40);
+          c.fillText("CROSS-REFERENCE / THE FLATS", 24, 40);
           SUSPECTS.forEach((sus, i) => {
             c.fillStyle = this.found === sus ? "#ff8c75" : "#7fb6e8";
             c.fillText(`${i + 1}. ${sus.name}`, 24, 90 + i * 40);

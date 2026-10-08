@@ -595,9 +595,9 @@ export class GroundLevel {
     });
     this.phase = "ended";
     this.onMode("driveEnded");
-    $("pause-title").textContent = win ? "Gotham is back online." : "The override is lost.";
+    $("pause-title").textContent = win ? "Steel City is back online." : "The override is lost.";
     $("pause-copy").textContent = win
-      ? `Gordon has the override and the shelters are warm. ${this.car.score} points · ${Math.floor(this.car.elapsed / 60)}m ${Math.floor(this.car.elapsed % 60)}s. Alfred still hears a rogue carrier in the Narrows. Return to the Batcave and trace its source.`
+      ? `Chief Reeves has the override and the shelters are warm. ${this.car.score} points · ${Math.floor(this.car.elapsed / 60)}m ${Math.floor(this.car.elapsed % 60)}s. Handler still hears a rogue carrier in the Riverside district. Return to Headquarters and trace its source.`
       : this.car.health <= 0
         ? "The Batmobile is disabled. Use EMP against mines and marked drone strikes."
         : "The rogue network reconnected. Follow the route and use jet boost on the straights.";

@@ -88,7 +88,7 @@ export function createSkyline(scene) {
     lights.push({ pivot, phase, speed });
     return pivot;
   };
-  // Two roaming civil-defence searchlights on the Midtown and Old Gotham rooftops.
+  // Two roaming civil-defence searchlights on the Midtown and Old Quarter rooftops.
   addBeam(420, 70, 260, 0xbfd6ff, 0.18, 900, 8, 0, 0.11);
   addBeam(-620, 58, 540, 0xbfd6ff, 0.16, 800, 7, 2.1, -0.09);
   // GCPD: the Bat-signal, steady, aimed high over the city.

@@ -76,7 +76,7 @@ export const SUSPECTS = [
   },
   {
     id: "rink",
-    name: "NARROWS ICE RINK",
+    name: "FLATS ICE RINK",
     detail: "Ammonia chillers run all winter. Six blocks from the river.",
     refrigeration: true,
     waterfront: false,

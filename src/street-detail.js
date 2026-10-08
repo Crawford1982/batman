@@ -273,7 +273,7 @@ export class StreetDetail {
               : section === 2
                 ? start < 500
                   ? "TRIGATE WORKS"
-                  : "OLD GOTHAM"
+                  : "OLD QUARTER"
                 : "CATHEDRAL DISTRICT";
         const signMap = texture(512, 128, (c, w, h) => {
           c.fillStyle = old ? "#171e22" : "#151b27";
