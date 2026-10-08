@@ -34,9 +34,9 @@ export function overlapsKessler(b) {
   );
 }
 export function districtAt(x, z) {
-  if (x > 850 && z > 300) return "TRICORNER DOCKS";
+  if (x > 850 && z > 300) return "RIVERSIDE DOCKS";
   if (x < -650 && z < -350) return "OLD QUARTER";
-  if (x < -650 && z > 350) return "THE NARROWS";
+  if (x < -650 && z > 350) return "THE FLATS";
   if (Math.abs(x - 720) < 160) return "CENTRAL RIVER";
   return "MIDTOWN";
 }
