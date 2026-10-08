@@ -73,7 +73,7 @@ export class GroundLevel {
     );
     document.body.insertAdjacentHTML(
       "beforeend",
-      `<section id="arrival-film" hidden aria-label="Grid threat cleared"><div class="arrival-top">OPERATION SILENT BELL / STEEL CITY CATHEDRAL</div><div class="arrival-copy"><small>SCPD / SECURE CHANNEL</small><h2>The city has a tomorrow.</h2><p>Override accepted. Heat restored.<br>Gordon’s people are safe inside. One rogue carrier is still re-keying the hijack from the Riverside district.</p><button id="arrival-skip">VIEW MISSION RESULTS →</button></div></section>`,
+      `<section id="arrival-film" hidden aria-label="Grid threat cleared"><div class="arrival-top">OPERATION SILENT BELL / STEEL CITY CATHEDRAL</div><div class="arrival-copy"><small>SCPD / SECURE CHANNEL</small><h2>The city has a tomorrow.</h2><p>Override accepted. Heat restored.<br>Chief Reeves’s people are safe inside. One rogue carrier is still re-keying the hijack from the Riverside district.</p><button id="arrival-skip">VIEW MISSION RESULTS →</button></div></section>`,
     );
     $("arrival-skip").onclick = () => this.endArrival();
     document
