@@ -12,6 +12,7 @@ Use vidIQ MCP tools if they're available (any tool whose name contains `vidiq`).
 3. **Audience (revealed preference)**: what this audience also watches, i.e. adjacent channels and topics with outlier videos. These are the demand-stacking candidates (films, characters, creators, events).
 4. **Persona and proof**: who the channel is for in one line, and what counts as *proof* for this creator (on-screen results, build hours, failure count, credentials).
 5. **Goal**: ask the user what success means for this channel right now (subs, watch hours for monetisation, shop traffic, community) and record it, since /post-mortem judges against it.
-6. **Shorts vs long-form**: compare how each performs, if there are both.
+6. **Reference channels**: ask the user for channels they'd like to be like. For each one, find its outlier videos and explain *why* they work (topic, framing, thumbnail, format, persona). Then sort each lesson into **transferable** (works at this channel's size and budget) or **not transferable** (depends on an existing audience, budget, team or fame). Suggest 2–3 *small* channels in the niche that broke out recently, since they're the closest copy of the situation this channel is in.
+7. **Shorts vs long-form**: compare how each performs, if there are both.
 
 Write all of this to `CHANNEL.md` in this folder, with a `Last updated: <date>` line. End by giving the user the three strongest opportunities you see, with evidence.
