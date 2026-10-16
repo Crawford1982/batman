@@ -289,23 +289,30 @@ def cmd_broll(proj: Path) -> None:
 # ---------------------------------------------------------------- 4. render
 
 class TimeMap:
-    """Maps source-video time to output time through the keep list."""
+    """Maps source-video time to output time through the keep list.
+
+    `keep` is in OUTPUT order, so segments may be reordered (e.g. a cold open
+    that plays a later moment first). Source times inside a cut snap forward
+    to the next kept moment in source order.
+    """
 
     def __init__(self, keep: list[dict]):
-        self.keep = sorted(((k["start"], k["end"]) for k in keep), key=lambda k: k[0])
+        self.keep = [(k["start"], k["end"]) for k in keep]
         self.offsets, acc = [], 0.0
         for s, e in self.keep:
             self.offsets.append(acc)
             acc += e - s
         self.duration = acc
+        self.by_source = sorted(zip(self.keep, self.offsets), key=lambda x: x[0][0])
 
     def map(self, t: float, snap: bool = True) -> float | None:
-        for (s, e), off in zip(self.keep, self.offsets):
+        for (s, e), off in self.by_source:
             if s <= t <= e:
                 return off + t - s
-            if t < s:
-                return off if snap else None
-        return self.duration if snap else None
+        if not snap:
+            return None
+        nxt = [off for (s, _), off in self.by_source if s > t]
+        return nxt[0] if nxt else self.duration
 
 
 def ass_color(hex_rgb: str, alpha: int = 0) -> str:
@@ -423,6 +430,7 @@ def build_ass(edl: dict, tm: TimeMap, transcript: dict | None) -> str:
                 cap_events.append([st, en, pop + " ".join(parts)])
             i += len(chunk)
         # one caption on screen at a time: clip each event at the next one's start
+        cap_events.sort(key=lambda c: c[0])  # output order (keep may be reordered)
         for k, (st, en, text) in enumerate(cap_events):
             if k + 1 < len(cap_events):
                 en = min(en, cap_events[k + 1][0])
@@ -445,6 +453,9 @@ def cmd_render(proj: Path, preview: bool) -> None:
     keep = [k for k in edl["keep"] if k["end"] > k["start"]]
     if not keep:
         sys.exit("edl.json has an empty keep list")
+    spans = sorted((k["start"], k["end"]) for k in keep)
+    if any(b[0] < a[1] - 0.01 for a, b in zip(spans, spans[1:])):
+        print("warning: keep segments overlap in source time - some footage will play twice")
     tm = TimeMap(keep)
     W, H = edl.get("resolution", [1920, 1080])
     if preview:

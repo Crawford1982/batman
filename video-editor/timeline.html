@@ -110,7 +110,10 @@ $("#pick").addEventListener("change", async (e) => {
     if (!src) throw new Error(`video ${edl.source} not found in folder`);
     vid.src = URL.createObjectURL(src);
     vid.onloadedmetadata = () => { dur = vid.duration; refresh(); };
-    edl.keep = normalise(edl.keep || []);
+    const k0 = edl.keep || [];
+    if (k0.some((k, i) => i && k.start < k0[i - 1].start))
+      $("#err").textContent = "Note: this edl.json reorders segments (cold open). Editing here restores source order - re-apply the reorder in edl.json or ask Claude.";
+    edl.keep = normalise(k0);
     renderTranscript();
     syncExtras();
     $("#save").disabled = false;

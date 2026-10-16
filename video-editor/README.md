@@ -33,6 +33,7 @@ Editing is one stage of five, and any single weak stage can sink a video. [PLAYB
 ```
 /channel-setup <channel>    once: baseline numbers, outliers, persona, goal -> CHANNEL.md (uses vidIQ)
 /idea-check <name> <idea>   demand: floor/ceiling, is it current, stack for a higher ceiling
+/template <name> [shorts|long]  best-performing videos on the idea (by outlier score) -> beat-by-beat template
 /package <name>             titles + thumbnails from proven framing patterns -> promise + edit intensity
 /outline <name>             4P hook + acceptance-criteria outline -> film this
 /edit-video <name>          edit matched to the promise, hook audited

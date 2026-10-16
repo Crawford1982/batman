@@ -5,6 +5,7 @@ argument-hint: <project-name>
 
 Follow PLAYBOOK.md stage 3 using `projects/$1/brief.md` (needs `## Packaging` and `## Promise`; if they're missing, run /package first).
 
+0. If brief.md has a `## Template` (from /template), follow its hook length, beat order and payoff position; the acceptance criteria fill in those beats.
 1. **Hook script** (aim for ≤30 seconds spoken, in the creator's own plain voice, no hype words), answering in order:
    - Promise: confirm they got what they clicked for, ideally in the first sentence.
    - Proof: why listen? Show it, don't claim it (the result on screen, failures survived, hours spent).
