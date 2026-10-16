@@ -8,7 +8,7 @@ Project folder: `projects/$1/` (create it if missing).
 
 1. Turn the idea into 3–5 search phrases a viewer would actually type.
 2. **Data source:** if vidIQ MCP tools are available (any tool whose name contains `vidiq`), use them first: keyword search volume and competition, top and outlier videos for each phrase, and trending outliers in the niche. Name the vidIQ tool used next to each number. Otherwise fall back to web search plus any numbers the user pastes. Keep vidIQ calls focused (about 10 per run) because they spend the user's credits.
-3. Using that source, For each phrase, list the top ~5 relevant videos: title, channel size, views, age.
+3. Using that source, for each phrase, list the top ~5 relevant videos: title, channel size, views, age.
    - **Floor** = typical views of a decent video on it; **ceiling** = the best performers. Flag outliers that are huge relative to their channel's size (strong demand signal) and ones that look botted.
    - **Currency**: are videos from the last 6–12 months still pulling views?
 4. Suggest 2–3 ways to **stack demand** to raise the ceiling (attach to a bigger character, film, creator or event the same audience already chooses), and say why each fits *this* audience.
