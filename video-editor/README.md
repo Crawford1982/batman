@@ -36,6 +36,7 @@ Editing is one stage of five, and any single weak stage can sink a video. [PLAYB
 /package <name>             titles + thumbnails from proven framing patterns -> promise + edit intensity
 /outline <name>             4P hook + acceptance-criteria outline -> film this
 /edit-video <name>          edit matched to the promise, hook audited
+/tiktok-pack <name>         vertical render + hook text, caption, hashtags, cover, timing for TikTok
 /post-mortem <name>         read results -> lessons go into CLAUDE.md "House style"
 ```
 
