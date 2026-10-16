@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>vedit timeline</title>
+<style>
+  :root { --bg:#f6f6f4; --panel:#fff; --ink:#1b1b1b; --mute:#6b6b6b; --line:#e2e2de; --accent:#c99a00; --cut:#c0392b; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#121212; --panel:#1c1c1c; --ink:#ececec; --mute:#9a9a9a; --line:#2c2c2c; --accent:#ffd400; --cut:#ff6b5b; } }
+  * { box-sizing:border-box; }
+  body { margin:0; font:14px/1.45 system-ui, sans-serif; background:var(--bg); color:var(--ink); }
+  header { display:flex; gap:12px; align-items:center; flex-wrap:wrap; padding:12px 16px; border-bottom:1px solid var(--line); background:var(--panel); position:sticky; top:0; z-index:2; }
+  header h1 { font-size:16px; margin:0 8px 0 0; }
+  button, label.btn { font:inherit; padding:6px 12px; border-radius:6px; border:1px solid var(--line); background:var(--bg); color:var(--ink); cursor:pointer; }
+  button.primary { background:var(--accent); color:#000; border-color:var(--accent); font-weight:600; }
+  .stat { color:var(--mute); }
+  main { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:16px; padding:16px; }
+  @media (max-width: 900px) { main { grid-template-columns:1fr; } }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:12px; }
+  video { width:100%; max-height:52vh; background:#000; border-radius:6px; }
+  #bar { position:relative; height:28px; margin-top:8px; background:var(--cut); opacity:.85; border-radius:4px; overflow:hidden; cursor:pointer; }
+  #bar .k { position:absolute; top:0; bottom:0; background:var(--accent); }
+  #bar .ph { position:absolute; top:0; bottom:0; width:2px; background:var(--ink); }
+  #transcript { max-height:72vh; overflow:auto; }
+  .seg { padding:6px 4px; border-bottom:1px solid var(--line); display:flex; gap:8px; }
+  .seg .t { color:var(--mute); font-variant-numeric:tabular-nums; min-width:52px; cursor:pointer; }
+  .seg .flag { color:var(--cut); font-size:12px; }
+  .w { cursor:pointer; border-radius:3px; padding:0 1px; user-select:none; }
+  .w.cut { text-decoration:line-through; color:var(--cut); opacity:.7; }
+  .w.now { background:var(--accent); color:#000; }
+  textarea { width:100%; min-height:220px; font:12px/1.4 ui-monospace, monospace; background:var(--bg); color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:8px; }
+  .help { color:var(--mute); font-size:12px; margin:6px 0; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; margin:8px 0; }
+  #err { color:var(--cut); }
+</style>
+</head>
+<body>
+<header>
+  <h1>vedit timeline</h1>
+  <label class="btn">Open project folder<input id="pick" type="file" webkitdirectory hidden></label>
+  <label><input id="previewCut" type="checkbox" checked> play edited cut</label>
+  <button class="primary" id="save" disabled>Download edl.json</button>
+  <span class="stat" id="stat">Pick a project folder (contains your video, edl.json, work/transcript.json)</span>
+  <span id="err"></span>
+</header>
+<main>
+  <section class="panel">
+    <video id="vid" controls></video>
+    <div id="bar" title="gold = kept, red = cut. Click to seek."></div>
+    <div class="row">
+      <button data-add="title">+ title here</button>
+      <button data-add="callout">+ callout here</button>
+      <button data-add="lower_third">+ lower third here</button>
+      <button data-add="broll">+ b-roll here</button>
+      <button data-add="zoom">+ zoom here</button>
+    </div>
+    <p class="help">Graphics, b-roll, zooms, captions and music (edit freely, must stay valid JSON):</p>
+    <textarea id="extras" spellcheck="false"></textarea>
+  </section>
+  <section class="panel">
+    <p class="help">Click a word to seek. Double-click a word to cut/restore it. Click a timestamp to cut/restore the whole line.
+      Save, replace <code>edl.json</code> in the project folder, then run <code>python vedit.py render</code>.</p>
+    <div id="transcript"></div>
+  </section>
+</main>
+<script>
+const $ = (s) => document.querySelector(s);
+const vid = $("#vid"), bar = $("#bar");
+let edl = null, tr = null, dur = 0, wordEls = [];
+
+const fmt = (t) => `${String(Math.floor(t / 60)).padStart(2, "0")}:${(t % 60).toFixed(1).padStart(4, "0")}`;
+const r3 = (x) => Math.round(x * 1000) / 1000;
+
+// --- keep-list interval maths (source seconds)
+function normalise(list) {
+  const s = list.filter((k) => k.end - k.start > 0.05).sort((a, b) => a.start - b.start);
+  const out = [];
+  for (const k of s) {
+    const last = out[out.length - 1];
+    if (last && k.start <= last.end + 0.01) last.end = Math.max(last.end, k.end);
+    else out.push({ start: r3(k.start), end: r3(k.end) });
+  }
+  return out;
+}
+function cutRange(a, b) {
+  const out = [];
+  for (const k of edl.keep) {
+    if (k.end <= a || k.start >= b) { out.push(k); continue; }
+    if (k.start < a) out.push({ start: k.start, end: a });
+    if (k.end > b) out.push({ start: b, end: k.end });
+  }
+  edl.keep = normalise(out);
+}
+function keepRange(a, b) { edl.keep = normalise([...edl.keep, { start: a, end: b }]); }
+const isKept = (t) => edl.keep.some((k) => t >= k.start && t <= k.end);
+const outDur = () => edl.keep.reduce((s, k) => s + k.end - k.start, 0);
+
+// --- load a project folder
+$("#pick").addEventListener("change", async (e) => {
+  $("#err").textContent = "";
+  const files = [...e.target.files];
+  const rel = (f) => f.webkitRelativePath.split("/").slice(1).join("/");
+  const byPath = Object.fromEntries(files.map((f) => [rel(f), f]));
+  try {
+    const edlFile = byPath["edl.json"] || byPath["work/edl.draft.json"];
+    if (!edlFile) throw new Error("no edl.json - run `python vedit.py prep` first");
+    edl = JSON.parse(await edlFile.text());
+    tr = byPath["work/transcript.json"] ? JSON.parse(await byPath["work/transcript.json"].text()) : { segments: [] };
+    const src = byPath[edl.source] || files.find((f) => /\.(mp4|mov|mkv|webm|m4v)$/i.test(f.name) && !rel(f).includes("/"));
+    if (!src) throw new Error(`video ${edl.source} not found in folder`);
+    vid.src = URL.createObjectURL(src);
+    vid.onloadedmetadata = () => { dur = vid.duration; refresh(); };
+    edl.keep = normalise(edl.keep || []);
+    renderTranscript();
+    syncExtras();
+    $("#save").disabled = false;
+  } catch (err) { $("#err").textContent = err.message; }
+});
+
+function renderTranscript() {
+  const box = $("#transcript");
+  box.innerHTML = "";
+  wordEls = [];
+  for (const s of tr.segments) {
+    const row = document.createElement("div");
+    row.className = "seg";
+    const t = document.createElement("span");
+    t.className = "t";
+    t.textContent = fmt(s.start);
+    t.title = "cut/restore whole line";
+    t.onclick = () => { const kept = s.words.some((w) => isKept((w.start + w.end) / 2)); kept ? cutRange(s.start, s.end) : keepRange(s.start - 0.1, s.end + 0.1); refresh(); };
+    const txt = document.createElement("span");
+    for (const w of (s.words.length ? s.words : [{ w: s.text, start: s.start, end: s.end }])) {
+      const el = document.createElement("span");
+      el.className = "w";
+      el.textContent = w.w + " ";
+      el.onclick = () => { vid.currentTime = w.start; };
+      el.ondblclick = () => { isKept((w.start + w.end) / 2) ? cutRange(w.start, w.end) : keepRange(w.start - 0.05, w.end + 0.05); refresh(); };
+      el._w = w;
+      wordEls.push(el);
+      txt.appendChild(el);
+    }
+    row.append(t, txt);
+    box.appendChild(row);
+  }
+  refresh();
+}
+
+function refresh() {
+  for (const el of wordEls) el.classList.toggle("cut", !isKept((el._w.start + el._w.end) / 2));
+  drawBar();
+  $("#stat").textContent = `edited ${fmt(outDur())} of ${fmt(dur || 0)} - ${edl.keep.length} segments`;
+}
+
+function drawBar() {
+  if (!edl || !dur) return;
+  bar.innerHTML = edl.keep.map((k) => `<div class="k" style="left:${(100 * k.start) / dur}%;width:${(100 * (k.end - k.start)) / dur}%"></div>`).join("") + `<div class="ph" id="ph"></div>`;
+}
+bar.addEventListener("click", (e) => { if (dur) vid.currentTime = (dur * e.offsetX) / bar.clientWidth; });
+
+// skip cut regions while playing; highlight current word
+vid.addEventListener("timeupdate", () => {
+  if (!edl) return;
+  const t = vid.currentTime;
+  if ($("#previewCut").checked && !vid.paused && !isKept(t)) {
+    const next = edl.keep.find((k) => k.start > t);
+    next ? (vid.currentTime = next.start) : vid.pause();
+  }
+  const ph = $("#ph");
+  if (ph && dur) ph.style.left = `${(100 * t) / dur}%`;
+  for (const el of wordEls) el.classList.toggle("now", t >= el._w.start && t < el._w.end);
+});
+
+// graphics / b-roll / music live in the textarea as JSON
+const EXTRA_KEYS = ["graphics", "broll", "zooms", "captions", "music", "resolution", "accent", "font"];
+function syncExtras() {
+  $("#extras").value = JSON.stringify(Object.fromEntries(EXTRA_KEYS.map((k) => [k, edl[k] ?? null])), null, 2);
+}
+function readExtras() {
+  try { Object.assign(edl, JSON.parse($("#extras").value)); $("#err").textContent = ""; return true; }
+  catch (err) { $("#err").textContent = "extras JSON invalid: " + err.message; return false; }
+}
+document.querySelectorAll("[data-add]").forEach((b) => b.addEventListener("click", () => {
+  if (!edl || !readExtras()) return;
+  const at = r3(vid.currentTime), kind = b.dataset.add;
+  if (kind === "broll") (edl.broll ||= []).push({ at, duration: 3, query: "describe the shot", file: null });
+  else if (kind === "zoom") (edl.zooms ||= []).push({ at, scale: 1.15 });
+  else (edl.graphics ||= []).push({ type: kind, text: "TEXT", ...(kind === "lower_third" ? { sub: "subtitle" } : {}), at, duration: 2.5 });
+  syncExtras();
+}));
+
+$("#save").addEventListener("click", () => {
+  if (!readExtras()) return;
+  const blob = new Blob([JSON.stringify(edl, null, 2)], { type: "application/json" });
+  const a = Object.assign(document.createElement("a"), { href: URL.createObjectURL(blob), download: "edl.json" });
+  a.click();
+});
+</script>
+</body>
+</html>
