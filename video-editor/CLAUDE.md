@@ -17,6 +17,11 @@ python vedit.py render projects/<name>        # final
 
 ## Your editing job (in order)
 
+0. **Read `brief.md`** if the project has one (written by /idea-check, /package and /outline; see PLAYBOOK.md). Its `## Promise` sets `edit_intensity`, and **the edit must match the expectation the packaging set**:
+   - `raw`: cut dead air and bad takes only. Captions on, no music or a very low bed, at most 1–2 graphics, b-roll only when something is impossible to see otherwise, no zooms.
+   - `standard` (the default when there's no brief): the defaults below.
+   - `high-energy`: tighter cuts (join_gap ~0.2 s), a zoom every 8–12 s, b-roll every 15–25 s, list and callout graphics for every enumeration and number.
+   Then **audit the hook**: within the first ~30 s of the *kept* transcript, check the four Ps (Promise, Proof, Plan, Persona). If the Promise doesn't land in the first sentence or two, look for a stronger line later in the video that could be moved to open with (a cold open). Propose it; don't do it silently. Also flag anything in the body that breaks the promise or is a tangent the acceptance criteria don't need.
 1. **Read `work/transcript.md`** in full. Lines marked `POSSIBLE RETAKE` / `POSSIBLY UNFINISHED` are heuristic hints, not verdicts. Also look for unflagged retakes: a sentence said twice, false starts, "let me say that again", "um, actually", tangents the user asked to drop.
 2. **Build `keep`**: start from the draft's silence-cut `keep` list and remove the spans for bad takes. Always keep the *last* complete take. Times are source seconds. For a cut mid-segment, use word times from `work/transcript.json` (`segments[].words[]`). Leave ~0.08–0.15 s of padding around speech so cuts don't clip consonants. Don't cut so tight that breaths disappear entirely; natural pacing beats jump-cut machine-gunning.
 3. **Graphics** (sparingly — roughly one every 20–40 s, never stacked): a `title` for the hook or each chapter, a `lower_third` for the speaker's name once near the start, a `callout` for a key number or claim, a `list` when the speaker enumerates steps.
@@ -54,6 +59,12 @@ If the user gives a brief ("make it punchy", "TikTok version", "no captions"), i
 ```
 
 Rules: `keep` must be sorted and non-overlapping. Captions are hidden automatically while a `title`/`list` is on screen. B-roll `file` may be a video or a still image (stills get a slow Ken Burns zoom). Leave `file` null and `vedit.py broll` fills it.
+
+## House style
+
+Lessons learned from /post-mortem, added only with the user's agreement. These override the defaults above.
+
+- _(none yet)_
 
 ## Don'ts
 

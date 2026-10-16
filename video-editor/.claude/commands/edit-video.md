@@ -10,4 +10,4 @@ Edit the video in `projects/$1` following CLAUDE.md. Extra brief from the user: 
 3. Write `projects/$1/edl.json` per the CLAUDE.md editing job and schema, honouring the brief.
 4. If the EDL has b-roll, run `python vedit.py broll projects/$1`.
 5. Run `python vedit.py render projects/$1 --preview`.
-6. Report: final duration vs raw, every retake/section you cut (with source timestamps and a one-line reason), the graphics and b-roll you added, and any b-roll still missing. Ask whether to tweak or run the full render (`python vedit.py render projects/$1`).
+6. Report: the edit intensity used and why; the hook audit (four Ps: pass or fail, and any cold-open proposal); final duration vs raw; every retake/section you cut (with source timestamps and a one-line reason), the graphics and b-roll you added, and any b-roll still missing. Ask whether to tweak or run the full render (`python vedit.py render projects/$1`).

@@ -26,6 +26,18 @@ raw.mp4 ─▶ prep ─▶ work/transcript.md ─▶ Claude writes edl.json ─�
 
 Claude only writes a JSON edit list, so every render is reproducible, diffable and editable by hand.
 
+## The whole loop, not just the edit
+
+Editing is one stage of five, and any single weak stage can sink a video. [PLAYBOOK.md](PLAYBOOK.md) covers the full process (adapted from Jake Trinder's framework for a solo creator). Each stage has a command, and they all share `projects/<name>/brief.md`:
+
+```
+/idea-check <name> <idea>   demand: floor/ceiling, is it current, stack for a higher ceiling
+/package <name>             titles + thumbnails from proven framing patterns -> promise + edit intensity
+/outline <name>             4P hook + acceptance-criteria outline -> film this
+/edit-video <name>          edit matched to the promise, hook audited
+/post-mortem <name>         read results -> lessons go into CLAUDE.md "House style"
+```
+
 ## Setup (Windows, one time)
 
 ```powershell
