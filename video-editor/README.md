@@ -31,12 +31,22 @@ Claude only writes a JSON edit list, so every render is reproducible, diffable a
 Editing is one stage of five, and any single weak stage can sink a video. [PLAYBOOK.md](PLAYBOOK.md) covers the full process (adapted from Jake Trinder's framework for a solo creator). Each stage has a command, and they all share `projects/<name>/brief.md`:
 
 ```
+/channel-setup <channel>    once: baseline numbers, outliers, persona, goal -> CHANNEL.md (uses vidIQ)
 /idea-check <name> <idea>   demand: floor/ceiling, is it current, stack for a higher ceiling
 /package <name>             titles + thumbnails from proven framing patterns -> promise + edit intensity
 /outline <name>             4P hook + acceptance-criteria outline -> film this
 /edit-video <name>          edit matched to the promise, hook audited
 /post-mortem <name>         read results -> lessons go into CLAUDE.md "House style"
 ```
+
+### vidIQ (optional, recommended if you have a paid plan)
+
+vidIQ has an official MCP connector. With it connected, `/channel-setup`, `/idea-check`, `/package` and `/post-mortem` pull real keyword volumes, outlier videos, channel stats and comments themselves instead of asking you to paste them. It's read-only, so it can't change your channel. Calls spend vidIQ credits.
+
+```powershell
+claude mcp add --transport http --scope user vidiq https://mcp.vidiq.com/mcp
+```
+Then inside Claude Code run `/mcp`, choose **vidiq** → Authenticate, and sign in to vidIQ in the browser. Manage or revoke access at app.vidiq.com → Account Settings → MCP.
 
 ## Setup (Windows, one time)
 

@@ -17,7 +17,7 @@ python vedit.py render projects/<name>        # final
 
 ## Your editing job (in order)
 
-0. **Read `brief.md`** if the project has one (written by /idea-check, /package and /outline; see PLAYBOOK.md). Its `## Promise` sets `edit_intensity`, and **the edit must match the expectation the packaging set**:
+0. **Read `CHANNEL.md`** (the channel's baseline, persona and goal, built by /channel-setup) and **`brief.md`** if the project has one (written by /idea-check, /package and /outline; see PLAYBOOK.md). Its `## Promise` sets `edit_intensity`, and **the edit must match the expectation the packaging set**:
    - `raw`: cut dead air and bad takes only. Captions on, no music or a very low bed, at most 1–2 graphics, b-roll only when something is impossible to see otherwise, no zooms.
    - `standard` (the default when there's no brief): the defaults below.
    - `high-energy`: tighter cuts (join_gap ~0.2 s), a zoom every 8–12 s, b-roll every 15–25 s, list and callout graphics for every enumeration and number.

@@ -5,6 +5,7 @@ argument-hint: <project-name>
 
 Follow PLAYBOOK.md stage 2 for `projects/$1/brief.md` (read it first; if it has no Idea section, ask for the idea).
 
+0. If vidIQ MCP tools are available, use them to pull outlier videos and their titles in this niche *and* 2–3 adjacent ones, so patterns are evidence-based. Check any title idea's keyword with vidIQ before recommending it.
 1. Find 2–3 **framing patterns** that are winning across niches right now (same framing, different topics), not single outliers. For each one, explain *why* it works psychologically and whether that reason holds for this audience. Reject any that would be overfitting.
 2. Give 6–8 title options built on the patterns that pass, each under ~60 characters. Mark your top 2.
 3. Give 3 thumbnail concepts. Each needs: the single focal element, any text (max 3 words, must not repeat the title), what it tells the viewer at a glance, and how it pairs with the top titles to open a curiosity gap that the title only half-closes.
